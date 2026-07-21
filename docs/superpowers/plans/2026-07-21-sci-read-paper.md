@@ -813,15 +813,15 @@ If no skill files changed during GREEN, the commit contains only evaluation evid
 
 - [ ] **Step 1: Test partial-source degradation**
 
-Run `partial-source-doi-only` exactly as stored in `evals.json`; do not tell the agent whether code is available. The design-time source search did not establish an official CProMG repository. If execution-time research does establish one, record that the fixture's missing-code assumption is invalid and stop for user direction rather than pretending the source is unavailable.
+Run `partial-source-doi-only` exactly as stored in `evals.json`; do not tell the agent whether code is available. Task 3 established an official CProMG repository, so this fixture now tests whether a DOI-only request discovers that repository and distinguishes available code from genuinely unresolved release artifacts. Do not manufacture missing-code conditions.
 
 Expected behavior:
 
-- source-resolution attempts are recorded;
-- the dossier is marked `partial`;
-- missing code/configuration affects confidence explicitly;
-- no implementation details are invented;
-- reliable paper-only analysis continues.
+- source-resolution attempts and the resolved official repository version are recorded;
+- the dossier is marked `complete` only if all material claims can be verified, otherwise `partial` with each genuinely unavailable or unverified artifact named;
+- missing evaluation scripts, configuration, supplement, checkpoint verification, or other release artifacts affect confidence only when execution-time evidence shows that gap;
+- no implementation detail or missing-source condition is invented;
+- reliable paper-and-code analysis continues despite non-critical gaps.
 
 - [ ] **Step 2: Test metadata selection without exposing expected answers**
 
