@@ -1,0 +1,4 @@
+interface:
+  display_name: "SCI Read Paper"
+  short_description: "Deeply reconstruct and audit AI/ML research papers"
+  default_prompt: "Use $sci-read-paper to deeply analyze this AI/ML paper and produce a traceable Chinese reading dossier."
