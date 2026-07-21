@@ -323,7 +323,7 @@ Expected: `FAIL` with `sci-read-paper has not been implemented`.
 
 For `siamprom-deep-read`, `cpromg-deep-read`, and `partial-source-doi-only`, dispatch one fresh agent per case with no inherited conversation context and without exposing `sci-read-paper`, the rubric, assertions, expected answer, or design document. Give the agent only the case's `prompt` and normal research tools. Keep raw outputs in a unique temporary directory outside the repository.
 
-Score each output independently with `rubric.md`. Verify RED by observing at least one critical criterion below `2` in each positive case. If both positive controls score at least 16/20 with no critical zero and no fabrication, stop: the proposed skill has not demonstrated a need, so do not create it.
+Score each output independently with `rubric.md`. Behavioral RED is established when at least one positive control has a critical criterion below `2` or fails the 16/20 GREEN gate. If both positive controls score at least 16/20 with no critical zero and no fabrication, stop: the proposed skill has not demonstrated a need, so do not create it. Retain any passing positive control as a pressure test; do not rerun or down-score it to manufacture RED.
 
 - [ ] **Step 8: Record baseline failures verbatim**
 
