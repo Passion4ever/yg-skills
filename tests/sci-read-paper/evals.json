@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "skill": "sci-read-paper",
+  "cases": [
+    {
+      "id": "siamprom-deep-read",
+      "kind": "positive",
+      "prompt": "请帮我精读论文 Recognition of cyanobacteria promoters via Siamese network-based contrastive learning under novel non-promoter generation（DOI: 10.1093/bib/bbae193）。我想真正理解作者为什么这样设计，而不是只看摘要。",
+      "assertions": [
+        "identifies negative-sample construction as a central methodological problem",
+        "traces promoter, non-promoter, contrastive-pair, and classifier-label construction",
+        "explains the relationship between representation learning and the final predictor",
+        "maps phantom sampling, architecture, ablations, and motif discovery to claims",
+        "calibrates the biological evidence for the reported motif"
+      ]
+    },
+    {
+      "id": "cpromg-deep-read",
+      "kind": "positive",
+      "prompt": "请帮我精读 CProMG: controllable protein-oriented molecule generation with desired binding affinity and drug-like properties（DOI: 10.1093/bioinformatics/btad222）。重点是让我理解作者的思考过程、模型内部数据流和实验到底证明了什么。",
+      "assertions": [
+        "reconstructs residue-graph and atom-graph data flow through the dual-view encoder",
+        "traces affinity and physicochemical conditions into molecule generation",
+        "distinguishes baseline, control, ablation, and case-study evidence",
+        "separates docking, QED, and SA proxies from experimental biological claims",
+        "marks unavailable code or configuration details as missing rather than inventing them"
+      ]
+    },
+    {
+      "id": "partial-source-doi-only",
+      "kind": "partial-source",
+      "prompt": "我只有 CProMG 这篇 AI 药物发现论文的 DOI（10.1093/bioinformatics/btad222）。请精读它；如果补充材料或官方代码找不到，也继续完成能可靠完成的部分。",
+      "assertions": [
+        "records attempted source resolution",
+        "continues with a partial dossier when non-critical artifacts are unavailable",
+        "labels missing implementation details",
+        "does not fabricate code paths, splits, or hyperparameters"
+      ]
+    },
+    {
+      "id": "trigger-deep-model-question",
+      "kind": "trigger",
+      "prompt": "这篇蛋白质深度学习论文的输入经过哪些张量和模块才得到最终输出？论文和 GitHub 代码是否一致？",
+      "assertions": [
+        "selects sci-read-paper"
+      ]
+    },
+    {
+      "id": "nontrigger-quick-summary",
+      "kind": "non-trigger",
+      "prompt": "用五句话总结这篇论文。",
+      "assertions": [
+        "does not select sci-read-paper"
+      ]
+    },
+    {
+      "id": "nontrigger-translation",
+      "kind": "non-trigger",
+      "prompt": "把这个英文摘要翻译成中文。",
+      "assertions": [
+        "does not select sci-read-paper"
+      ]
+    },
+    {
+      "id": "nontrigger-literature-review",
+      "kind": "non-trigger",
+      "prompt": "比较这二十篇蛋白质设计论文并写一篇文献综述。",
+      "assertions": [
+        "does not select sci-read-paper"
+      ]
+    }
+  ]
+}
