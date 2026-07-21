@@ -112,3 +112,70 @@ three complete outputs.
   GREEN threshold without the skill.
 - All three outputs explicitly narrowed at least one biological or chemical
   claim to the evidence actually reported.
+
+## GREEN results
+
+Run date: 2026-07-21. Skill commit: `5e93f46`.
+
+Each unchanged positive-control prompt was run with the skill in a fresh,
+isolated context. Complete raw dossiers are retained outside the repository in
+`/tmp/sci-read-paper-green.uaO99b/siamprom-raw-created/` and
+`/tmp/sci-read-paper-green.uaO99b/cpromg-raw-created/`.
+
+### Score changes
+
+| Criterion | SiamProm RED → GREEN | CProMG RED → GREEN |
+|---|---:|---:|
+| Research problem chain | 2 → 2 | 2 → 2 |
+| Source completion | 2 → 2 | 1 → 2 |
+| Data and training | 2 → 2 | 1 → 2 |
+| Model data flow | 2 → 2 | 2 → 2 |
+| Experiment-to-claim mapping | 2 → 2 | 2 → 2 |
+| Paper-code comparison | 2 → 2 | 0 → 2 |
+| Evidence calibration | 2 → 2 | 2 → 2 |
+| Bio/chemical validity | 2 → 2 | 2 → 2 |
+| Main-report usability | 2 → 2 | 2 → 2 |
+| Reproducibility and boundaries | 2 → 2 | 1 → 2 |
+| **Total** | **20 → 20** | **15 → 20** |
+
+Both runs meet the numeric GREEN gate, have no critical criterion at `0`,
+contain every case assertion, and have no fabrication flag. Each standalone
+`deep-reading.md` contains the full problem chain, data/training trace, model
+flow, experiment interpretation, validity audit, and reproducibility boundary;
+the appendices are traceability aids rather than required reading.
+
+### Resolved baseline failures
+
+- CProMG now records the paper, official repository and commit, configuration,
+  released split/data, Zenodo artifacts, unavailable supplement, incomplete
+  checkpoint access, and missing evaluation pipeline.
+- CProMG now traces pocket and ligand preprocessing, the 99,000/1,000/100
+  released split, property-label construction, teacher-forced objective,
+  optimizer/scheduler, coordinate noise, checkpoint behavior, and missing
+  table-generation details.
+- CProMG now separates paper claims, executable code, implementation conflicts,
+  and missing artifacts. It identifies one-way residue-to-atom fusion, reversed
+  token-type IDs, the `max_iters: 50` conflict, hard-coded paths, silent missing
+  Vina-label fallback, and the absent evaluation entry point.
+- CProMG now gives an actionable reproduction boundary: checkpoint generation
+  is plausible after path/environment repair, while training and Tables 1–3 are
+  not independently reproducible from the release.
+- SiamProm preserved its prior full score while making the phantom-sampling,
+  gradient-path, independent-set, and motif-evidence boundaries explicit.
+
+### Short evidence
+
+- SiamProm: “训练负样本制造了捷径”; “encoder 只从 contrastive loss 收梯度”;
+  “`GCGATCGC` 就是已知 HIP1”.
+- CProMG: “训练信号只有 teacher-forced next-token cross-entropy”;
+  “残基查询原子”; “Vina 是 docking scoring proxy”.
+
+### Remaining limitations
+
+Both dossiers honestly use `partial`. SiamProm lacks the released generation,
+10-fold CV, baseline, significance-test, and motif-analysis workflows. CProMG
+lacks the complete Table 1–3 evaluation/docking pipeline, baseline artifacts,
+full checkpoint verification, validity/failure handling, and chemical
+split/novelty audit. These are limitations of the paper releases, not gaps that
+can be repaired by adding speculative skill instructions. No skill file changed
+during GREEN.
