@@ -181,3 +181,33 @@ verification. The missing release artifacts are limitations of the paper
 releases; incomplete checkpoint verification is an evaluation limitation.
 Neither can be repaired by adding speculative skill instructions. No skill file
 changed during GREEN.
+
+## Partial-source and trigger results
+
+Run date: 2026-07-22. The unchanged DOI-only prompt used
+`10.1093/bioinformatics/btad222`. A fresh skill-assisted run resolved the PMC
+paper, official `lijianing0902/CProMG` repository at
+`main@1c9fc00da88af9a279eb15b19fd031617d92bba7`, its two configurations and
+public split, and Zenodo v1 (`10.5281/zenodo.7737709`). The downloaded
+`CProMG-VQS.pt` matched the published MD5
+`aee806f6587d74867ddf0f9cae912ac7`.
+
+The dossier honestly reports **partial** and scores **20/20** with no critical
+zero or fabrication found. It continues the reliable paper-and-code analysis
+while naming the unresolved material gaps: no located independent supplement,
+complete evaluation/baseline/ablation pipeline, MMseqs2/split-construction
+commands, or reproducible Tables 1–3 workflow; the full training/runtime stack
+was not executed. It does not call the official code missing. Source attempts
+and versions are recorded in the evidence ledger, and the main report separates
+reported, implemented, inferred, missing, conflicting, and externally checked
+claims.
+
+Fresh prompt-only metadata selection results were:
+
+- `trigger-deep-model-question`: `sci-read-paper` **5/5**.
+- `nontrigger-quick-summary`: `summarize-paper` **5/5**.
+- `nontrigger-translation`: `translate-academic-text` **5/5**.
+- `nontrigger-literature-review`: `review-literature` **5/5**.
+
+All 20 responses used the same exact four-skill catalog. No selection failed,
+so the `sci-read-paper` metadata did not change.
