@@ -175,7 +175,9 @@ the appendices are traceability aids rather than required reading.
 Both dossiers honestly use `partial`. SiamProm lacks the released generation,
 10-fold CV, baseline, significance-test, and motif-analysis workflows. CProMG
 lacks the complete Table 1–3 evaluation/docking pipeline, baseline artifacts,
-full checkpoint verification, validity/failure handling, and chemical
-split/novelty audit. These are limitations of the paper releases, not gaps that
-can be repaired by adding speculative skill instructions. No skill file changed
-during GREEN.
+validity/failure handling, and chemical split/novelty audit. Its checkpoints
+are publicly listed, but this evaluation did not complete their download and
+verification. The missing release artifacts are limitations of the paper
+releases; incomplete checkpoint verification is an evaluation limitation.
+Neither can be repaired by adding speculative skill instructions. No skill file
+changed during GREEN.
