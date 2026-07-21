@@ -1,6 +1,6 @@
 ---
 name: sci-read-paper
-description: Use when deeply analyzing one AI/ML paper beyond summary, including its research logic, datasets, training, model data flow, experiments, reproducibility, code, or scientific validity, especially in protein, small-molecule, or drug-discovery research.
+description: Use when deeply analyzing one AI/ML paper beyond summary, including its research logic, datasets, training, model data flow, experiments, reproducibility, code, or scientific validity, especially in protein, small-molecule, or drug-discovery research. Do not use for direct single-fact extraction.
 ---
 
 # Deep Read Paper
@@ -9,7 +9,7 @@ Reconstruct the research argument and implementation from evidence. Detail-shape
 
 ## Workflow
 
-1. Resolve the paper, supplement, official code/configuration, and dataset sources. Read [evidence-policy.md](references/evidence-policy.md). Ask only for authentication/payment, ambiguous source identity, conclusion-changing version conflicts, or a material user choice.
+1. Resolve the paper from a PDF/path, title, DOI, arXiv ID, journal page, or official repository; then collect its supplement, official code/configuration, and dataset sources. Read [evidence-policy.md](references/evidence-policy.md). Ask only for authentication/payment, ambiguous source identity, conclusion-changing version conflicts, or a material user choice.
 2. Map the task, prior limitation, gap, hypothesis, contributions, evidence, and conclusion.
 3. Reconstruct why prior limitations lead to each design choice and whether the claimed innovation addresses the gap.
 4. Trace data provenance, sample construction, splits, leakage, preprocessing, objectives, training stages, hyperparameters, and paper-code differences. Read [ai-ml-reading-guide.md](references/ai-ml-reading-guide.md).

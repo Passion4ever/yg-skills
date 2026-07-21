@@ -160,6 +160,14 @@ Create `tests/sci-read-paper/evals.json` with exactly:
       "assertions": [
         "does not select sci-read-paper"
       ]
+    },
+    {
+      "id": "nontrigger-simple-fact",
+      "kind": "non-trigger",
+      "prompt": "这篇论文使用了哪个数据集？只告诉我数据集名称。",
+      "assertions": [
+        "does not select sci-read-paper"
+      ]
     }
   ]
 }
@@ -250,6 +258,18 @@ class SkillContractTests(unittest.TestCase):
         _frontmatter, body = read_frontmatter(SKILL_MD)
         self.assertLessEqual(len(body.split()), 500)
 
+    def test_skill_lists_supported_starting_inputs(self):
+        text = SKILL_MD.read_text(encoding="utf-8")
+        for starting_input in (
+            "PDF",
+            "title",
+            "DOI",
+            "arXiv",
+            "journal page",
+            "official repository",
+        ):
+            self.assertIn(starting_input, text)
+
     def test_references_are_direct_and_complete(self):
         text = SKILL_MD.read_text(encoding="utf-8")
         reference_dir = SKILL_DIR / "references"
@@ -292,6 +312,18 @@ class SkillContractTests(unittest.TestCase):
         for case in data["cases"]:
             self.assertTrue(case["prompt"].strip())
             self.assertTrue(case["assertions"])
+
+    def test_eval_nontrigger_coverage(self):
+        data = json.loads(EVALS_JSON.read_text(encoding="utf-8"))
+        self.assertEqual(
+            {case["id"] for case in data["cases"] if case["kind"] == "non-trigger"},
+            {
+                "nontrigger-quick-summary",
+                "nontrigger-translation",
+                "nontrigger-literature-review",
+                "nontrigger-simple-fact",
+            },
+        )
 
 
 if __name__ == "__main__":
@@ -378,7 +410,7 @@ Replace `skills/sci-read-paper/SKILL.md` with:
 ```markdown
 ---
 name: sci-read-paper
-description: Use when deeply analyzing one AI/ML paper beyond summary, including its research logic, datasets, training, model data flow, experiments, reproducibility, code, or scientific validity, especially in protein, small-molecule, or drug-discovery research.
+description: Use when deeply analyzing one AI/ML paper beyond summary, including its research logic, datasets, training, model data flow, experiments, reproducibility, code, or scientific validity, especially in protein, small-molecule, or drug-discovery research. Do not use for direct single-fact extraction.
 ---
 
 # Deep Read Paper
@@ -387,7 +419,7 @@ Reconstruct the research argument and implementation from evidence. Detail-shape
 
 ## Workflow
 
-1. Resolve the paper, supplement, official code/configuration, and dataset sources. Read [evidence-policy.md](references/evidence-policy.md). Ask only for authentication/payment, ambiguous source identity, conclusion-changing version conflicts, or a material user choice.
+1. Resolve the paper from a PDF/path, title, DOI, arXiv ID, journal page, or official repository; then collect its supplement, official code/configuration, and dataset sources. Read [evidence-policy.md](references/evidence-policy.md). Ask only for authentication/payment, ambiguous source identity, conclusion-changing version conflicts, or a material user choice.
 2. Map the task, prior limitation, gap, hypothesis, contributions, evidence, and conclusion.
 3. Reconstruct why prior limitations lead to each design choice and whether the claimed innovation addresses the gap.
 4. Trace data provenance, sample construction, splits, leakage, preprocessing, objectives, training stages, hyperparameters, and paper-code differences. Read [ai-ml-reading-guide.md](references/ai-ml-reading-guide.md).
@@ -724,7 +756,7 @@ Run:
 .venv/bin/python /Users/yangguang/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/sci-read-paper
 ```
 
-Expected: seven unit tests pass and `Skill is valid!`.
+Expected: nine unit tests pass and `Skill is valid!`.
 
 - [ ] **Step 9: Commit the minimal skill**
 
@@ -808,7 +840,7 @@ If no skill files changed during GREEN, the commit contains only evaluation evid
 - Modify only for an observed partial-output failure: `skills/sci-read-paper/references/evidence-policy.md` or `skills/sci-read-paper/references/output-contract.md`
 
 **Interfaces:**
-- Consumes: `partial-source-doi-only`, `trigger-deep-model-question`, and the three non-trigger cases.
+- Consumes: `partial-source-doi-only`, `trigger-deep-model-question`, and the four non-trigger cases.
 - Produces: evidence that the skill degrades honestly and that its metadata selects narrowly.
 
 - [ ] **Step 1: Test partial-source degradation**
@@ -831,7 +863,7 @@ For each trigger and non-trigger case, dispatch five fresh metadata-selection sa
 summarize-paper — Use when a user wants a short overview or key takeaways from one paper.
 translate-academic-text — Use when translating academic prose between English and Chinese.
 review-literature — Use when synthesizing findings across multiple papers into a literature review.
-sci-read-paper — Use when deeply analyzing one AI/ML paper beyond summary, including its research logic, datasets, training, model data flow, experiments, reproducibility, code, or scientific validity, especially in protein, small-molecule, or drug-discovery research.
+sci-read-paper — Use when deeply analyzing one AI/ML paper beyond summary, including its research logic, datasets, training, model data flow, experiments, reproducibility, code, or scientific validity, especially in protein, small-molecule, or drug-discovery research. Do not use for direct single-fact extraction.
 ```
 
 Ask only: `Which single skill, if any, applies? Return its name or none.` Do not expose `kind` or assertions.
@@ -839,11 +871,12 @@ Ask only: `Which single skill, if any, applies? Return its name or none.` Do not
 Expected across all five repetitions:
 
 - `trigger-deep-model-question` selects `sci-read-paper` five times;
-- each non-trigger selects its matching distractor five times and never selects `sci-read-paper`.
+- the quick-summary, translation, and literature-review controls select their matching distractors five times and never select `sci-read-paper`;
+- `nontrigger-simple-fact` may select any alternative or `none`, but never `sci-read-paper`.
 
 - [ ] **Step 3: Tighten only the metadata if selection fails**
 
-If a selection failure occurs, preserve the exact mistaken choice, change only the frontmatter description, and repeat five fresh samples for the failed case plus all three non-trigger controls. Do not summarize the workflow in the description.
+If a selection failure occurs, preserve the exact mistaken choice, change only the frontmatter description, and repeat five fresh samples for the failed case, the three prior non-trigger controls, and `trigger-deep-model-question`. Do not summarize the workflow in the description.
 
 - [ ] **Step 4: Record and commit trigger/partial evidence**
 
@@ -885,7 +918,7 @@ rg -n 'TBD|TODO|FIXME|PLACEHOLDER|待定' skills tests
 
 Expected:
 
-- seven unit tests pass;
+- nine unit tests pass;
 - `Skill is valid!`;
 - `git diff --check` emits no output;
 - `SKILL.md` body remains within the 500-word contract enforced by the unit test;

@@ -45,6 +45,18 @@ class SkillContractTests(unittest.TestCase):
         _frontmatter, body = read_frontmatter(SKILL_MD)
         self.assertLessEqual(len(body.split()), 500)
 
+    def test_skill_lists_supported_starting_inputs(self):
+        text = SKILL_MD.read_text(encoding="utf-8")
+        for starting_input in (
+            "PDF",
+            "title",
+            "DOI",
+            "arXiv",
+            "journal page",
+            "official repository",
+        ):
+            self.assertIn(starting_input, text)
+
     def test_references_are_direct_and_complete(self):
         text = SKILL_MD.read_text(encoding="utf-8")
         reference_dir = SKILL_DIR / "references"
@@ -87,6 +99,18 @@ class SkillContractTests(unittest.TestCase):
         for case in data["cases"]:
             self.assertTrue(case["prompt"].strip())
             self.assertTrue(case["assertions"])
+
+    def test_eval_nontrigger_coverage(self):
+        data = json.loads(EVALS_JSON.read_text(encoding="utf-8"))
+        self.assertEqual(
+            {case["id"] for case in data["cases"] if case["kind"] == "non-trigger"},
+            {
+                "nontrigger-quick-summary",
+                "nontrigger-translation",
+                "nontrigger-literature-review",
+                "nontrigger-simple-fact",
+            },
+        )
 
 
 if __name__ == "__main__":

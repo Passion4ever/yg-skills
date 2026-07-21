@@ -68,6 +68,14 @@
       "assertions": [
         "does not select sci-read-paper"
       ]
+    },
+    {
+      "id": "nontrigger-simple-fact",
+      "kind": "non-trigger",
+      "prompt": "这篇论文使用了哪个数据集？只告诉我数据集名称。",
+      "assertions": [
+        "does not select sci-read-paper"
+      ]
     }
   ]
 }

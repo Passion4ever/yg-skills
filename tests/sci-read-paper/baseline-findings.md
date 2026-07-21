@@ -211,3 +211,54 @@ Fresh prompt-only metadata selection results were:
 
 All 20 responses used the same exact four-skill catalog. No selection failed,
 so the `sci-read-paper` metadata did not change.
+
+## Post-audit boundary correction
+
+Run date: 2026-07-22. Final review identified two uncovered design boundaries:
+the six accepted starting forms were not explicit in `SKILL.md`, and direct
+single-fact extraction had neither a stored non-trigger fixture nor routing
+evidence. The new supported-input structural test failed before the workflow
+sentence changed because `PDF` was absent, then passed after the source resolver
+explicitly accepted a PDF/path, title, DOI, arXiv ID, journal page, or official
+repository.
+
+The first five fresh `nontrigger-simple-fact` metadata samples used the prior
+description and all selected `sci-read-paper` (**0/5 pass**). The prior exact
+description was:
+
+```text
+Use when deeply analyzing one AI/ML paper beyond summary, including its research logic, datasets, training, model data flow, experiments, reproducibility, code, or scientific validity, especially in protein, small-molecule, or drug-discovery research.
+```
+
+Following the metadata-only correction rule, one sentence was appended to the
+frontmatter description. The final exact description is:
+
+```text
+Use when deeply analyzing one AI/ML paper beyond summary, including its research logic, datasets, training, model data flow, experiments, reproducibility, code, or scientific validity, especially in protein, small-molecule, or drug-discovery research. Do not use for direct single-fact extraction.
+```
+
+Five fresh samples for the failed case plus all four existing boundary cases
+then produced:
+
+- `nontrigger-simple-fact`: `none` **5/5**;
+- `nontrigger-quick-summary`: `summarize-paper` **5/5**;
+- `nontrigger-translation`: `translate-academic-text` **5/5**;
+- `nontrigger-literature-review`: `review-literature` **5/5**;
+- `trigger-deep-model-question`: `sci-read-paper` **5/5**.
+
+Thus the post-fix simple-fact boundary passes **5/5**, all three earlier
+non-trigger controls remain **5/5**, and the positive deep-model trigger remains
+**5/5**. Each sample saw only its stored prompt, the exact four-skill catalog,
+and the exact routing question; no kind, assertion, expected choice, prior
+output, rubric, design, plan, or skill body was exposed.
+
+All 30 raw prompt/catalog/question/response transcripts are preserved at
+`/private/tmp/sci-read-paper-task5-fix.SValkA/`: five pre-fix records under
+`pre-fix/` and 25 fresh post-fix records under `post-fix/`. SHA-256 values are:
+
+- pre-fix `m21`–`m25`: `f0be8627c25f65b84e1889726e76fa17339f1c5161b89f8cb08f4c5b28b24776` each;
+- post-fix `m26`–`m30`: `808f63898feaaefa496847910973d48461363ffcaa050fac088fb6db677f7b13` each;
+- post-fix `m31`–`m35`: `82f1367ec88f891d596ae794471ab83c43461cce2094adbec4ab0e44b9c6fd6f` each;
+- post-fix `m36`–`m40`: `17fbf674c4acea5c1796bef569ab94a5f29d2a0443623035b32f55136c54645a` each;
+- post-fix `m41`–`m45`: `91a2847d39fe00ca854cc775e48909dde0745f42e23633dcbc40aeeb3613445d` each;
+- post-fix `m46`–`m50`: `5c2065a20ed7e1878e4d90b96d335408c5dc82810b6e1893994ec80304976117` each.
