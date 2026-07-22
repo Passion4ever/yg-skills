@@ -44,3 +44,48 @@ Total: **14/16**. Verdict: **GREEN** (at least 14/16 and no criterion is `0`).
 - Both use Chinese-first prose and delay equations, tensor shapes, and configuration until after conclusions and intuition.
 - Neither consistently starts data, training, and model explanation from one traceable sample: both introduce aggregate data or batch details first, and their sample walkthroughs are generic.
 - Both mark epistemic status explicitly, but repeated in-line evidence-label clusters make some main-report paragraphs heavier to read.
+
+## CProMG readability GREEN
+
+Run date: 2026-07-22. Evaluated skill base commit: `0709172`; the successful run also included the single Task 3 `SKILL.md` correction that bounds retrieval after conclusion-changing evidence is resolved and requires the six dossier files before optional corroboration. Raw dossier: `/tmp/sci-read-paper-task3-cpromg-final.R161D6/cpromg-controllable-protein-oriented-molecule-generation/`.
+
+| Readability criterion | Current output | New output | New evidence |
+|---|---|---|---|
+| Background orientation | 2/2: the task and entry gap are present, but the report opens with source inventory before field context. | 2/2: a compact navigation is followed by task, stakes, difficulty, mainstream routes, and the paper's gap. | `deep-reading.md` lines 5–15, especially “真实任务不是‘凭空发明药’” and the two-route framing. |
+| Three-minute map | 2/2: the one-page section covers the task, thought chain, flow, verdict, and proxy risk. | 2/2: the fixed map states the tension, causal design, minimal flow, experimental verdict, and largest credibility risk independently. | Lines 19–25 connect the two-route tension to dual graphs/property prefix, then bound the result as oracle-consistent control. |
+| Causal narrative | 2/2: prior limitations and design choices are connected, though partly as lists. | 2/2: each design choice follows a named limitation and ends in a bounded contribution. | Lines 29–41 trace localized 3D input → two semantic scales → one-way fusion → property prefix → three evidence classes. |
+| Concrete sample | 1/2: aggregate CrossDocked counts appear before a generic `*_pocket10.pdb` sample. | 2/2: the named 5I0B sample appears before aggregate counts and is followed through preprocessing, labels, batching, and training. | Lines 45–53 begin with the exact PAK4/5I0B pocket-ligand path and `[1,1,1]` condition before the 99k/1k/100 split. |
+| Progressive technical depth | 2/2: intuition precedes equations, but some sections quickly become configuration inventories. | 2/2: section conclusions and semantic flow consistently precede shapes, kNN values, interfaces, and code conflicts. | Lines 63–84 explain the model as a 3D-pocket-conditioned SMILES model and show the simple flow before the technical expansion at lines 86–96. |
+| Chinese-first prose | 2/2: Chinese carries the explanation with precise English terms retained. | 2/2: natural Chinese remains the default; English is limited to names, metrics, paths, and identifiers needed for exact mapping. | Lines 11–15 and 29–41 are Chinese-first; lines 47, 51, and 86–94 retain only precise technical mappings. |
+| Readable evidence | 1/2: dense clusters such as `[论文][代码][推断]` interrupt the main prose. | 2/2: paragraph-level `〔E…〕` references preserve traceability, while prose directly states missing, inferred, and conflicting status. | Lines 11, 19, 23, and 148–154 use light paragraph-end IDs; lines 7, 25, and 158–162 state epistemic boundaries in prose. |
+| Main/appendix separation | 1/2: optimizer details, a six-item risk inventory, and checkpoint mechanics remain in the main report. | 2/2: the main report keeps the complete research story and conclusion-changing conflicts, while exhaustive ledgers and matrices stay in appendices. | Lines 9–172 are self-contained; lines 59 and 142 point to appendices without copying them, while lines 150–156 retain only judgment-changing audit facts. |
+
+Calculated readability total: **13/16 → 16/16**. The new output is GREEN: at least 14/16, no criterion at `0`, and the independent reviewer found the primary report understandable without appendices.
+
+Scientific-depth totals remained non-regressive: **no-skill baseline 15/20; previous-skill output 20/20; readability-revision output 20/20**. The independent scientific reviewer found no critical zero, all five CProMG assertions present, and no fabricated evidence.
+
+### Before/after excerpts
+
+#### Opening and background
+
+**Current:** “已核对论文开放全文……官方代码仓库提交……” starts the report as a source audit, followed almost immediately by “给定一个已知蛋白口袋的双尺度三维表示……写出 SMILES” (`/tmp/sci-read-paper-green.uaO99b/cpromg-raw-created/deep-reading.md`, lines 5–13).
+
+**New:** “真实任务不是‘凭空发明药’，而是：给定一个已经定位的蛋白结合口袋，提出一批化学结构”，then explains why 3D interaction, discrete generation, and experimental validity are distinct before locating the two mainstream routes and CProMG's gap (`deep-reading.md`, lines 9–15).
+
+#### Model data flow
+
+**Current:** the model section moves directly from the flowchart into `48-NN`, `30-NN`, `RBF64`, `LPE8`, six graph-attention layers, and one-way fusion (`/tmp/sci-read-paper-green.uaO99b/cpromg-raw-created/deep-reading.md`, lines 91–127).
+
+**New:** “CProMG 不是三维分子生成器，而是一个‘3D pocket memory 条件下的 SMILES 语言模型’” establishes the semantic model first; the simple diagram follows, and only then do shapes, kNN/RBF/LPE details, fusion direction, and version conflicts appear (`deep-reading.md`, lines 61–96).
+
+#### Experiment and critical judgment
+
+**Current:** Table 1 begins with a metric table and then states “它支持” and “它不支持”; the later audit expands into a six-item inventory (`/tmp/sci-read-paper-green.uaO99b/cpromg-raw-created/deep-reading.md`, lines 152–166 and 212–219).
+
+**New:** each experiment is framed as a research question and ends with “作者想证明 / 当前证据 / 我们的判断”; the critique then separates proxy control, evaluation reproducibility, generalization, and chemical validity before stating what can and cannot be concluded (`deep-reading.md`, lines 98–140 and 144–164).
+
+### Remaining limitations
+
+- The 176-line primary report is substantially easier to navigate but still requires familiarity with SMILES, docking, graph attention, and common drug-discovery metrics; the precise English/code terms are necessary for paper-code mapping.
+- The upstream release still lacks the complete Table 1–3 generation, validity filtering, deduplication, docking, and statistical pipeline, baseline artifacts, raw per-sample outputs, and failure denominators.
+- The released split does not establish ligand-scaffold or temporal separation, and the paper provides no wet-lab binding, synthesis, efficacy, or safety validation; these limits cannot be repaired by report wording.

@@ -18,7 +18,7 @@ Reconstruct the authors' reasoning and implementation from evidence. The main re
 7. Audit internal validity, then verify only conclusion-critical scientific claims with first-party literature. For protein, small-molecule, or drug-discovery work, read [bio-chem-validity.md](references/bio-chem-validity.md).
 8. Write the dossier exactly as [output-contract.md](references/output-contract.md) defines.
 
-Run continuously. Continue with a `partial` dossier when non-critical artifacts are unavailable; never fill gaps by guessing.
+Run continuously. Bound retrieval to evidence that can change the paper's interpretation: once the paper, official code/configuration, dataset sources, and critical external checks are resolved or explicitly marked unavailable, write all six Markdown dossier files before pursuing optional corroboration. Continue with a `partial` dossier when non-critical artifacts are unavailable; never fill gaps by guessing.
 
 ## Communication
 
