@@ -1,64 +1,90 @@
 # AI/ML Reading Guide
 
+## Field Orientation
+
+Before discussing the paper, explain only the domain context needed later:
+
+1. What real scientific or engineering task is being solved?
+2. Why does it matter, and what makes it difficult?
+3. How do mainstream approaches usually frame it?
+4. Which precise limitation creates the opening for this paper?
+
+Distinguish field consensus from the authors' framing and from claims that still require verification. Do not turn this section into a broad literature review.
+
 ## Research Logic
 
 Build one causal chain:
 
 ```text
 task and stakes
-→ limitation of prior data, assumptions, representation, optimization, or evaluation
+→ prior approach
+→ decisive limitation
 → unresolved gap
 → author hypothesis
-→ design choice intended to test it
+→ design choice intended to address it
 → evidence
-→ bounded conclusion
+→ bounded contribution
 ```
 
-Separate a genuinely new capability from a new combination, new dataset construction, engineering improvement, or evaluation change. Test whether the proposed method addresses the stated gap rather than a nearby easier problem.
+Explain how each major design choice answers a named limitation. Separate a new capability from a new combination, dataset construction, engineering improvement, or evaluation change.
 
-## Data and Training
+## Concrete Sample First
 
-Recover and cross-check:
+Start data, training, and model explanations from one concrete sample. Follow its semantic identity before listing aggregate statistics:
 
-- dataset origin, version, license, inclusion/exclusion, labels, units, and sample counts;
-- sample construction, negatives or decoys, augmentation, deduplication, and preprocessing order;
-- train/validation/test split unit and strategy; group, identity, scaffold, temporal, and external separation;
-- leakage through duplicates, related entities, preprocessing fit, target knowledge, pretrained data, or test-guided selection;
-- objective terms, weighting, optimization, schedules, freezing, early stopping, seeds, precision, hardware, and checkpoint selection;
-- differences among paper prose, supplement, default config, training command, and released checkpoint.
+```text
+raw sample
+→ inclusion and label construction
+→ preprocessing and representation
+→ split membership and batch
+→ model path
+→ loss or decoding
+→ prediction, generated object, or metric
+```
 
-Do not infer an unreported value from a library default without labeling it `[推断]` and proving that the released version used that default.
+After the sample is clear, add dataset origin/version, counts, deduplication, augmentation, split unit, leakage checks, objectives, optimization, schedules, seeds, hardware, precision, and checkpoint selection. Put exhaustive configuration and secondary paper-code differences in `appendices/data-training.md`.
+
+Do not infer a library default without proving the released version used it and labeling the inference in the evidence ledger.
 
 ## Model Data Flow
 
-Start from one concrete sample. Track:
+Give one simplified Mermaid diagram when evidence supports explicit edges. Then record each main-path stage:
 
-| Stage | Record |
+| Question | Record |
 |---|---|
-| Input | semantic meaning, raw type, shape, and preprocessing |
-| Representation | tokenizer/featurizer, embedding, positional or geometric information |
-| Transformation | operation, input/output shape, parameters, and information gained or lost |
-| Interaction | attention, message passing, pairing, cross-view exchange, or conditioning |
-| Fusion | concatenation, sum, pooling, gating, or decoder context |
-| Output | prediction/generation target, decoding, calibration, and postprocessing |
-| Training signal | loss path and which modules receive gradients |
+| What is it now? | semantic object and raw/encoded type |
+| What is its shape? | tensor, sequence, graph, or batch shape |
+| What happens? | operation and information gained or lost |
+| Why is it needed? | connection to the author's hypothesis |
+| Where does it go? | next module, fusion, decoder, or output |
+| Can we verify it? | paper/code agreement, inference, missing detail, or conflict |
 
-Explain motivation before equations. Define symbols and shapes before manipulating them. When shapes are not reported, derive only those forced by code or equations and label them `[推断]`.
+Explain intuition before equations. Define symbols and connect them to real objects immediately. Keep the main report on the primary path; place exhaustive interfaces, shapes, and code anchors in `appendices/model-dataflow.md`.
 
 ## Code Audit
 
-Locate the actual data loader, split generator, model entry point, loss computation, training loop, evaluation command, and default configuration. Cite file paths and commit IDs. Distinguish executable paths from dead code, examples, or unused options.
+Locate the actual data loader, split generator, model entry point, loss computation, training loop, evaluation command, and default configuration. Cite paths and commits in the evidence ledger. Distinguish executable paths from dead code, examples, or unused options.
 
 ## Experiment Reasoning
 
-Classify each result as baseline, ablation, analysis, robustness/generalization, case study, or external validation. For each experiment record:
+Organize experiments by research question rather than paper table order. Group baseline, control, ablation, robustness/generalization, case study, and external validation evidence around the claim being tested.
 
-1. Question or claim under test.
-2. Changed and controlled variables.
-3. Data split and metric.
-4. Fairness of baselines and tuning.
-5. Result with uncertainty or statistical support.
-6. What the result supports.
-7. What it does not establish.
+For each core question explain:
 
-Check whether ablations isolate one factor, whether baseline implementations and compute budgets are comparable, whether multiple seeds or confidence intervals matter, and whether analysis plots are explanatory evidence or illustrations.
+```text
+what the authors want to prove
+→ changed and controlled variables
+→ data, split, metric, and result
+→ what the evidence supports
+→ what it does not establish
+```
+
+End a core experiment section with a compact judgment card:
+
+```text
+作者想证明：...
+当前证据：...
+我们的判断：...
+```
+
+Check baseline fairness, isolated ablations, uncertainty, seeds, confidence intervals, and whether analysis plots provide evidence or illustration. Store the exhaustive experiment inventory in `appendices/experiment-matrix.md`.

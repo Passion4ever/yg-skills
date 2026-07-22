@@ -10,7 +10,7 @@ Use sources in this order:
 4. First-party literature needed to test a conclusion-critical domain claim.
 5. Secondary sources only when first-party evidence is unavailable; label them as secondary.
 
-Record the URL or local path, version or commit when available, access date, and which claims each source supports. Search actively, but do not bypass authentication, payment, or access controls.
+Record URL or local path, version or commit, access date, and supported claims. Search actively, but do not bypass authentication, payment, or access controls.
 
 ## Evidence Labels
 
@@ -21,31 +21,42 @@ Record the URL or local path, version or commit when available, access date, and
 - `[缺失]`: the available sources do not report it.
 - `[冲突]`: paper, supplement, code, dataset, or versions disagree.
 
-Attach a label to every conclusion-changing statement. Nearby sentences may share one label only when their source and epistemic status are identical.
+These labels define epistemic status and remain mandatory in the evidence ledger.
+
+## Evidence IDs in the Main Report
+
+Assign stable dossier-local IDs such as `E01`, `E02`, and `E03`. Cite a natural paragraph with compact forms such as `〔E03〕` or `〔E12–E15〕`; do not append clusters of source labels to every sentence.
+
+Each ID maps to one ledger row containing label, source, version/commit, locator, supported statement, and access status. Reuse an ID only for the statement it actually supports.
+
+Lightweight IDs never hide inference, missing information, or conflict. When epistemic status changes the interpretation, write it directly in Chinese: “论文报告……”, “公开代码实际执行……”, “我们据此推断……”, or “当前材料无法确定……”.
 
 ## Conflict Rules
 
-- Report paper-code conflicts without choosing the more convenient version or inventing author intent.
+- Report paper-code conflicts without choosing the convenient version or inventing author intent.
 - Code-only behavior can explain implementation; it is not automatically a claimed contribution.
 - Paper-only behavior absent from released code is a reproducibility limitation.
-- For version conflicts, identify the versions and determine whether the difference changes a conclusion. Pause only when the choice changes the analysis materially.
+- Identify conflicting versions and whether the difference changes a conclusion. Pause only when the choice changes the analysis materially.
+- Put conclusion-changing conflicts in `deep-reading.md`; move secondary implementation differences to the relevant appendix.
 
 ## Calibration
 
-Rewrite author language into evidence-calibrated language when needed:
+Rewrite author language when the design does not support it:
 
-- `demonstrates` requires a design that excludes credible alternatives.
-- `improves` requires a fair comparison under matched data, tuning, and evaluation.
-- `generalizes` requires an appropriate distribution, family, scaffold, temporal, or external test.
+- `demonstrates` requires credible alternatives to be excluded.
+- `improves` requires matched data, tuning, and evaluation.
+- `generalizes` requires an appropriate family, scaffold, temporal, distribution, or external test.
 - `novel` requires a declared comparison scope and defensible similarity criterion.
 
-Missing splits, hyperparameters, seeds, preprocessing, or training stages remain `[缺失]`; never reconstruct them from convention alone.
+Never reconstruct missing splits, hyperparameters, seeds, preprocessing, or training stages from convention.
 
 ## Completion Status
 
-Use `complete` only when the paper, essential supplement, and conclusion-changing implementation evidence were accessible and the required audits were performed. Otherwise use `partial` and list:
+Use `complete` only when the paper, essential supplement, and conclusion-changing implementation evidence were accessible and the required audits were performed. Otherwise use `partial` and state once in the reading guide:
 
 - unavailable artifacts;
-- affected sections;
-- conclusions whose confidence is reduced;
-- the smallest action that would resolve each gap.
+- affected conclusions;
+- confidence reduction;
+- the smallest resolving action.
+
+Repeat a gap later only when it changes the current judgment.
