@@ -11,6 +11,7 @@ SKILL_DIR = ROOT / "skills" / "sci-read-paper"
 SKILL_MD = SKILL_DIR / "SKILL.md"
 OPENAI_YAML = SKILL_DIR / "agents" / "openai.yaml"
 EVALS_JSON = ROOT / "tests" / "sci-read-paper" / "evals.json"
+READABILITY_RUBRIC = ROOT / "tests" / "sci-read-paper" / "readability-rubric.md"
 EXPECTED_REFERENCES = {
     "evidence-policy.md",
     "ai-ml-reading-guide.md",
@@ -82,6 +83,58 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("appendices/experiment-matrix.md", contract)
         self.assertIn("appendices/critical-review.md", contract)
         self.assertIn("sci-ai-figure", contract)
+
+    def test_readability_rubric_contract(self):
+        text = READABILITY_RUBRIC.read_text(encoding="utf-8")
+        for criterion in (
+            "Background orientation",
+            "Three-minute map",
+            "Causal narrative",
+            "Concrete sample",
+            "Progressive technical depth",
+            "Chinese-first prose",
+            "Readable evidence",
+            "Main/appendix separation",
+        ):
+            self.assertIn(f"| {criterion} |", text)
+        self.assertIn("at least 14/16", text)
+        self.assertIn("scientific-depth score", text)
+
+    def test_output_contract_has_guided_reading_layers(self):
+        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
+        for heading in (
+            "## 阅读导航",
+            "## 1. 先把论文放回领域里",
+            "## 2. 三分钟看懂这篇论文",
+            "## 3. 作者是怎样一步步想到这个方法的",
+            "## 4. 数据与训练：跟踪一条样本",
+            "## 5. 模型：数据怎样一步步变成输出",
+            "## 6. 实验：每项实验究竟回答什么问题",
+            "## 7. 批判性审查：哪些结论可以相信",
+            "## 8. 最终带走什么",
+        ):
+            self.assertIn(heading, contract)
+
+    def test_skill_enforces_chinese_first_progressive_reading(self):
+        text = SKILL_MD.read_text(encoding="utf-8")
+        for phrase in (
+            "Chinese-first",
+            "conclusion → intuition → technical detail → meaning",
+            "3–5 sentences",
+            "15–20 minutes",
+        ):
+            self.assertIn(phrase, text)
+
+    def test_evidence_policy_supports_lightweight_ids(self):
+        policy = (SKILL_DIR / "references" / "evidence-policy.md").read_text(encoding="utf-8")
+        self.assertIn("Evidence IDs", policy)
+        self.assertIn("〔E12–E15〕", policy)
+        self.assertIn("never hide inference, missing information, or conflict", policy)
+
+    def test_ai_ml_guide_is_sample_and_question_driven(self):
+        guide = (SKILL_DIR / "references" / "ai-ml-reading-guide.md").read_text(encoding="utf-8")
+        self.assertIn("Start data, training, and model explanations from one concrete sample.", guide)
+        self.assertIn("Organize experiments by research question rather than paper table order.", guide)
 
     def test_eval_schema_and_case_coverage(self):
         data = json.loads(EVALS_JSON.read_text(encoding="utf-8"))
