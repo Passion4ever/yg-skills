@@ -175,6 +175,36 @@ class SkillContractTests(unittest.TestCase):
         ):
             self.assertIn(heading, contract)
 
+    def test_output_contract_separates_interpretation_and_critique(self):
+        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "理解作者（Sections 1–6） → 集中审查作者（Section 7） → 形成自己的结论（Section 8）",
+            contract,
+        )
+        self.assertIn("这一差异对结论的影响在第 7 节集中评估", contract)
+
+        experiment = re.search(
+            r"Organize experiments by question.*?```text\n(.*?)\n```",
+            contract,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(experiment)
+        for field in ("作者要回答", "实验怎么做", "观察到什么", "证据边界"):
+            self.assertIn(field, experiment.group(1))
+        self.assertNotIn("我们的判断", experiment.group(1))
+
+        for field in (
+            "审查议题",
+            "作者主张",
+            "支持证据",
+            "反证或替代解释",
+            "对中心结论的影响",
+            "最小解决实验",
+        ):
+            self.assertIn(field, contract)
+        self.assertIn("方法上值得带走什么", contract)
+        self.assertIn("最终可以相信到哪里", contract)
+
     def test_skill_enforces_chinese_first_progressive_reading(self):
         text = SKILL_MD.read_text(encoding="utf-8")
         for phrase in (
