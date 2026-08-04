@@ -29,7 +29,7 @@ In `standard` mode, resolve conclusion-changing evidence, then write `deep-readi
 
 ## Final Gates
 
-- Background makes the paper's problem understandable without becoming a broad review.
+- Background states the literal input and prediction target, separating it from sampling/annotation proxies and biological mechanism.
 - The three-minute map gives the task, thought chain, minimal flow, reported outcome, and one review preview.
 - Data and model explanations follow a concrete sample; module inventories do not pass.
 - Section 6 states experiment questions, controls, results, and neutral boundaries; Section 7 judges them.

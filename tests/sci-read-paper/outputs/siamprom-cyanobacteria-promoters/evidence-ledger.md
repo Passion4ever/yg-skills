@@ -4,7 +4,7 @@
 
 | evidence ID | 标签 | 来源 | 版本/commit | locator | supported statement | access status |
 |---|---|---|---|---|---|---|
-| E01 | [论文] | Yang et al., *Briefings in Bioinformatics* | 25(3), bbae193, DOI 10.1093/bib/bbae193 | [OUP article](https://academic.oup.com/bib/article/25/3/bbae193/7663433)，title/abstract/article history | 论文身份、作者、正式发表日期与核心自述贡献。 | 可访问；正式全文与 PDF 已获取 |
+| E01 | [论文] | Yang et al., *Briefings in Bioinformatics* | 25(3), bbae193, DOI 10.1093/bib/bbae193 | [OUP article](https://academic.oup.com/bib/article/25/3/bbae193/7663433)，title/abstract/model architecture | 论文身份、核心贡献及 predictor 的直接目标：区分输入序列是 promoter 还是 non-promoter。 | 可访问；正式全文与 PDF 已获取 |
 | E02 | [论文] | 主文 | 正式发表版 | Materials and Methods, “Promoter collection”; PDF p.2 | 论文称从文献 [20] 收集 13,705 条 experimentally validated promoter，截取 −60…+20，经 CD-HIT-EST 0.8 得到 12,566 条。 | 可访问 |
 | E03 | [论文] | 补充材料 | `supplementary_information_bbae193.docx` | “Sampling of pseudo-promoters” | 34 条所谓 IND 实际从 PCC 7120 CDS 中按 `WAWWWTNNNNNYR` 搜索并截取，负标签依据是不在实验 promoter 集合。 | 可访问；原始核查材料已保存 |
 | E04 | [论文] | 主文 | 正式发表版 | “Non-promoter construction”, Figure 1 | phantom 声称固定 −12…−7 Pribnow box 与 −1…0 TSS，余段分 10 份、随机化 7 份，并将 GC 差约束为 <5%。 | 可访问 |

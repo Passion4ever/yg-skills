@@ -7,6 +7,7 @@
       "kind": "positive",
       "prompt": "请帮我精读论文 Recognition of cyanobacteria promoters via Siamese network-based contrastive learning under novel non-promoter generation（DOI: 10.1093/bib/bbae193）。我想真正理解作者为什么这样设计，而不是只看摘要。",
       "assertions": [
+        "defines the prediction target as promoter/non-promoter sequence classification and separately explains TSS-aligned positive-sample construction",
         "identifies negative-sample construction as a central methodological problem",
         "traces promoter, non-promoter, contrastive-pair, and classifier-label construction",
         "explains the relationship between representation learning and the final predictor",

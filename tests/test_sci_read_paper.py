@@ -238,6 +238,22 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("Start data, training, and model explanations from one concrete sample.", guide)
         self.assertIn("Organize experiments by research question rather than paper table order.", guide)
 
+    def test_task_definition_separates_target_from_sampling_proxy(self):
+        guide = (SKILL_DIR / "references" / "ai-ml-reading-guide.md").read_text(encoding="utf-8")
+        for concept in (
+            "prediction target",
+            "sampling or annotation proxy",
+            "biological mechanism",
+        ):
+            self.assertIn(concept, guide)
+
+        data = json.loads(EVALS_JSON.read_text(encoding="utf-8"))
+        siamprom = next(case for case in data["cases"] if case["id"] == "siamprom-deep-read")
+        self.assertIn(
+            "defines the prediction target as promoter/non-promoter sequence classification and separately explains TSS-aligned positive-sample construction",
+            siamprom["assertions"],
+        )
+
     def test_eval_schema_and_case_coverage(self):
         data = json.loads(EVALS_JSON.read_text(encoding="utf-8"))
         self.assertEqual(data["skill"], "sci-read-paper")

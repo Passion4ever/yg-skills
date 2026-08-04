@@ -58,7 +58,7 @@ Keep it compact. Record `mode: standard|audit`, `complete|partial`, recommended 
 
 ### `1. 先把论文放回领域里`
 
-In roughly 600–1000 Chinese characters, explain the real task, significance, difficulty, mainstream framing, and the paper's precise entry gap. Separate field consensus from author framing and include only concepts used later.
+In roughly 600–1000 Chinese characters, begin with the literal model input and prediction target, then explain significance, difficulty, mainstream framing, and the paper's precise entry gap. Keep the predicted object or label separate from dataset sampling/annotation proxies and the underlying biological mechanism. Separate field consensus from author framing and include only concepts used later.
 
 ### `2. 三分钟看懂这篇论文`
 

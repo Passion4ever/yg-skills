@@ -13,9 +13,11 @@
 
 ## 1. 先把论文放回领域里
 
-蓝藻启动子识别要解决的问题是：给定一段基因组 DNA，判断它附近是否存在转录起始位点（transcription start site, TSS），即 RNA 聚合酶是否可能从这里开始转录。可靠的启动子地图可以帮助研究者理解基因调控，也可用于合成生物学中的启动子选择和改造。本文把每个候选位点表示为一条以 TSS 对齐、从上游 −60 延伸到下游 +20 的 81 bp 序列，并将任务建模为 promoter/non-promoter 二分类。〔E02〕
+本文的机器学习任务是：输入一条 81 bp DNA 序列，输出 promoter 或 non-promoter 标签。启动子是转录起始时被 RNA 聚合酶及相关因子识别和结合的 DNA 区域；转录起始位点（transcription start site, TSS）则是 RNA 转录开始的具体碱基坐标，通常记作 +1。二者相关但不是同一个概念：本文用候选 TSS 作为坐标锚点截取 −60…+20 的窗口来构造正样本，但模型并不负责寻找 TSS，也不直接测量转录是否发生。〔E01–E02〕
 
-这类任务最棘手的地方不是缺少正例模式，而是缺少定义清楚的负例。被实验观察到的 TSS 可以提供正样本，但“某段序列没有启动功能”通常不能通过一次实验完整证明：它可能只是在特定条件下没有被检测到，也可能存在尚未注释的替代 TSS。因此，研究通常使用随机序列、编码区（coding sequence, CDS）片段或人工修改的正例作为代理负样本。模型最终学到什么，会直接受到这些代理负样本怎样生成的影响。〔E03–E04〕
+可靠识别一段 DNA 是否具有启动子特征，可以辅助基因调控研究和合成生物学设计。这里还要区分“数据标签”和“生物学事实”：论文把候选 TSS 周围的窗口标作 promoter 正例，这是训练数据的构造方式；一条序列在实验条件下是否真正具有启动活性，则是更强的功能性问题。后文会先按论文的二分类任务解释模型，再在第 7 节审查标签证据能够支持到哪里。〔E02、E21〕
+
+这类任务最棘手的地方不是缺少正例模式，而是缺少定义清楚的负例。候选 TSS 对齐窗口可被论文用作正样本，但“某段序列是 non-promoter”通常不能通过一次未观察到转录的实验完整证明：它可能只是在特定条件下没有被检测到，也可能含有尚未注释的替代启动子。因此，研究通常使用随机序列、编码区（coding sequence, CDS）片段或人工修改的正例作为代理负样本。模型最终学到什么，会直接受到这些代理负样本怎样生成的影响。〔E03–E04〕
 
 如果负样本与正样本差得太明显，模型就可能找到并不对应真实部署任务的简单判别规则。例如，随机序列可能没有细菌启动子常见的 −10 Pribnow box，CDS 片段的 GC 分布也可能与 TSS 邻域不同。此时即使一个简单分类器得到很高分，也只能说明两套人工数据容易区分，不能自动说明它能在真实基因组中排除那些“外观像启动子、实际功能未知”的困难片段。作者据此把论文的切入口放在负样本构造，而不是先扩大模型。〔E04、E13〕
 
@@ -25,7 +27,7 @@
 
 ## 2. 三分钟看懂这篇论文
 
-论文表面上在做 81 bp DNA 序列二分类，真正想回答的是：如果过去的高分主要来自过于简单的负样本，那么能否先制造更像启动子的困难负例，再用对比学习逼迫模型寻找更细的差异？作者从 Anabaena/Nostoc sp. PCC 7120 的候选 TSS 邻域得到 13,705 条序列，经 80% CD-HIT-EST 去冗余后保留 12,566 条正例；随后分别构造 random、CDS、partial substitution 和 phantom 四套负例。论文描述的 phantom 负例保留 −10 区与 TSS，对其余片段中的 7/10 进行随机化，并将 GC 差控制在 5% 以内。〔E02、E04–E07〕
+论文直接做的是 81 bp DNA 序列的 promoter/non-promoter 二分类。它进一步想回答：如果过去的高分主要来自过于简单的负样本，那么能否先制造更像启动子的困难负例，再用对比学习逼迫模型寻找更细的差异？作者以 Anabaena/Nostoc sp. PCC 7120 的候选 TSS 为锚点截取 13,705 个窗口，经 80% CD-HIT-EST 去冗余后将 12,566 条序列作为正例；随后分别构造 random、CDS、partial substitution 和 phantom 四套负例。论文描述的 phantom 负例保留 −10 区与 TSS，对其余片段中的 7/10 进行随机化，并将 GC 差控制在 5% 以内。〔E02、E04–E07〕
 
 模型把每条 81 nt 序列切成 79 个重叠 3-mer。每个 token 变成 1024 维向量后，同时进入 self-attention、双向 LSTM 和 1D-CNN 三条路径，分别汇总全局 token 关系、双向顺序上下文和局部邻域模式；三路结果经均值池化后拼接，再压缩为 128 维序列表征。训练时，两条序列共用同一编码器：contrastive loss 决定表征空间中谁应该靠近、谁应该至少相隔 margin；分类头则把单条序列的 128 维表征映射成 promoter/non-promoter logits。〔E09–E12〕
 
@@ -63,7 +65,7 @@
 
 ## 4. 数据与训练：跟踪一条样本
 
-### 4.1 从一个候选 TSS 到一条 81 bp 正例
+### 4.1 怎样以候选 TSS 为锚点构造一条 81 bp 正例
 
 以仓库第一条正例为锚点：
 
@@ -72,7 +74,7 @@
 TGATGATTTTGGATTTAGGGCTTCCTGGTAAAGATGGCTTGGATGTGTTAGAAGAATTACGGGGACAAGGGGAAAATATCC
 ```
 
-这条序列以一个候选 TSS 为坐标 0，保留上游 60 nt 和下游 20 nt，因此总长 81 nt。论文称 13,705 条序列来自参考文献 [20]；外部来源核查显示，这一数量对应 Mitschke 等 2011 年用 dRNA-seq 构建的 candidate TSS 图谱，而论文参考文献 [20] 本身是 2001 年完整基因组测序。dRNA-seq 为这些位点提供高通量实验支持，随后只有部分区域接受 primer extension 或 Northern blot 验证。作者再以 CD-HIT-EST `c=0.8` 去冗余，得到 12,566 条正例。〔E02、E21〕
+这条序列被标为 promoter 正例，是因为作者以一个 candidate TSS 为坐标锚点，保留上游 60 nt 和下游 20 nt，得到总长 81 nt 的窗口。论文称 13,705 条序列来自参考文献 [20]；外部来源核查显示，这一数量对应 Mitschke 等 2011 年用 dRNA-seq 构建的 candidate TSS 图谱，而论文参考文献 [20] 本身是 2001 年完整基因组测序。dRNA-seq 为这些 TSS 候选提供高通量实验支持，随后只有部分区域接受 primer extension 或 Northern blot 验证。作者再以 CD-HIT-EST `c=0.8` 去冗余，将 12,566 个 TSS 对齐窗口作为正例。〔E02、E21〕
 
 ### 4.2 从同一模板得到 phantom 负例
 
@@ -303,7 +305,7 @@ L_con = (1-y)·D² + y·max(0, m-D)²,  m=2
 
 - **用途与读者：** 帮助第一次阅读论文的 AI/ML 与生物信息学研究者同时看清作者方法链和后续审查点。
 - **图型：** 从左到右的数据流图，上半部分画作者方法，下半部分以独立的“证据边界”轨道标注核查事实。
-- **核心实体与关系：** candidate TSS → 81 bp positive → phantom generation → 3-mer encoder → three branches → 128-d contrastive space → classifier；证据边界分别连接 phantom TSS/GC、90/10 vs 10-fold、HIP1 imbalance。
+- **核心实体与关系：** candidate TSS（采样锚点）→ 81 bp positive window（分类输入）→ phantom generation → 3-mer encoder → three branches → 128-d contrastive space → promoter/non-promoter classifier；证据边界分别连接 phantom TSS/GC、90/10 vs 10-fold、HIP1 imbalance。
 - **证据来源：** 方法结构使用 E02、E04、E09–E12；边界使用 E05、E08、E18–E20。
 - **视觉层级：** 作者流程使用单一冷色；证据边界使用中性琥珀色；第 7 节裁决不混入流程图。
 - **不得虚构：** 不画 RNA polymerase 与 HIP1 的结合，不把 pseudo-promoter 画成实验确认的功能阴性，不补造未公开张量或实验流程。

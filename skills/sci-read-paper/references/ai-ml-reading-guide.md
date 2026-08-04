@@ -9,6 +9,8 @@ Before discussing the paper, explain only the domain context needed later:
 3. How do mainstream approaches usually frame it?
 4. Which precise limitation creates the opening for this paper?
 
+State the literal model input and prediction target before explaining the broader science. Keep the prediction target separate from any sampling or annotation proxy and from the biological mechanism. For example, promoter/non-promoter sequence classification is the target; a TSS-aligned window may be how a positive sample is collected; transcription initiation is the underlying biological process. Do not redefine one as another.
+
 Distinguish field consensus from the authors' framing and from claims that still require verification. Do not turn this section into a broad literature review.
 
 ## Research Logic
