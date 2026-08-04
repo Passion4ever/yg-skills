@@ -66,23 +66,23 @@ In roughly 900 Chinese characters, give the task, central tension, thought chain
 
 ### Guided deep-reading sections
 
-Develop every core section as:
+Develop Sections 1–6 as:
 
 ```text
-本节结论
-→ 直观解释
+本节要理解什么
+→ 作者为什么这样设计
 → 必要的技术展开
-→ 这对论文结论意味着什么
+→ 这一部分在作者论证中的作用
 ```
 
-Keep one main judgment per paragraph and usually 3–5 sentences. Use Chinese-first prose. Retain English only for precise names, metrics, code mapping, identifiers, and author-defined modules.
+Keep one explanatory purpose per paragraph and usually 3–5 sentences. Use Chinese-first prose. Retain English only for precise names, metrics, code mapping, identifiers, and author-defined modules.
 
 Keep one concrete sample identifiable across data construction, training, model flow, and output. Include one simplified Mermaid data-flow diagram when supported; mark inferred edges or shapes in prose.
 
-Sections 1–6 explain the authors' problem, choices, implementation, and observations. When a conclusion-changing paper-code difference appears, use a compact neutral handoff:
+Sections 1–6 explain the authors' problem, choices, implementation, and observations. When any conclusion-changing fact appears—including a paper-code/data conflict, missing material, external correction, or direct logical fact—use a compact neutral handoff. For a conflict, state both the paper's report and what released evidence shows.
 
 ```text
-证据边界：论文报告……；公开代码/数据实际显示……。这一差异对结论的影响在第 7 节集中评估。〔E…〕
+证据边界：相关材料显示……。这是理解论文必须知道的事实；其对结论的影响在第 7 节集中评估。〔E…〕
 ```
 
 The boundary states facts. Severity ranking, alternative explanations, claim downgrades, and final verdicts belong in Section 7.

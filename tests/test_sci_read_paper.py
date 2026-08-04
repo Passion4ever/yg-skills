@@ -181,7 +181,19 @@ class SkillContractTests(unittest.TestCase):
             "理解作者（Sections 1–6） → 集中审查作者（Section 7） → 形成自己的结论（Section 8）",
             contract,
         )
-        self.assertIn("这一差异对结论的影响在第 7 节集中评估", contract)
+        self.assertIn("any conclusion-changing fact", contract)
+        for boundary_type in ("missing material", "external correction", "direct logical fact"):
+            self.assertIn(boundary_type, contract)
+        self.assertIn("其对结论的影响在第 7 节集中评估", contract)
+        for descriptive_step in (
+            "本节要理解什么",
+            "作者为什么这样设计",
+            "必要的技术展开",
+            "这一部分在作者论证中的作用",
+        ):
+            self.assertIn(descriptive_step, contract)
+        self.assertNotIn("本节结论", contract)
+        self.assertNotIn("one main judgment", contract)
 
         experiment = re.search(
             r"Organize experiments by question.*?```text\n(.*?)\n```",
@@ -209,7 +221,7 @@ class SkillContractTests(unittest.TestCase):
         text = SKILL_MD.read_text(encoding="utf-8")
         for phrase in (
             "Chinese-first",
-            "conclusion → intuition → technical detail → meaning",
+            "question → author rationale → technical detail → role in the argument",
             "3–5 sentences",
             "15–20 minutes",
         ):

@@ -22,9 +22,9 @@ In `standard` mode, resolve conclusion-changing evidence, then write `deep-readi
 ## Communication
 
 - Use Chinese-first prose. At first use, give Chinese with the English term only when it helps paper/code mapping; then prefer Chinese. Preserve proper names, metrics, code identifiers, file paths, and author-defined modules.
-- Develop each core section as conclusion → intuition → technical detail → meaning. Start from a concrete object before aggregate inventories.
-- Follow understand authors (1–6) → review (7) → synthesize (8); use neutral early conflict handoffs.
-- Keep a paragraph to one main judgment and usually 3–5 sentences. Aim for a 15–20 minutes main-report reading path, independent of audit depth.
+- Develop Sections 1–6 as question → author rationale → technical detail → role in the argument. Start from a concrete object before aggregate inventories.
+- Follow understand authors (1–6) → review (7) → synthesize (8); use neutral early fact handoffs.
+- Keep a paragraph to one explanatory purpose and usually 3–5 sentences. Aim for a 15–20 minutes main-report reading path, independent of audit depth.
 - Cite paragraphs with lightweight evidence IDs. Explicitly say when the paper reports, code implements, evidence conflicts, information is missing, or the analysis infers.
 
 ## Final Gates

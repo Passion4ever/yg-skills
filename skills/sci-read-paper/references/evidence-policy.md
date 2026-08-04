@@ -44,8 +44,8 @@ Lightweight IDs never hide inference, missing information, or conflict. When epi
 - Paper-only behavior absent from released code is a reproducibility limitation.
 - Identify conflicting versions and whether the difference changes a conclusion. Pause only when the choice changes the analysis materially.
 - Put conclusion-changing conflicts in `deep-reading.md`; move secondary implementation differences to the relevant appendix.
-- Before Section 7, present a conclusion-changing conflict as a neutral factual boundary: what the paper reports, what released evidence shows, and that its impact is assessed in Section 7. Do not hide the conflict or develop severity, alternatives, and verdicts early.
-- In Section 7, rank the conflict's impact, test alternative explanations, and state how the supported conclusion changes.
+- Before Section 7, present any conclusion-changing fact—a conflict, missing material, external correction, or direct logical fact—as a neutral factual boundary. State the fact needed for understanding, and defer severity, alternatives, and claim impact to Section 7. For a conflict, state both what the paper reports and what released evidence shows. Never hide a critical fact merely to preserve narrative separation.
+- In Section 7, rank its impact, test alternative explanations, and state how the supported conclusion changes.
 
 ## Calibration
 
