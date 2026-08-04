@@ -1,6 +1,7 @@
 import json
 import re
 import unittest
+from html.parser import HTMLParser
 from pathlib import Path
 
 import yaml
@@ -12,12 +13,47 @@ SKILL_MD = SKILL_DIR / "SKILL.md"
 OPENAI_YAML = SKILL_DIR / "agents" / "openai.yaml"
 EVALS_JSON = ROOT / "tests" / "sci-read-paper" / "evals.json"
 READABILITY_RUBRIC = ROOT / "tests" / "sci-read-paper" / "readability-rubric.md"
+HTML_TEMPLATE = SKILL_DIR / "assets" / "report-template.html"
+SIAMPROM_HTML = (
+    ROOT / "tests" / "sci-read-paper" / "outputs" / "siamprom-cyanobacteria-promoters.html"
+)
+EXPECTED_SECTION_TITLES = [
+    "为什么要做这项研究：背景、现状与本文切入点",
+    "三分钟建立论文全局地图",
+    "从问题到方法：作者为什么这样设计",
+    "数据从哪里来，又怎样进入训练",
+    "模型内部：数据怎样一步步变成输出",
+    "实验逻辑：每项实验在回答什么问题",
+    "批判性审查：证据究竟支持到哪里",
+    "读完这篇论文，真正应该带走什么",
+]
 EXPECTED_REFERENCES = {
     "evidence-policy.md",
     "ai-ml-reading-guide.md",
     "bio-chem-validity.md",
     "output-contract.md",
 }
+
+
+class DocumentIndex(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.ids: list[str] = []
+        self.internal_targets: list[str] = []
+        self.section_ids: list[str] = []
+        self.classes: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]):
+        attributes = dict(attrs)
+        element_id = attributes.get("id")
+        if element_id:
+            self.ids.append(element_id)
+            if tag == "section" and re.fullmatch(r"section-[1-8]", element_id):
+                self.section_ids.append(element_id)
+        href = attributes.get("href")
+        if tag == "a" and href and href.startswith("#"):
+            self.internal_targets.append(href[1:])
+        self.classes.extend((attributes.get("class") or "").split())
 
 
 def read_frontmatter(path: Path) -> tuple[dict, str]:
@@ -76,57 +112,33 @@ class SkillContractTests(unittest.TestCase):
 
     def test_output_contract_has_one_primary_report(self):
         contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
-        self.assertIn("deep-reading.md", contract)
-        self.assertIn("evidence-ledger.md", contract)
-        self.assertIn("appendices/data-training.md", contract)
-        self.assertIn("appendices/model-dataflow.md", contract)
-        self.assertIn("appendices/experiment-matrix.md", contract)
-        self.assertIn("appendices/critical-review.md", contract)
+        self.assertIn("<paper-slug>.html", contract)
+        self.assertIn("<paper-slug>-audit.html", contract)
+        self.assertIn("embedded evidence ledger", contract)
+        self.assertIn("audit panels", contract)
         self.assertIn("sci-ai-figure", contract)
 
-    def test_standard_mode_has_two_required_outputs(self):
+    def test_standard_mode_has_one_html_output(self):
         contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
         standard = contract.split("## Standard Mode — Default", 1)[1].split(
             "## Audit Mode — Explicit", 1
         )[0]
         tree = re.search(r"```text\n(.*?)\n```", standard, re.DOTALL)
         self.assertIsNotNone(tree)
-        markdown_paths = re.findall(r"[\w/-]+\.md", tree.group(1))
-        self.assertEqual(markdown_paths, ["deep-reading.md", "evidence-ledger.md"])
-        for appendix in (
-            "data-training.md",
-            "model-dataflow.md",
-            "experiment-matrix.md",
-            "critical-review.md",
-        ):
-            self.assertNotIn(appendix, tree.group(1))
-        self.assertIn("at most one targeted appendix", contract)
-        self.assertIn("does not require the four audit appendices", contract)
+        output_paths = [line.strip() for line in tree.group(1).splitlines() if line.strip()]
+        self.assertEqual(output_paths, ["<paper-slug>.html"])
+        self.assertNotIn("deep-reading.md", standard)
+        self.assertNotIn("evidence-ledger.md", standard)
 
-    def test_audit_mode_preserves_full_dossier(self):
+    def test_audit_mode_has_one_html_output(self):
         contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
         audit = contract.split("## Audit Mode — Explicit", 1)[1].split("## Primary Report", 1)[0]
         tree = re.search(r"```text\n(.*?)\n```", audit, re.DOTALL)
         self.assertIsNotNone(tree)
-        markdown_paths = re.findall(r"[\w/-]+\.md", tree.group(1))
-        self.assertEqual(
-            markdown_paths,
-            [
-                "deep-reading.md",
-                "evidence-ledger.md",
-                "data-training.md",
-                "model-dataflow.md",
-                "experiment-matrix.md",
-                "critical-review.md",
-            ],
-        )
-        for appendix in (
-            "appendices/data-training.md",
-            "appendices/model-dataflow.md",
-            "appendices/experiment-matrix.md",
-            "appendices/critical-review.md",
-        ):
-            self.assertIn(appendix, contract)
+        output_paths = [line.strip() for line in tree.group(1).splitlines() if line.strip()]
+        self.assertEqual(output_paths, ["<paper-slug>-audit.html"])
+        for panel in ("data-training", "model-dataflow", "experiment-matrix", "critical-review"):
+            self.assertIn(panel, audit)
 
     def test_standard_mode_bounds_research_scope(self):
         skill = SKILL_MD.read_text(encoding="utf-8")
@@ -162,18 +174,13 @@ class SkillContractTests(unittest.TestCase):
 
     def test_output_contract_has_guided_reading_layers(self):
         contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
-        for heading in (
-            "## 阅读导航",
-            "## 1. 先把论文放回领域里",
-            "## 2. 三分钟看懂这篇论文",
-            "## 3. 作者是怎样一步步想到这个方法的",
-            "## 4. 数据与训练：跟踪一条样本",
-            "## 5. 模型：数据怎样一步步变成输出",
-            "## 6. 实验：每项实验究竟回答什么问题",
-            "## 7. 批判性审查：哪些结论可以相信",
-            "## 8. 最终带走什么",
-        ):
-            self.assertIn(heading, contract)
+        positions = [contract.index(title) for title in EXPECTED_SECTION_TITLES]
+        self.assertEqual(positions, sorted(positions))
+        primary_structure = re.search(
+            r"## Primary Report.*?```html\n(.*?)\n```", contract, re.DOTALL
+        )
+        self.assertIsNotNone(primary_structure)
+        self.assertNotIn("阅读导航", primary_structure.group(1))
 
     def test_output_contract_separates_interpretation_and_critique(self):
         contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
@@ -253,6 +260,63 @@ class SkillContractTests(unittest.TestCase):
             "defines the prediction target as promoter/non-promoter sequence classification and separately explains TSS-aligned positive-sample construction",
             siamprom["assertions"],
         )
+
+    def test_report_template_is_self_contained_and_polished(self):
+        self.assertTrue(HTML_TEMPLATE.is_file(), "reusable HTML report template is missing")
+        text = HTML_TEMPLATE.read_text(encoding="utf-8")
+        for required in (
+            "<!doctype html>",
+            "<header",
+            "<nav",
+            "<main",
+            "<footer",
+            "--paper",
+            "position: sticky",
+            "@media (max-width: 900px)",
+            "@media print",
+            "prefers-reduced-motion",
+            "<details",
+            "<summary",
+            "evidence-boundary",
+            "experiment-card",
+            "review-card",
+        ):
+            self.assertIn(required, text)
+        for external_resource in (
+            '<link rel="stylesheet"',
+            "<script src=",
+            "@import",
+            '<img src="http',
+        ):
+            self.assertNotIn(external_resource, text)
+
+    def test_siamprom_showcase_has_complete_internal_links(self):
+        self.assertTrue(SIAMPROM_HTML.is_file(), "complete SiamProm HTML showcase is missing")
+        text = SIAMPROM_HTML.read_text(encoding="utf-8")
+        parser = DocumentIndex()
+        parser.feed(text)
+
+        self.assertEqual(parser.section_ids, [f"section-{i}" for i in range(1, 9)])
+        self.assertEqual(len(parser.ids), len(set(parser.ids)), "HTML IDs must be unique")
+        self.assertLessEqual(set(parser.internal_targets), set(parser.ids))
+        for required_id in ("evidence-ledger", "E01", "E24"):
+            self.assertIn(required_id, parser.ids)
+        for title in EXPECTED_SECTION_TITLES:
+            self.assertIn(title, text)
+        self.assertNotIn("<h2>阅读导航</h2>", text)
+
+    def test_siamprom_showcase_preserves_scientific_depth(self):
+        self.assertTrue(SIAMPROM_HTML.is_file(), "complete SiamProm HTML showcase is missing")
+        text = SIAMPROM_HTML.read_text(encoding="utf-8")
+        parser = DocumentIndex()
+        parser.feed(text)
+
+        self.assertIn("promoter 或 non-promoter", text)
+        self.assertIn("TSS 只是正样本的采样锚点", text)
+        for fact in ("HIP1", "10-fold", "90/10", "33 条", "AAA", "margin", "E24"):
+            self.assertIn(fact, text)
+        self.assertGreaterEqual(parser.classes.count("experiment-card"), 5)
+        self.assertGreaterEqual(parser.classes.count("review-card"), 6)
 
     def test_eval_schema_and_case_coverage(self):
         data = json.loads(EVALS_JSON.read_text(encoding="utf-8"))
