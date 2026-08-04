@@ -17,7 +17,7 @@ Help the reader understand one paper as a human expert: reconstruct reasoning an
 6. Audit internal validity and only conclusion-critical scientific claims. For protein, small-molecule, or drug-discovery work, read [bio-chem-validity.md](references/bio-chem-validity.md).
 7. Write the selected output exactly as [output-contract.md](references/output-contract.md) defines.
 
-In `standard` mode, resolve conclusion-changing evidence, then write `deep-reading.md` and `evidence-ledger.md` before optional corroboration. Add at most one targeted appendix only when a central conflict cannot be audited succinctly in those files. In `audit` mode, produce the complete six-file dossier. Continue with `partial` when non-critical artifacts are unavailable; never fill gaps by guessing.
+In `standard` mode, resolve conclusion-changing evidence, then write one self-contained `<paper-slug>.html`. In `audit` mode, write `<paper-slug>-audit.html` with embedded audit panels. Continue with `partial` when non-critical artifacts are unavailable; never fill gaps by guessing or leave working notes as deliverables.
 
 ## Communication
 
@@ -34,7 +34,7 @@ In `standard` mode, resolve conclusion-changing evidence, then write `deep-readi
 - Data and model explanations follow a concrete sample; module inventories do not pass.
 - Section 6 states experiment questions, controls, results, and neutral boundaries; Section 7 judges them.
 - Computational proxies never become experimental biological or chemical facts.
-- `deep-reading.md` contains the complete research story without copying evidence inventories.
+- The HTML contains the complete research story and embedded evidence ledger without duplicated inventories.
 - Mark `mode: standard|audit` and `complete|partial`; list unresolved gaps once and repeat them only where they change a judgment.
 
 Generate figure briefs only when a visual materially improves understanding. Do not invoke `sci-ai-figure` unless it is available and the user explicitly asks for a figure.

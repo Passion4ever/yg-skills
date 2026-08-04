@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>{{PAPER_TITLE}}</title>
+  <style>
+    :root {
+      --paper: #f7f4ed;
+      --paper-strong: #fffdf8;
+      --ink: #17232b;
+      --muted: #647178;
+      --line: #d9ddd8;
+      --accent: #155e75;
+      --accent-deep: #103f4c;
+      --accent-soft: #e5f1f2;
+      --warm: #9a5b13;
+      --warm-soft: #fff3dc;
+      --danger: #9f3d32;
+      --danger-soft: #faece8;
+      --success: #356649;
+      --success-soft: #eaf3ec;
+      --shadow: 0 18px 45px rgba(33, 47, 55, 0.08);
+      --radius-lg: 22px;
+      --radius-md: 14px;
+      --serif: ui-serif, "Songti SC", "STSong", "Noto Serif CJK SC", Georgia, serif;
+      --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      --mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 28px; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: var(--sans);
+      font-size: 17px;
+      line-height: 1.82;
+      text-rendering: optimizeLegibility;
+    }
+    body::before {
+      content: "";
+      display: block;
+      height: 7px;
+      background: var(--accent);
+    }
+    a { color: var(--accent); text-underline-offset: 0.18em; }
+    a:hover { color: var(--accent-deep); }
+    a:focus-visible, summary:focus-visible {
+      outline: 3px solid rgba(21, 94, 117, 0.32);
+      outline-offset: 4px;
+      border-radius: 4px;
+    }
+    code, pre, kbd { font-family: var(--mono); }
+    code {
+      padding: 0.12em 0.35em;
+      border: 1px solid #d7dedb;
+      border-radius: 5px;
+      background: #eef2ef;
+      font-size: 0.9em;
+    }
+    pre {
+      margin: 1.25rem 0;
+      padding: 1.1rem 1.25rem;
+      overflow-x: auto;
+      color: #e9f1f2;
+      background: #183039;
+      border-radius: var(--radius-md);
+      line-height: 1.55;
+    }
+    pre code { padding: 0; border: 0; color: inherit; background: transparent; }
+
+    .paper-hero {
+      padding: 64px max(24px, calc((100vw - 1240px) / 2)) 34px;
+      background: var(--paper-strong);
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+    .paper-title {
+      max-width: 1050px;
+      margin: 0;
+      font-family: var(--serif);
+      font-size: clamp(2.2rem, 4.7vw, 4.5rem);
+      font-weight: 760;
+      letter-spacing: -0.035em;
+      line-height: 1.08;
+    }
+    .paper-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px 16px;
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .status-badge, .evidence-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: fit-content;
+      padding: 4px 9px;
+      border: 1px solid #c9d7d7;
+      border-radius: 999px;
+      color: var(--accent-deep);
+      background: var(--accent-soft);
+      font-size: 0.78rem;
+      font-weight: 750;
+      line-height: 1.3;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 34px;
+    }
+    .summary-card {
+      min-height: 150px;
+      padding: 21px 22px;
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--accent);
+      border-radius: var(--radius-md);
+      background: #fff;
+      box-shadow: 0 8px 24px rgba(33, 47, 55, 0.045);
+    }
+    .summary-card.is-evidence { border-top-color: var(--warm); }
+    .summary-card.is-review { border-top-color: var(--danger); }
+    .summary-card h2 {
+      margin: 0 0 8px;
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .summary-card p { margin: 0; font-size: 0.95rem; line-height: 1.65; }
+    .report-info { max-width: 1050px; margin-top: 18px; }
+
+    .page-shell {
+      display: grid;
+      grid-template-columns: minmax(230px, 270px) minmax(0, 880px);
+      justify-content: center;
+      gap: clamp(34px, 5vw, 74px);
+      padding: 46px 24px 82px;
+    }
+    .toc {
+      position: sticky;
+      top: 24px;
+      align-self: start;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+      padding: 18px 16px 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(255, 253, 248, 0.94);
+      box-shadow: 0 10px 30px rgba(33, 47, 55, 0.05);
+    }
+    .toc-title {
+      margin: 0 8px 12px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .toc ol { margin: 0; padding: 0; list-style: none; }
+    .toc li + li { margin-top: 3px; }
+    .toc a {
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 7px;
+      padding: 9px 8px;
+      color: #405058;
+      border-radius: 9px;
+      text-decoration: none;
+      font-size: 0.86rem;
+      font-weight: 650;
+      line-height: 1.35;
+    }
+    .toc a:hover { color: var(--accent-deep); background: var(--accent-soft); }
+    .toc .num { color: var(--accent); font-family: var(--mono); font-size: 0.76rem; }
+    .toc .quick-link { margin-top: 13px; border-top: 1px solid var(--line); padding-top: 13px; }
+
+    main { min-width: 0; }
+    .report-section {
+      margin: 0 0 34px;
+      padding: clamp(25px, 4vw, 46px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--paper-strong);
+      box-shadow: var(--shadow);
+      scroll-margin-top: 24px;
+    }
+    .report-section:target { border-color: rgba(21, 94, 117, 0.55); }
+    .section-kicker {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+    }
+    .section-title {
+      margin: 0 0 28px;
+      font-family: var(--serif);
+      font-size: clamp(1.65rem, 3.2vw, 2.45rem);
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h3 {
+      margin: 2.1rem 0 0.8rem;
+      font-family: var(--serif);
+      font-size: 1.33rem;
+      line-height: 1.35;
+    }
+    h4 { margin: 1.65rem 0 0.65rem; font-size: 1.02rem; }
+    p { margin: 0 0 1.05rem; }
+    .lead {
+      color: #304149;
+      font-family: var(--serif);
+      font-size: 1.16rem;
+      line-height: 1.78;
+    }
+    .evidence-link {
+      white-space: nowrap;
+      color: var(--accent);
+      font-size: 0.78em;
+      font-weight: 800;
+      text-decoration: none;
+      vertical-align: 0.08em;
+    }
+    .evidence-link:hover { text-decoration: underline; }
+
+    .evidence-boundary, .experiment-card, .review-card, .takeaway-card {
+      margin: 1.3rem 0;
+      padding: 20px 22px;
+      border-radius: var(--radius-md);
+    }
+    .evidence-boundary {
+      border: 1px solid #e7c997;
+      border-left: 5px solid var(--warm);
+      background: var(--warm-soft);
+    }
+    .evidence-boundary strong:first-child { color: #70420e; }
+    .experiment-card { border: 1px solid #bdd5d9; background: #f1f8f8; }
+    .review-card { border: 1px solid #e4bbb4; background: #fff8f6; }
+    .review-card h4 { margin-top: 0; color: #7f2e27; }
+    .review-card dl, .experiment-card dl { margin: 0; }
+    .review-card dt, .experiment-card dt {
+      margin-top: 0.75rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .review-card dd, .experiment-card dd { margin: 0.15rem 0 0; }
+    .takeaway-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 13px;
+    }
+    .takeaway-card { margin: 0; border: 1px solid var(--line); background: #fff; }
+    .takeaway-card h3 { margin-top: 0; font-size: 1.08rem; }
+    .verdict-supported { border-top: 4px solid var(--success); }
+    .verdict-qualified { border-top: 4px solid var(--warm); }
+    .verdict-rejected { border-top: 4px solid var(--danger); }
+
+    .flow-wrap {
+      margin: 1.4rem 0;
+      padding: 18px;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fff;
+    }
+    .flow-wrap svg { display: block; min-width: 720px; width: 100%; height: auto; }
+    blockquote {
+      margin: 1.35rem 0;
+      padding: 0.1rem 0 0.1rem 1.2rem;
+      color: #42545c;
+      border-left: 4px solid #9ec3c9;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.87rem; line-height: 1.55; }
+    th, td { padding: 10px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+    th { color: var(--accent-deep); background: #edf4f3; font-weight: 800; }
+    .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+    .table-scroll table { min-width: 820px; }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--paper-strong);
+    }
+    details + details { margin-top: 12px; }
+    summary {
+      padding: 13px 16px;
+      color: var(--accent-deep);
+      cursor: pointer;
+      font-weight: 800;
+      list-style-position: inside;
+    }
+    details[open] > summary { border-bottom: 1px solid var(--line); }
+    .details-body { padding: 18px; }
+    footer {
+      padding: 0 max(24px, calc((100vw - 1240px) / 2)) 76px;
+      background: var(--paper);
+    }
+    .ledger summary { font-family: var(--serif); font-size: 1.2rem; }
+    .ledger-row:target { outline: 3px solid rgba(154, 91, 19, 0.34); outline-offset: -3px; }
+
+    @media (max-width: 900px) {
+      body { font-size: 16px; }
+      .paper-hero { padding: 42px 18px 26px; }
+      .summary-grid, .takeaway-grid { grid-template-columns: 1fr; }
+      .summary-card { min-height: auto; }
+      .page-shell { display: block; padding: 20px 14px 60px; }
+      .toc { position: relative; top: auto; max-height: none; margin-bottom: 18px; }
+      .toc ol { columns: 2; column-gap: 12px; }
+      .toc li { break-inside: avoid; }
+      .report-section { padding: 25px 20px; border-radius: 16px; }
+      footer { padding: 0 14px 54px; }
+    }
+
+    @media (max-width: 560px) {
+      .paper-title { font-size: 2.05rem; }
+      .toc ol { columns: 1; }
+      .report-section { padding: 22px 17px; }
+      .evidence-boundary, .experiment-card, .review-card, .takeaway-card { padding: 17px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+
+    @media print {
+      :root { --paper: #fff; --paper-strong: #fff; --ink: #000; }
+      body { background: #fff; color: #000; font-size: 11pt; }
+      body::before, .toc { display: none !important; }
+      .paper-hero { padding: 0 0 18pt; border-bottom: 1pt solid #999; }
+      .page-shell { display: block; padding: 18pt 0; }
+      .report-section { margin: 0 0 16pt; padding: 0; border: 0; box-shadow: none; break-inside: auto; }
+      .summary-card, .experiment-card, .review-card, .takeaway-card, .evidence-boundary {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+      details > * { display: block !important; }
+      details { border: 0; }
+      summary { padding-left: 0; }
+      footer { padding: 0; }
+      a { color: #000; text-decoration: none; }
+      a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 8pt; overflow-wrap: anywhere; }
+      tr, pre, blockquote, .flow-wrap { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header class="paper-hero">
+    <p class="eyebrow">SCI · DEEP READING</p>
+    <h1 class="paper-title">{{PAPER_TITLE}}</h1>
+    <div class="paper-meta">{{REPORT_META}}</div>
+    <div class="summary-grid">{{SUMMARY_CARDS}}</div>
+    <details class="report-info" id="report-info">
+      <summary>报告与版本信息</summary>
+      <div class="details-body">{{REPORT_DETAILS}}</div>
+    </details>
+  </header>
+
+  <div class="page-shell">
+    <nav class="toc" aria-label="论文精读目录">
+      <p class="toc-title">Reading path</p>
+      <ol>
+        <li><a href="#section-1"><span class="num">01</span><span>背景、现状与切入点</span></a></li>
+        <li><a href="#section-2"><span class="num">02</span><span>论文全局地图</span></a></li>
+        <li><a href="#section-3"><span class="num">03</span><span>作者为什么这样设计</span></a></li>
+        <li><a href="#section-4"><span class="num">04</span><span>数据与训练</span></a></li>
+        <li><a href="#section-5"><span class="num">05</span><span>模型内部数据流</span></a></li>
+        <li><a href="#section-6"><span class="num">06</span><span>实验逻辑</span></a></li>
+        <li><a href="#section-7"><span class="num">07</span><span>批判性审查</span></a></li>
+        <li><a href="#section-8"><span class="num">08</span><span>最终带走什么</span></a></li>
+        <li class="quick-link"><a href="#section-2"><span class="num">↳</span><span>直接进入三分钟地图</span></a></li>
+      </ol>
+    </nav>
+
+    <main id="main-content">
+      {{REPORT_BODY}}
+      <details id="figure-briefs">
+        <summary>可选科研绘图 Briefs</summary>
+        <div class="details-body">{{FIGURE_BRIEFS}}</div>
+      </details>
+      {{AUDIT_PANELS}}
+    </main>
+  </div>
+
+  <footer>
+    <details class="ledger" id="evidence-ledger">
+      <summary>完整证据账本</summary>
+      <div class="details-body table-scroll">{{EVIDENCE_LEDGER}}</div>
+    </details>
+  </footer>
+</body>
+</html>
