@@ -64,6 +64,41 @@ def read_frontmatter(path: Path) -> tuple[dict, str]:
     return yaml.safe_load(match.group(1)), match.group(2)
 
 
+def extract_css_rule(text: str, selector: str) -> str:
+    match = re.search(rf"{re.escape(selector)}\s*\{{(.*?)\}}", text, re.DOTALL)
+    if not match:
+        raise AssertionError(f"missing CSS rule: {selector}")
+    return match.group(1)
+
+
+def assert_compact_reading_layout(testcase: unittest.TestCase, text: str):
+    header = text.split("<header", 1)[1].split("</header>", 1)[0]
+    footer = text.split("<footer", 1)[1].split("</footer>", 1)[0]
+    title_rule = extract_css_rule(text, ".paper-title")
+    shell_rule = extract_css_rule(text, ".page-shell")
+    toc_rule = extract_css_rule(text, ".toc")
+
+    testcase.assertIn("font-size: clamp(1.9rem, 3.2vw, 3.2rem)", title_rule)
+    for declaration in (
+        "width: min(calc(100% - 64px), 1360px)",
+        "grid-template-columns: 225px minmax(0, 900px)",
+        "gap: 30px",
+        "justify-content: start",
+    ):
+        testcase.assertIn(declaration, shell_rule)
+    for declaration in (
+        "border-left: 3px solid var(--accent)",
+        "box-shadow: none",
+    ):
+        testcase.assertIn(declaration, toc_rule)
+
+    testcase.assertNotIn('class="report-info"', header)
+    testcase.assertIn("来源、版本与未解决问题", footer)
+    testcase.assertLess(
+        footer.index("来源、版本与未解决问题"), footer.index("evidence-ledger")
+    )
+
+
 class SkillContractTests(unittest.TestCase):
     def test_skill_exists(self):
         self.assertTrue(SKILL_MD.is_file(), "sci-read-paper has not been implemented")
@@ -291,6 +326,12 @@ class SkillContractTests(unittest.TestCase):
         ):
             self.assertNotIn(external_resource, text)
 
+    def test_report_template_uses_compact_reading_layout(self):
+        self.assertTrue(HTML_TEMPLATE.is_file(), "reusable HTML report template is missing")
+        assert_compact_reading_layout(
+            self, HTML_TEMPLATE.read_text(encoding="utf-8")
+        )
+
     def test_siamprom_showcase_has_complete_internal_links(self):
         self.assertTrue(SIAMPROM_HTML.is_file(), "complete SiamProm HTML showcase is missing")
         text = SIAMPROM_HTML.read_text(encoding="utf-8")
@@ -318,6 +359,10 @@ class SkillContractTests(unittest.TestCase):
             self.assertIn(fact, text)
         self.assertGreaterEqual(parser.classes.count("experiment-card"), 5)
         self.assertGreaterEqual(parser.classes.count("review-card"), 6)
+
+    def test_siamprom_showcase_uses_compact_reading_layout(self):
+        self.assertTrue(SIAMPROM_HTML.is_file(), "complete SiamProm HTML showcase is missing")
+        assert_compact_reading_layout(self, SIAMPROM_HTML.read_text(encoding="utf-8"))
 
     def test_eval_schema_and_case_coverage(self):
         data = json.loads(EVALS_JSON.read_text(encoding="utf-8"))
