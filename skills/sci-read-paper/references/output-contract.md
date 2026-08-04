@@ -41,13 +41,17 @@ Follow this narrative sequence: 理解作者（Sections 1–6） → 集中审�
 
 ## Header and Navigation
 
-Do not create a `阅读导航` report section. In the template header, record `mode: standard|audit`, `complete|partial`, paper identity, DOI/stable ID, paper version, code commit, and access date. Fill three summary cards:
+Do not create a `阅读导航` report section. Keep the header metadata compact: record `mode: standard|audit`, `complete|partial`, paper identity, DOI/stable ID, and access date. Fill three summary cards:
 
 - `作者主线`: intended contribution, without a verdict;
 - `证据状态`: conclusion-changing gaps and the smallest resolving material;
 - `审查入口`: the issue assessed in Section 7, without developing the answer.
 
 Keep the template's eight-link table of contents and quick link to Section 2. Do not include a generated-file inventory.
+
+## Footer Provenance
+
+Immediately before the embedded evidence ledger, use a collapsed disclosure named `来源、版本与未解决问题`. Record the paper version, code commit, conclusion-changing unavailable artifacts, affected claims, and smallest resolving material there. Do not duplicate this full provenance block in the hero.
 
 ## Section Responsibilities
 
