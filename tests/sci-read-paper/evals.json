@@ -12,7 +12,9 @@
         "traces promoter, non-promoter, contrastive-pair, and classifier-label construction",
         "explains the relationship between representation learning and the final predictor",
         "maps phantom sampling, architecture, ablations, and motif discovery to claims",
-        "calibrates the biological evidence for the reported motif"
+        "calibrates the biological evidence for the reported motif",
+        "delivers exactly one offline self-contained HTML report with eight ordered sections and an embedded evidence ledger",
+        "keeps author interpretation in Sections 1–6 and cumulative criticism in Section 7"
       ]
     },
     {
@@ -24,7 +26,8 @@
         "traces affinity and physicochemical conditions into molecule generation",
         "distinguishes baseline, control, ablation, and case-study evidence",
         "separates docking, QED, and SA proxies from experimental biological claims",
-        "marks unavailable code or configuration details as missing rather than inventing them"
+        "marks unavailable code or configuration details as missing rather than inventing them",
+        "delivers exactly one offline self-contained HTML report with eight ordered sections and working evidence links"
       ]
     },
     {
@@ -35,7 +38,8 @@
         "records attempted source resolution",
         "continues with a partial dossier when non-critical artifacts are unavailable",
         "labels missing implementation details",
-        "does not fabricate code paths, splits, or hyperparameters"
+        "does not fabricate code paths, splits, or hyperparameters",
+        "records partial status and unresolved material inside the single HTML report"
       ]
     },
     {

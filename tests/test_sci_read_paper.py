@@ -166,10 +166,11 @@ class SkillContractTests(unittest.TestCase):
             "Progressive technical depth",
             "Chinese-first prose",
             "Readable evidence",
-            "Main/appendix separation",
+            "Main/audit separation",
+            "HTML reading experience",
         ):
             self.assertIn(f"| {criterion} |", text)
-        self.assertIn("at least 14/16", text)
+        self.assertIn("at least 16/18", text)
         self.assertIn("scientific-depth score", text)
 
     def test_output_contract_has_guided_reading_layers(self):
@@ -208,7 +209,7 @@ class SkillContractTests(unittest.TestCase):
             re.DOTALL,
         )
         self.assertIsNotNone(experiment)
-        for field in ("作者要回答", "实验怎么做", "观察到什么", "证据边界"):
+        for field in ("作者要回答什么", "实验怎样设计", "实际观察到什么", "证据边界"):
             self.assertIn(field, experiment.group(1))
         self.assertNotIn("我们的判断", experiment.group(1))
 
@@ -221,7 +222,7 @@ class SkillContractTests(unittest.TestCase):
             "最小解决实验",
         ):
             self.assertIn(field, contract)
-        self.assertIn("方法上值得带走什么", contract)
+        self.assertIn("论文真正贡献了什么", contract)
         self.assertIn("最终可以相信到哪里", contract)
 
     def test_skill_enforces_chinese_first_progressive_reading(self):

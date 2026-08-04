@@ -1,6 +1,6 @@
 # `sci-read-paper` Readability Rubric
 
-Score the primary `deep-reading.md` from 0 to 2 on every criterion. Judge the reading experience of the main report; use appendices only to check whether detail was moved rather than lost.
+Score the single primary HTML report from 0 to 2 on every criterion. Judge both the long-form reading experience and whether embedded evidence remains reachable without interrupting the narrative.
 
 - `0`: absent, misleading, or seriously obstructs understanding.
 - `1`: present but dense, fragmented, inconsistently applied, or dependent on appendices.
@@ -15,8 +15,9 @@ Score the primary `deep-reading.md` from 0 to 2 on every criterion. Judge the re
 | Progressive technical depth | Gives conclusion and intuition before equations, tensor shapes, configuration, and code; technical detail does not interrupt the main line. |
 | Chinese-first prose | Uses natural Chinese by default and retains English only for precise mapping, proper names, code identifiers, metrics, or author-defined modules. |
 | Readable evidence | Uses light paragraph-level evidence IDs and explicit epistemic language without dense repeated source-label clusters. |
-| Main/appendix separation | The main report contains the complete research story but does not copy exhaustive ledgers, configuration inventories, or conflict lists from appendices. |
+| Main/audit separation | The eight-section report contains the complete research story; the embedded ledger and optional audit panels remain available without duplicating inventories in the narrative. |
+| HTML reading experience | The page has a clear publication-style hierarchy, useful sticky contents, readable line length, responsive tables/cards, working internal links, and no external UI dependency. |
 
-Readability GREEN requires at least 14/16 and no criterion at `0`.
+Readability GREEN requires at least 16/18 and no criterion at `0`.
 
 Joint GREEN additionally requires the existing scientific-depth score to remain at least 16/20 with no critical criterion at `0`, all case-specific assertions present, and no fabricated evidence.

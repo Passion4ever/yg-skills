@@ -16,7 +16,7 @@ Record URL or local path, version or commit, access date, and supported claims. 
 
 In `standard` mode, externally verify at most three conclusion-critical claim families. Resolve the selected checks, then mark additional checks unresolved and offer `audit` mode instead of extending retrieval indefinitely. This limit applies to claim families, not to the number of source pages needed to resolve one family.
 
-Stop broad collection once the central paper, relevant supplement, shortest official-code path, dataset provenance, and selected external checks are resolved or explicitly unavailable. Write the primary report and ledger before optional corroboration. `audit` mode may expand the evidence inventory when the user explicitly requests it.
+Stop broad collection once the central paper, relevant supplement, shortest official-code path, dataset provenance, and selected external checks are resolved or explicitly unavailable. Build the primary reading and embedded ledger before optional corroboration. `audit` mode may expand the evidence inventory when the user explicitly requests it.
 
 ## Evidence Labels
 
@@ -27,13 +27,13 @@ Stop broad collection once the central paper, relevant supplement, shortest offi
 - `[缺失]`: the available sources do not report it.
 - `[冲突]`: paper, supplement, code, dataset, or versions disagree.
 
-These labels define epistemic status and remain mandatory in the evidence ledger.
+These labels define epistemic status and remain mandatory in the embedded evidence ledger.
 
 ## Evidence IDs in the Main Report
 
 Assign stable dossier-local IDs such as `E01`, `E02`, and `E03`. Cite a natural paragraph with compact forms such as `〔E03〕` or `〔E12–E15〕`; do not append clusters of source labels to every sentence.
 
-Each ID maps to one ledger row containing label, source, version/commit, locator, supported statement, and access status. Reuse an ID only for the statement it actually supports.
+Each ID maps to one embedded ledger row with a unique HTML `id`, label, source, version/commit, locator, supported statement, and access status. Every citation in the report must link to that row with an internal anchor. Reuse an ID only for the statement it actually supports.
 
 Lightweight IDs never hide inference, missing information, or conflict. When epistemic status changes the interpretation, write it directly in Chinese: “论文报告……”, “公开代码实际执行……”, “我们据此推断……”, or “当前材料无法确定……”.
 
@@ -43,7 +43,7 @@ Lightweight IDs never hide inference, missing information, or conflict. When epi
 - Code-only behavior can explain implementation; it is not automatically a claimed contribution.
 - Paper-only behavior absent from released code is a reproducibility limitation.
 - Identify conflicting versions and whether the difference changes a conclusion. Pause only when the choice changes the analysis materially.
-- Put conclusion-changing conflicts in `deep-reading.md`; move secondary implementation differences to the relevant appendix.
+- Put conclusion-changing conflicts in the primary eight-section reading; move secondary implementation differences to the relevant embedded audit panel.
 - Before Section 7, present any conclusion-changing fact—a conflict, missing material, external correction, or direct logical fact—as a neutral factual boundary. State the fact needed for understanding, and defer severity, alternatives, and claim impact to Section 7. For a conflict, state both what the paper reports and what released evidence shows. Never hide a critical fact merely to preserve narrative separation.
 - In Section 7, rank its impact, test alternative explanations, and state how the supported conclusion changes.
 
@@ -62,7 +62,7 @@ Never reconstruct missing splits, hyperparameters, seeds, preprocessing, or trai
 
 ## Completion Status
 
-Judge completion against the selected `standard|audit` mode. Use `complete` only when the paper, essential supplement, conclusion-changing implementation evidence, and required checks for that mode were accessible or explicitly resolved. Otherwise use `partial` and state once in the reading guide:
+Judge completion against the selected `standard|audit` mode. Use `complete` only when the paper, essential supplement, conclusion-changing implementation evidence, and required checks for that mode were accessible or explicitly resolved. Otherwise use `partial` and state once in the HTML header/status area:
 
 - unavailable artifacts;
 - affected conclusions;

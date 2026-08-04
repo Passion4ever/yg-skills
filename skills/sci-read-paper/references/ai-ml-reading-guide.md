@@ -1,5 +1,7 @@
 # AI/ML Reading Guide
 
+Use the eight report sections as one reading argument: orient the field in Section 1, compress the whole paper in Section 2, reconstruct design logic in Section 3, trace data and training in Section 4, trace internal model flow in Section 5, explain experiment logic in Section 6, switch explicitly to reviewer mode in Section 7, and synthesize in Section 8. Do not mix cumulative criticism into Sections 1–6.
+
 ## Field Orientation
 
 Before discussing the paper, explain only the domain context needed later:
@@ -44,13 +46,13 @@ raw sample
 → prediction, generated object, or metric
 ```
 
-After the sample is clear, add dataset origin/version, counts, deduplication, augmentation, split unit, leakage checks, objectives, optimization, schedules, seeds, hardware, precision, and checkpoint selection. Put exhaustive configuration and secondary paper-code differences in `appendices/data-training.md`.
+After the sample is clear, add dataset origin/version, counts, deduplication, augmentation, split unit, leakage checks, objectives, optimization, schedules, seeds, hardware, precision, and checkpoint selection. In `audit` mode, put exhaustive configuration and secondary paper-code differences in the embedded `data-training` panel.
 
 Do not infer a library default without proving the released version used it and labeling the inference in the evidence ledger.
 
 ## Model Data Flow
 
-Give one simplified Mermaid diagram when evidence supports explicit edges. Then record each main-path stage:
+Give one simplified inline SVG or semantic HTML flow when evidence supports explicit edges. Then record each main-path stage:
 
 | Question | Record |
 |---|---|
@@ -61,7 +63,7 @@ Give one simplified Mermaid diagram when evidence supports explicit edges. Then 
 | Where does it go? | next module, fusion, decoder, or output |
 | Can we verify it? | paper/code agreement, inference, missing detail, or conflict |
 
-Explain intuition before equations. Define symbols and connect them to real objects immediately. Keep the main report on the primary path; place exhaustive interfaces, shapes, and code anchors in `appendices/model-dataflow.md`.
+Explain intuition before equations. Define symbols and connect them to real objects immediately. Keep the main report on the primary path; in `audit` mode, place exhaustive interfaces, shapes, and code anchors in the embedded `model-dataflow` panel.
 
 ## Code Audit
 
@@ -69,19 +71,23 @@ In `standard` mode, follow the shortest conclusion-relevant path through the dat
 
 Acquire code with raw-file requests or sparse or blob-filtered repository retrieval. Inspect the remote tree first and exclude weight/checkpoint paths before checkout; a normal clone that fetches tracked weights does not satisfy the standard-mode boundary.
 
-Do not download weights, inspect every utility, enumerate every configuration field, or reconstruct secondary experiments unless that artifact can change a central interpretation. In `audit` mode, expand to the complete executable-path inventory and audit appendix schemas.
+Do not download weights, inspect every utility, enumerate every configuration field, or reconstruct secondary experiments unless that artifact can change a central interpretation. In `audit` mode, expand the embedded panels to the complete executable-path inventory.
 
 ## Experiment Reasoning
 
 Organize experiments by research question rather than paper table order. Group baseline, control, ablation, robustness/generalization, case study, and external validation evidence around the claim being tested.
 
-For each core question explain descriptively:
+For each core question explain descriptively in an experiment card:
 
 ```text
 作者要回答：...
-实验怎么做：...
-观察到什么：...
+实验类型：...
+实验怎样设计：...
+改变了什么，控制了什么：...
+数据与指标：...
+实际观察到什么：...
+作者据此主张什么：...
 证据边界：...
 ```
 
-The evidence boundary records missing controls, uncertainty, unavailable artifacts, or direct design limits in neutral language and points to Section 7. Check baseline fairness, isolated ablations, seeds, confidence intervals, and whether analysis plots are evidence or illustration; concentrate the cumulative judgment in Section 7. Store the exhaustive experiment inventory in `appendices/experiment-matrix.md`.
+The evidence boundary records missing controls, uncertainty, unavailable artifacts, or direct design limits in neutral language and points to Section 7. Check baseline fairness, isolated ablations, seeds, confidence intervals, and whether analysis plots are evidence or illustration; concentrate the cumulative judgment in Section 7. In `audit` mode, store the exhaustive inventory in the embedded `experiment-matrix` panel.
