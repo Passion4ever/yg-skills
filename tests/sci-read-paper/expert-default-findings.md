@@ -37,7 +37,7 @@ Overall: `4/5` expert-understanding checks passed. The report is a substantive e
 
 ## Observed limitations
 
-- First visible dossier output appeared after about 13 minutes; the complete agent turn took 14m 17s. Source scope was bounded, but first-result latency is still not interactive.
+- First visible dossier output appeared after about 13 minutes; the complete agent turn took 14m 17s. Analysis scope was bounded, but first-result latency is still not interactive.
 - Code analysis stayed on the central paths, but source acquisition was not fully bounded: the clone downloaded a 49.8 MB checkpoint. The skill now requires raw-file, sparse, or blob-filtered retrieval that excludes weight paths before checkout; this wording change was not behaviorally rerun.
 - The 210-line, 12,773-character main report is readable and strongly structured, but still closer to a long expert note than a short everyday reading aid.
 - The concrete first sample is not explicitly carried through the generic model tensor path to a named prediction.
