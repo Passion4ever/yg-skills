@@ -12,6 +12,12 @@ Use sources in this order:
 
 Record URL or local path, version or commit, access date, and supported claims. Search actively, but do not bypass authentication, payment, or access controls.
 
+## Standard-Mode Evidence Boundary
+
+In `standard` mode, externally verify at most three conclusion-critical claim families. Resolve the selected checks, then mark additional checks unresolved and offer `audit` mode instead of extending retrieval indefinitely. This limit applies to claim families, not to the number of source pages needed to resolve one family.
+
+Stop broad collection once the central paper, relevant supplement, shortest official-code path, dataset provenance, and selected external checks are resolved or explicitly unavailable. Write the primary report and ledger before optional corroboration. `audit` mode may expand the evidence inventory when the user explicitly requests it.
+
 ## Evidence Labels
 
 - `[论文]`: the paper or supplement states it explicitly.
@@ -48,11 +54,13 @@ Rewrite author language when the design does not support it:
 - `generalizes` requires an appropriate family, scaffold, temporal, distribution, or external test.
 - `novel` requires a declared comparison scope and defensible similarity criterion.
 
+For a conclusion-critical novelty claim about a specific motif or sequence, search the literal sequence and recognized aliases in first-party literature. If no match is found, mark the comparison scope unresolved rather than treating search absence as evidence of novelty.
+
 Never reconstruct missing splits, hyperparameters, seeds, preprocessing, or training stages from convention.
 
 ## Completion Status
 
-Use `complete` only when the paper, essential supplement, and conclusion-changing implementation evidence were accessible and the required audits were performed. Otherwise use `partial` and state once in the reading guide:
+Judge completion against the selected `standard|audit` mode. Use `complete` only when the paper, essential supplement, conclusion-changing implementation evidence, and required checks for that mode were accessible or explicitly resolved. Otherwise use `partial` and state once in the reading guide:
 
 - unavailable artifacts;
 - affected conclusions;

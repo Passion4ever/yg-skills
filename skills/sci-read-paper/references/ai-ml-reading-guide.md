@@ -63,7 +63,9 @@ Explain intuition before equations. Define symbols and connect them to real obje
 
 ## Code Audit
 
-Locate the actual data loader, split generator, model entry point, loss computation, training loop, evaluation command, and default configuration. Cite paths and commits in the evidence ledger. Distinguish executable paths from dead code, examples, or unused options.
+In `standard` mode, follow the shortest conclusion-relevant path through the dataset constructor or loader, split logic, model entry point and primary `forward`, loss/training loop, evaluation entry point, and active configuration. Stop when the primary data flow and conclusion-changing paper-code conflicts are resolved. Cite paths and commits in the evidence ledger; distinguish executable paths from dead code, examples, or unused options.
+
+Do not download weights, inspect every utility, enumerate every configuration field, or reconstruct secondary experiments unless that artifact can change a central interpretation. In `audit` mode, expand to the complete executable-path inventory and audit appendix schemas.
 
 ## Experiment Reasoning
 

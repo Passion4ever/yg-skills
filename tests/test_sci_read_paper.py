@@ -77,7 +77,7 @@ class SkillContractTests(unittest.TestCase):
     def test_output_contract_has_one_primary_report(self):
         contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
         self.assertIn("deep-reading.md", contract)
-        self.assertIn("appendices/evidence-ledger.md", contract)
+        self.assertIn("evidence-ledger.md", contract)
         self.assertIn("appendices/data-training.md", contract)
         self.assertIn("appendices/model-dataflow.md", contract)
         self.assertIn("appendices/experiment-matrix.md", contract)

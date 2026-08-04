@@ -1,20 +1,35 @@
 # Output Contract
 
-Create one directory named from a stable paper slug:
+Create one directory from a stable paper slug. `deep-reading.md` is always the primary reading path.
+
+## Standard Mode — Default
+
+Required output:
 
 ```text
 <paper-slug>/
 ├── deep-reading.md
-├── appendices/
-│   ├── evidence-ledger.md
-│   ├── data-training.md
-│   ├── model-dataflow.md
-│   ├── experiment-matrix.md
-│   └── critical-review.md
-└── assets/
+└── evidence-ledger.md
 ```
 
-`deep-reading.md` contains the complete research story and is the only file a normal reader must open. Appendices preserve exhaustive audit detail without copying it into the main narrative.
+Standard mode does not require the four audit appendices. It may add at most one targeted appendix from the audit schemas below only when a conclusion-changing conflict cannot be explained and audited succinctly in the two required files. State the reason in `阅读导航`; otherwise record unresolved audit detail once and offer audit mode as the next step.
+
+## Audit Mode — Explicit
+
+Use only for explicit exhaustive audit, reproduction preparation, a full experiment matrix, or file-by-file code comparison:
+
+```text
+<paper-slug>/
+├── deep-reading.md
+├── evidence-ledger.md
+└── appendices/
+    ├── data-training.md
+    ├── model-dataflow.md
+    ├── experiment-matrix.md
+    └── critical-review.md
+```
+
+Audit mode adds traceability, not a second copy of the narrative. The complete dossier contains six Markdown files.
 
 ## Primary Report
 
@@ -37,15 +52,15 @@ Use exactly these top-level sections:
 
 ### `阅读导航`
 
-Keep this compact. Record `complete|partial`, recommended reading path, conclusion-changing source gaps, paper/code versions, and a one-sentence credibility judgment. Do not begin with an exhaustive source inventory.
+Keep it compact. Record `mode: standard|audit`, `complete|partial`, recommended reading path, conclusion-changing gaps, paper/code versions, generated files, and a one-sentence credibility judgment. Do not begin with a source inventory.
 
 ### `1. 先把论文放回领域里`
 
-In roughly 600–1000 Chinese characters, explain the real task, significance, difficulty, mainstream framing, and the paper's entry gap. Separate field consensus from author framing. Include only concepts used later.
+In roughly 600–1000 Chinese characters, explain the real task, significance, difficulty, mainstream framing, and the paper's precise entry gap. Separate field consensus from author framing and include only concepts used later.
 
 ### `2. 三分钟看懂这篇论文`
 
-In roughly 900 Chinese characters, give the task, central tension, thought chain, minimal data flow, overall experimental verdict, and largest credibility risk. This section must stand alone but cannot replace the deep reading.
+In roughly 900 Chinese characters, give the task, central tension, thought chain, minimal data flow, overall experimental verdict, and largest credibility risk. It must stand alone without replacing the deep reading.
 
 ### Guided deep-reading sections
 
@@ -58,11 +73,11 @@ Develop every core section as:
 → 这对论文结论意味着什么
 ```
 
-Keep paragraphs to one main judgment and usually 3–5 sentences. Use Chinese-first prose. At first mention, add an English term only when needed for paper/code mapping; preserve proper names, metrics, identifiers, paths, and author-defined modules.
+Keep one main judgment per paragraph and usually 3–5 sentences. Use Chinese-first prose. Retain English only for precise names, metrics, code mapping, identifiers, and author-defined modules.
 
-The data and model sections start from one concrete sample. The model section includes one simplified Mermaid data-flow diagram when supported. Mark inferred edges or shapes explicitly in prose.
+Keep one concrete sample identifiable across data construction, training, model flow, and output. Include one simplified Mermaid data-flow diagram when supported; mark inferred edges or shapes in prose.
 
-Organize experiments by question, not table number. A core experiment may end with:
+Organize experiments by question, not table number. End a core question with:
 
 ```text
 作者想证明：...
@@ -70,17 +85,17 @@ Organize experiments by question, not table number. A core experiment may end wi
 我们的判断：...
 ```
 
-Rank critical-review issues as: core-conclusion threats, generalization/reproducibility limits, then secondary reporting issues. End by separating what can be believed, provisionally believed, not concluded, and the smallest decisive next experiment.
+Rank criticism as central-conclusion threats, generalization/reproducibility limits, then secondary reporting issues. Separate what can be believed, provisionally believed, not concluded, and the smallest decisive next experiment.
 
-The final section answers only: the real contribution, the transferable idea, and the most important next experiment.
+The final section answers only: the real contribution, transferable idea, and most important next experiment.
 
-Use paragraph-level evidence IDs such as `〔E03〕` and `〔E12–E15〕`. Explicitly name paper report, code behavior, inference, missing information, or conflict when that status changes interpretation.
+Use paragraph-level evidence IDs such as `〔E03〕` and `〔E12–E15〕`. Explicitly name paper report, code behavior, inference, missing information, external check, or conflict when that status changes interpretation.
 
-## Appendices
+## Evidence Ledger
 
-### `appendices/evidence-ledger.md`
+`evidence-ledger.md` is required in both modes. Use columns: evidence ID, label, source, version/commit, locator, supported statement, and access status. It owns the six evidence labels and full locators.
 
-Use columns: evidence ID, label, source, version/commit, locator, supported statement, and access status. This file owns the six evidence labels and complete locators.
+## Audit Appendix Schemas
 
 ### `appendices/data-training.md`
 
@@ -88,24 +103,24 @@ Record full provenance, construction, counts, splits, preprocessing, leakage che
 
 ### `appendices/model-dataflow.md`
 
-Record the concrete sample trace plus a table with stage, semantic object, shape, operation, output, code anchor, and evidence ID.
+Record the concrete-sample trace plus stage, semantic object, shape, operation, output, code anchor, and evidence ID.
 
 ### `appendices/experiment-matrix.md`
 
-Use columns: experiment ID, type, question/claim, changed variable, controls, data/split, metric, result, supported conclusion, unsupported conclusion, and evidence IDs.
+Record experiment type, question, changed variable, controls, data/split, metric, result, supported conclusion, unsupported conclusion, and evidence IDs.
 
 ### `appendices/critical-review.md`
 
-Separate internal validity, reproducibility, domain validity, external checks, alternative explanations, applicability, and unresolved questions. Rank issues by effect on the central conclusion.
+Separate internal validity, reproducibility, domain validity, external checks, alternatives, applicability, and unresolved questions. Rank issues by effect on the central conclusion.
 
-## Main/Appendix Boundary
+## Main/Audit Boundary
 
-The main report keeps background, causal reasoning, primary data flow, core experiment judgments, and conclusion-changing conflicts. Move exhaustive configurations, complete shape/interface inventories, secondary conflicts, all experiment rows, and full source locators to appendices.
+The main report keeps background, causal reasoning, primary sample and model flow, core experiment judgments, and conclusion-changing conflicts. The ledger owns source locators. Audit appendices own exhaustive configurations, full shapes/interfaces, secondary conflicts, every experiment row, and extended reproducibility inventories.
 
-Self-contained means the reader can understand the research story and judgments without opening appendices; it does not mean duplicating every audit entry.
+Self-contained means the reader understands the research story and judgments without an appendix; it does not mean duplicating audit entries.
 
 ## Optional Figure Handoff
 
-Include at most three briefs, only when a visual materially improves understanding. Each brief contains purpose/reader, figure type, entities/relationships, evidence IDs, visual hierarchy, and content that must not be invented.
+Include at most three briefs only when a visual materially improves understanding. Each brief contains purpose/reader, figure type, entities/relationships, evidence IDs, visual hierarchy, and content that must not be invented.
 
 Do not generate images automatically. If `sci-ai-figure` is installed and the user explicitly asks for a figure, pass the brief as the handoff contract.
