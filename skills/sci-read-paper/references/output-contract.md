@@ -50,9 +50,11 @@ Use exactly these top-level sections:
 ## 可选科研绘图 Briefs
 ```
 
+Follow this narrative sequence: 理解作者（Sections 1–6） → 集中审查作者（Section 7） → 形成自己的结论（Section 8）.
+
 ### `阅读导航`
 
-Keep it compact. Record `mode: standard|audit`, `complete|partial`, recommended reading path, conclusion-changing gaps, paper/code versions, generated files, and a one-sentence credibility judgment. Do not begin with a source inventory.
+Keep it compact. Record `mode: standard|audit`, `complete|partial`, recommended reading path, conclusion-changing gaps, paper/code versions, and generated files. Add `作者主线：` with the intended contribution and `审查入口：` with the issue evaluated in Section 7, without giving the verdict. Do not begin with a source inventory.
 
 ### `1. 先把论文放回领域里`
 
@@ -60,7 +62,7 @@ In roughly 600–1000 Chinese characters, explain the real task, significance, d
 
 ### `2. 三分钟看懂这篇论文`
 
-In roughly 900 Chinese characters, give the task, central tension, thought chain, minimal data flow, overall experimental verdict, and largest credibility risk. It must stand alone without replacing the deep reading.
+In roughly 900 Chinese characters, give the task, central tension, thought chain, minimal data flow, and reported experimental outcome. End with one `审查预告：` sentence naming the largest evidence question and pointing to Section 7; do not develop the answer. It must stand alone without replacing the deep reading.
 
 ### Guided deep-reading sections
 
@@ -77,17 +79,37 @@ Keep one main judgment per paragraph and usually 3–5 sentences. Use Chinese-fi
 
 Keep one concrete sample identifiable across data construction, training, model flow, and output. Include one simplified Mermaid data-flow diagram when supported; mark inferred edges or shapes in prose.
 
+Sections 1–6 explain the authors' problem, choices, implementation, and observations. When a conclusion-changing paper-code difference appears, use a compact neutral handoff:
+
+```text
+证据边界：论文报告……；公开代码/数据实际显示……。这一差异对结论的影响在第 7 节集中评估。〔E…〕
+```
+
+The boundary states facts. Severity ranking, alternative explanations, claim downgrades, and final verdicts belong in Section 7.
+
 Organize experiments by question, not table number. End a core question with:
 
 ```text
-作者想证明：...
-当前证据：...
-我们的判断：...
+作者要回答：...
+实验怎么做：...
+观察到什么：...
+证据边界：...
 ```
 
-Rank criticism as central-conclusion threats, generalization/reproducibility limits, then secondary reporting issues. Separate what can be believed, provisionally believed, not concluded, and the smallest decisive next experiment.
+Open Section 7 with an explicit transition into reviewer mode. Rank criticism as central-conclusion threats, generalization/reproducibility limits, then secondary issues. Use compact review cards:
 
-The final section answers only: the real contribution, transferable idea, and most important next experiment.
+```text
+审查议题：...
+作者主张：...
+支持证据：...
+反证或替代解释：...
+对中心结论的影响：...
+最小解决实验：...
+```
+
+Reference earlier explanations and evidence IDs instead of repeating data flow or result tables. End Section 7 by separating what can be believed, provisionally believed, and not concluded.
+
+Section 8 contains `### 方法上值得带走什么` for the genuine contribution and transferable design lesson, followed by `### 最终可以相信到哪里` for the calibrated conclusion after review.
 
 Use paragraph-level evidence IDs such as `〔E03〕` and `〔E12–E15〕`. Explicitly name paper report, code behavior, inference, missing information, external check, or conflict when that status changes interpretation.
 

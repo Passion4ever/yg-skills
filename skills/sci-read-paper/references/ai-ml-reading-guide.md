@@ -26,7 +26,7 @@ task and stakes
 → bounded contribution
 ```
 
-Explain how each major design choice answers a named limitation. Separate a new capability from a new combination, dataset construction, engineering improvement, or evaluation change.
+First reconstruct how each major design choice answers a named limitation from the authors' perspective. Preserve factual evidence boundaries, but defer severity, alternatives, and final claim calibration to the critical-review section. Separate a new capability from a new combination, dataset construction, engineering improvement, or evaluation change.
 
 ## Concrete Sample First
 
@@ -73,22 +73,13 @@ Do not download weights, inspect every utility, enumerate every configuration fi
 
 Organize experiments by research question rather than paper table order. Group baseline, control, ablation, robustness/generalization, case study, and external validation evidence around the claim being tested.
 
-For each core question explain:
+For each core question explain descriptively:
 
 ```text
-what the authors want to prove
-→ changed and controlled variables
-→ data, split, metric, and result
-→ what the evidence supports
-→ what it does not establish
+作者要回答：...
+实验怎么做：...
+观察到什么：...
+证据边界：...
 ```
 
-End a core experiment section with a compact judgment card:
-
-```text
-作者想证明：...
-当前证据：...
-我们的判断：...
-```
-
-Check baseline fairness, isolated ablations, uncertainty, seeds, confidence intervals, and whether analysis plots provide evidence or illustration. Store the exhaustive experiment inventory in `appendices/experiment-matrix.md`.
+The evidence boundary records missing controls, uncertainty, unavailable artifacts, or direct design limits in neutral language and points to Section 7. Check baseline fairness, isolated ablations, seeds, confidence intervals, and whether analysis plots are evidence or illustration; concentrate the cumulative judgment in Section 7. Store the exhaustive experiment inventory in `appendices/experiment-matrix.md`.

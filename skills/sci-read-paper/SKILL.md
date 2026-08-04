@@ -5,7 +5,7 @@ description: Use when deeply analyzing one AI/ML paper beyond summary, including
 
 # Deep Read Paper
 
-Help the reader understand one paper as a human expert would. Reconstruct the authors' reasoning, follow the real data flow, and judge what the evidence establishes; do not reduce the paper to a summary or field inventory.
+Help the reader understand one paper as a human expert: reconstruct reasoning and data flow before judging evidence; never reduce it to a summary or field inventory.
 
 ## Workflow
 
@@ -23,15 +23,16 @@ In `standard` mode, resolve conclusion-changing evidence, then write `deep-readi
 
 - Use Chinese-first prose. At first use, give Chinese with the English term only when it helps paper/code mapping; then prefer Chinese. Preserve proper names, metrics, code identifiers, file paths, and author-defined modules.
 - Develop each core section as conclusion → intuition → technical detail → meaning. Start from a concrete object before aggregate inventories.
+- Follow understand authors (1–6) → review (7) → synthesize (8); use neutral early conflict handoffs.
 - Keep a paragraph to one main judgment and usually 3–5 sentences. Aim for a 15–20 minutes main-report reading path, independent of audit depth.
 - Cite paragraphs with lightweight evidence IDs. Explicitly say when the paper reports, code implements, evidence conflicts, information is missing, or the analysis infers.
 
 ## Final Gates
 
 - Background makes the paper's problem understandable without becoming a broad review.
-- The three-minute map stands alone and includes the task, tension, thought chain, minimal data flow, experimental verdict, and largest risk.
+- The three-minute map gives the task, thought chain, minimal flow, reported outcome, and one review preview.
 - Data and model explanations follow a concrete sample; module inventories do not pass.
-- Every experiment maps to a question, controls, result, supported claim, and unsupported claim.
+- Section 6 states experiment questions, controls, results, and neutral boundaries; Section 7 judges them.
 - Computational proxies never become experimental biological or chemical facts.
 - `deep-reading.md` contains the complete research story without copying evidence inventories.
 - Mark `mode: standard|audit` and `complete|partial`; list unresolved gaps once and repeat them only where they change a judgment.
