@@ -30,9 +30,12 @@
     }
 
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; scroll-padding-top: 28px; }
+    html { max-width: 100%; overflow-x: clip; scroll-behavior: smooth; scroll-padding-top: 28px; }
     body {
       margin: 0;
+      max-width: none;
+      padding: 0;
+      overflow-x: clip;
       color: var(--ink);
       background: var(--paper);
       font-family: var(--sans);
@@ -88,6 +91,7 @@
     .paper-title {
       max-width: 1050px;
       margin: 0;
+      overflow-wrap: anywhere;
       font-family: var(--serif);
       font-size: clamp(2.2rem, 4.7vw, 4.5rem);
       font-weight: 760;
@@ -207,7 +211,7 @@
       font-weight: 800;
       letter-spacing: 0.12em;
     }
-    .section-title {
+    .section-title, .report-section > h2 {
       margin: 0 0 28px;
       font-family: var(--serif);
       font-size: clamp(1.65rem, 3.2vw, 2.45rem);
@@ -251,7 +255,7 @@
     .evidence-boundary strong:first-child { color: #70420e; }
     .experiment-card { border: 1px solid #bdd5d9; background: #f1f8f8; }
     .review-card { border: 1px solid #e4bbb4; background: #fff8f6; }
-    .review-card h4 { margin-top: 0; color: #7f2e27; }
+    .review-card h3, .review-card h4 { margin-top: 0; color: #7f2e27; }
     .review-card dl, .experiment-card dl { margin: 0; }
     .review-card dt, .experiment-card dt {
       margin-top: 0.75rem;
@@ -282,6 +286,25 @@
       background: #fff;
     }
     .flow-wrap svg { display: block; min-width: 720px; width: 100%; height: auto; }
+    .flow-chain { display: flex; align-items: stretch; gap: 9px; min-width: 1120px; }
+    .flow-node, .flow-branches {
+      display: flex;
+      flex: 1 0 145px;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      min-height: 116px;
+      padding: 14px;
+      border: 1px solid #bdd5d9;
+      border-radius: 11px;
+      background: #f4f9f9;
+    }
+    .flow-node small { color: var(--accent); font-weight: 850; letter-spacing: 0.08em; }
+    .flow-node span { color: var(--muted); font-family: var(--mono); font-size: 0.76rem; }
+    .flow-branches { gap: 7px; background: #fff; }
+    .flow-branches div { padding: 7px 9px; border-left: 3px solid var(--accent); background: var(--accent-soft); font-size: 0.8rem; font-weight: 700; }
+    .flow-output div { border-left-color: var(--warm); background: var(--warm-soft); }
+    .flow-arrow { align-self: center; color: var(--accent); font-weight: 900; }
     blockquote {
       margin: 1.35rem 0;
       padding: 0.1rem 0 0.1rem 1.2rem;
@@ -320,7 +343,8 @@
       body { font-size: 16px; }
       .paper-hero { padding: 42px 18px 26px; }
       .summary-grid, .takeaway-grid { grid-template-columns: 1fr; }
-      .summary-card { min-height: auto; }
+      .summary-card { min-width: 0; min-height: auto; }
+      .paper-meta > * { max-width: 100%; overflow-wrap: anywhere; }
       .page-shell { display: block; padding: 20px 14px 60px; }
       .toc { position: relative; top: auto; max-height: none; margin-bottom: 18px; }
       .toc ol { columns: 2; column-gap: 12px; }
