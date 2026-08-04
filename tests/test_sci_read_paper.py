@@ -84,6 +84,39 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("appendices/critical-review.md", contract)
         self.assertIn("sci-ai-figure", contract)
 
+    def test_standard_mode_has_two_required_outputs(self):
+        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
+        self.assertIn("## Standard Mode — Default", contract)
+        self.assertIn("evidence-ledger.md", contract)
+        self.assertIn("at most one targeted appendix", contract)
+        self.assertIn("does not require the four audit appendices", contract)
+
+    def test_audit_mode_preserves_full_dossier(self):
+        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
+        self.assertIn("## Audit Mode — Explicit", contract)
+        for appendix in (
+            "appendices/data-training.md",
+            "appendices/model-dataflow.md",
+            "appendices/experiment-matrix.md",
+            "appendices/critical-review.md",
+        ):
+            self.assertIn(appendix, contract)
+
+    def test_standard_mode_bounds_research_scope(self):
+        skill = SKILL_MD.read_text(encoding="utf-8")
+        policy = (SKILL_DIR / "references" / "evidence-policy.md").read_text(encoding="utf-8")
+        guide = (SKILL_DIR / "references" / "ai-ml-reading-guide.md").read_text(encoding="utf-8")
+        self.assertIn("standard", skill)
+        self.assertIn("audit", skill)
+        self.assertIn("at most three conclusion-critical claim families", policy)
+        self.assertIn("shortest conclusion-relevant path", guide)
+        self.assertIn("Do not download weights", guide)
+
+    def test_report_records_selected_mode(self):
+        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
+        self.assertIn("mode: standard|audit", contract)
+        self.assertIn("complete|partial", contract)
+
     def test_readability_rubric_contract(self):
         text = READABILITY_RUBRIC.read_text(encoding="utf-8")
         for criterion in (
