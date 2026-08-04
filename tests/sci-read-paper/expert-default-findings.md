@@ -12,6 +12,7 @@
   - `/tmp/sci-read-paper-expert-default-siamprom.0uQFso/siamprom-cyanobacteria-promoters/deep-reading.md` — 210 lines, SHA-256 `277b18c0fd65467b459ab4684a602921d37e3657e7d66dc905474e2d04bf757c`
   - `/tmp/sci-read-paper-expert-default-siamprom.0uQFso/siamprom-cyanobacteria-promoters/evidence-ledger.md` — 39 lines, SHA-256 `3b5f403d2f3ba5591a5a386b5558c01a826c2b0acfcedc0fd621572c89792039`
 - Retry count: `0`; the trial was not regenerated or edited.
+- Repository acquisition boundary: `FAIL`. A normal repository clone fetched `.research/SiamProm/weights/siamprom_phantom.pth` (`49,797,656` bytes) even though the report did not inspect or depend on the checkpoint.
 
 ## Expert-understanding checks
 
@@ -32,11 +33,12 @@ Overall: `4/5` expert-understanding checks passed. The report is a substantive e
 - **Promoter, non-promoter, pair, classifier, and gradient flow remain traceable:** `deep-reading.md:49–71` follows positive/phantom construction, random pairing, XOR pair labels, two cross-entropies, and the `no_grad()`-induced gradient separation.
 - **Motif identity is externally calibrated:** `deep-reading.md:33`, `:155–167`, and `:175–179` identify `GCGATCGC` as the previously known HIP1 sequence, distinguish genome signature from promoter function, and quantify the sampling-induced shortcut.
 - **Conclusion-changing paper-code conflicts remain visible:** `deep-reading.md:31`, `:65–69`, `:97–101`, and `:175–191` retain TSS/GC construction conflicts, 10-fold versus 90/10 split behavior, label encoding, attention masking, and missing executable experiment paths.
-- **External-check boundary was obeyed:** `evidence-ledger.md:32–39` records two conclusion-critical external claim families rather than a broad literature review.
+- **External claim-family boundary was obeyed:** `evidence-ledger.md:32–39` records two conclusion-critical external claim families rather than a broad literature review. This does not cancel the separate repository-blob boundary failure recorded above.
 
 ## Observed limitations
 
 - First visible dossier output appeared after about 13 minutes; the complete agent turn took 14m 17s. Source scope was bounded, but first-result latency is still not interactive.
+- Code analysis stayed on the central paths, but source acquisition was not fully bounded: the clone downloaded a 49.8 MB checkpoint. The skill now requires raw-file, sparse, or blob-filtered retrieval that excludes weight paths before checkout; this wording change was not behaviorally rerun.
 - The 210-line, 12,773-character main report is readable and strongly structured, but still closer to a long expert note than a short everyday reading aid.
 - The concrete first sample is not explicitly carried through the generic model tensor path to a named prediction.
 - Status is `partial` because the official release lacks negative-generation scripts, a 10-fold driver, baseline reproduction, and motif-analysis code; this cannot be fixed by report wording.

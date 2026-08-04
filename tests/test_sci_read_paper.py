@@ -86,14 +86,40 @@ class SkillContractTests(unittest.TestCase):
 
     def test_standard_mode_has_two_required_outputs(self):
         contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
-        self.assertIn("## Standard Mode — Default", contract)
-        self.assertIn("evidence-ledger.md", contract)
+        standard = contract.split("## Standard Mode — Default", 1)[1].split(
+            "## Audit Mode — Explicit", 1
+        )[0]
+        tree = re.search(r"```text\n(.*?)\n```", standard, re.DOTALL)
+        self.assertIsNotNone(tree)
+        markdown_paths = re.findall(r"[\w/-]+\.md", tree.group(1))
+        self.assertEqual(markdown_paths, ["deep-reading.md", "evidence-ledger.md"])
+        for appendix in (
+            "data-training.md",
+            "model-dataflow.md",
+            "experiment-matrix.md",
+            "critical-review.md",
+        ):
+            self.assertNotIn(appendix, tree.group(1))
         self.assertIn("at most one targeted appendix", contract)
         self.assertIn("does not require the four audit appendices", contract)
 
     def test_audit_mode_preserves_full_dossier(self):
         contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
-        self.assertIn("## Audit Mode — Explicit", contract)
+        audit = contract.split("## Audit Mode — Explicit", 1)[1].split("## Primary Report", 1)[0]
+        tree = re.search(r"```text\n(.*?)\n```", audit, re.DOTALL)
+        self.assertIsNotNone(tree)
+        markdown_paths = re.findall(r"[\w/-]+\.md", tree.group(1))
+        self.assertEqual(
+            markdown_paths,
+            [
+                "deep-reading.md",
+                "evidence-ledger.md",
+                "data-training.md",
+                "model-dataflow.md",
+                "experiment-matrix.md",
+                "critical-review.md",
+            ],
+        )
         for appendix in (
             "appendices/data-training.md",
             "appendices/model-dataflow.md",
@@ -111,6 +137,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("at most three conclusion-critical claim families", policy)
         self.assertIn("shortest conclusion-relevant path", guide)
         self.assertIn("Do not download weights", guide)
+        self.assertIn("sparse or blob-filtered repository retrieval", guide)
 
     def test_report_records_selected_mode(self):
         contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
