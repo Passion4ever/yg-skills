@@ -42,9 +42,14 @@ class DocumentIndex(HTMLParser):
         self.internal_targets: list[str] = []
         self.section_ids: list[str] = []
         self.classes: list[str] = []
+        self._main_depth = 0
+        self._active_evidence_link: tuple[str, list[str]] | None = None
+        self.main_report_evidence_links: list[tuple[str, str]] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]):
         attributes = dict(attrs)
+        if tag == "main":
+            self._main_depth += 1
         element_id = attributes.get("id")
         if element_id:
             self.ids.append(element_id)
@@ -54,6 +59,24 @@ class DocumentIndex(HTMLParser):
         if tag == "a" and href and href.startswith("#"):
             self.internal_targets.append(href[1:])
         self.classes.extend((attributes.get("class") or "").split())
+        if (
+            tag == "a"
+            and self._main_depth
+            and "evidence-link" in (attributes.get("class") or "").split()
+        ):
+            self._active_evidence_link = (href or "", [])
+
+    def handle_data(self, data: str):
+        if self._active_evidence_link is not None:
+            self._active_evidence_link[1].append(data)
+
+    def handle_endtag(self, tag: str):
+        if tag == "a" and self._active_evidence_link is not None:
+            href, text = self._active_evidence_link
+            self.main_report_evidence_links.append((href, "".join(text)))
+            self._active_evidence_link = None
+        if tag == "main":
+            self._main_depth -= 1
 
 
 def read_frontmatter(path: Path) -> tuple[dict, str]:
@@ -377,6 +400,20 @@ class SkillContractTests(unittest.TestCase):
         for title in EXPECTED_SECTION_TITLES:
             self.assertIn(title, text)
         self.assertNotIn("<h2>阅读导航</h2>", text)
+
+    def test_siamprom_main_report_evidence_links_target_each_visible_id(self):
+        """Each cited evidence ID must navigate directly to its ledger row."""
+        parser = DocumentIndex()
+        parser.feed(SIAMPROM_HTML.read_text(encoding="utf-8"))
+
+        self.assertTrue(parser.main_report_evidence_links)
+        for href, visible_citation in parser.main_report_evidence_links:
+            visible_ids = re.findall(r"E\d{2}", visible_citation)
+            self.assertEqual(
+                visible_ids,
+                [href.removeprefix("#")],
+                f"{visible_citation!r} must give every Evidence ID its own matching anchor",
+            )
 
     def test_siamprom_showcase_preserves_scientific_depth(self):
         self.assertTrue(SIAMPROM_HTML.is_file(), "complete SiamProm HTML showcase is missing")
