@@ -75,19 +75,14 @@ Do not download weights, inspect every utility, enumerate every configuration fi
 
 ## Experiment Reasoning
 
-Organize experiments by research question rather than paper table order. Group baseline, control, ablation, robustness/generalization, case study, and external validation evidence around the claim being tested.
+Organize experiments by research question rather than paper table order. Group baseline, control, ablation, robustness/generalization, case study, and external validation evidence around the claim being tested. `output-contract.md` defines the experiment card fields and the experiment-type vocabulary; use them verbatim rather than a local variant.
 
-For each core question explain descriptively in an experiment card:
+The evidence boundary records missing controls, uncertainty, unavailable artifacts, or direct design limits in neutral language, carries its own `B01`-style ID, and is discharged in Section 7. Concentrate the cumulative judgment there; in `audit` mode, store the exhaustive inventory in the embedded `experiment-matrix` panel.
 
-```text
-作者要回答：...
-实验类型：...
-实验怎样设计：...
-改变了什么，控制了什么：...
-数据与指标：...
-实际观察到什么：...
-作者据此主张什么：...
-证据边界：...
-```
+Check seeds, confidence intervals, isolated ablations, and whether analysis plots are evidence or illustration. Three checks are easy to skip and decide what the main table means:
 
-The evidence boundary records missing controls, uncertainty, unavailable artifacts, or direct design limits in neutral language and points to Section 7. Check baseline fairness, isolated ablations, seeds, confidence intervals, and whether analysis plots are evidence or illustration; concentrate the cumulative judgment in Section 7. In `audit` mode, store the exhaustive inventory in the embedded `experiment-matrix` panel.
+**Baseline parity.** Do the baselines have the same interface as the proposed model — same inputs, same conditioning signals, same tuning budget, same evaluation protocol? A model conditioned on the very quantities the table scores will beat an unconditioned baseline on those quantities without being a better model. When the comparison mixes architecture with capability, say so and note whether an equally-conditioned variant or an unconditioned ablation restores the comparison.
+
+**Input ablation.** Name the single input whose removal would falsify the paper's mechanistic claim, and check whether that ablation was run. A model claiming to capture an interaction must lose accuracy when one side of the interaction is withheld; a ligand-only or sequence-only variant that matches the full model shows the claimed mechanism is not what carries the performance. Unrun means the claim tops out at association.
+
+**Metric validity.** Check that the reported metric can express the failure that matters: class balance and prevalence against AUROC versus AUPRC, threshold choice, whether enrichment is computed over a matched decoy set, and whether the aggregate hides per-target or per-scaffold variance. A metric chosen after seeing results, or reported without the spread across seeds and targets, bounds the claim rather than supporting it.

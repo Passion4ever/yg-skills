@@ -2,6 +2,18 @@
 
 Load only for protein, small-molecule, molecular-generation, binding, or drug-discovery work.
 
+## Negative Samples and Decoys
+
+In this field the negative class is usually constructed, not observed, so how it was built often decides what the reported accuracy means. Check:
+
+- how negatives were generated: sampled from genomic or library background, randomly shuffled, mono- or di-nucleotide shuffled, scaffold-swapped, property-matched decoys, or assumed-inactive by absence of a positive record;
+- whether positives and negatives are matched on composition — GC content, k-mer spectrum, length, molecular weight, logP, charge — or differ in a way a trivial model could exploit;
+- whether a composition-only baseline (k-mer frequency, fingerprint similarity, physicochemical descriptors alone) already separates the classes; if it does, the reported gain over it, not the raw metric, is the result;
+- whether absence of a positive label means measured-inactive or merely untested, and what that does to precision;
+- for a paper whose contribution *is* the negative generator, whether harder negatives were shown to make the task harder for prior models too, rather than only for the proposed one.
+
+A classifier that separates constructed negatives has demonstrated separability from that construction. Restate the claim in those terms and treat transfer to natural or prospective negatives as untested until a held-out natural negative set is evaluated.
+
 ## Protein and Sequence Tasks
 
 Check:
