@@ -160,6 +160,18 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("audit panels", contract)
         self.assertIn("sci-ai-figure", contract)
 
+    def test_figure_mode_is_explicit_and_defaults_off(self):
+        skill = SKILL_MD.read_text(encoding="utf-8")
+        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(
+            encoding="utf-8"
+        )
+        for state in ("figure=off", "figure=brief", "figure=generate"):
+            self.assertIn(state, skill)
+            self.assertIn(state, contract)
+        self.assertIn("default", skill)
+        self.assertIn("fall back to `figure=brief`", contract)
+        self.assertIn("does not change the paper-reading completion status", contract)
+
     def test_standard_mode_has_one_html_output(self):
         contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
         standard = contract.split("## Standard Mode — Default", 1)[1].split(

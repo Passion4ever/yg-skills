@@ -10,7 +10,7 @@ Required output:
 <paper-slug>.html
 ```
 
-The file contains the complete eight-section reading, an embedded evidence ledger, report/version information, and optional collapsed figure briefs. Do not leave working notes or intermediate artifacts in the final output directory.
+The file contains the complete eight-section reading, an embedded evidence ledger, and report/version information. With the default `figure=off`, it contains no figure material. Do not leave working notes or intermediate artifacts in the final output directory.
 
 ## Audit Mode — Explicit
 
@@ -163,8 +163,18 @@ Every main-report citation is an internal link such as `<a class="evidence-link"
 
 The primary report keeps background, causal reasoning, one sample, primary model flow, core experiment logic, conclusion-changing facts, calibrated review, and final synthesis. Audit panels own exhaustive configurations, complete interfaces/shapes, every experiment row, and expanded reproducibility inventories. Reference earlier sections and evidence IDs rather than duplicating prose.
 
-## Optional Figure Handoff
+## Figure Mode
 
-Keep at most three collapsed briefs only when a visual materially improves understanding. Each brief contains purpose/reader, figure type, entities/relationships, evidence IDs, visual hierarchy, and content that must not be invented.
+Select `mode` and `figure` independently:
 
-Do not generate images automatically. If `sci-ai-figure` is installed and the user explicitly asks, pass the brief as the handoff contract. Embed an explicitly requested final image as a data URI when the report must remain one file.
+```text
+mode=standard|audit, figure=off|brief|generate
+```
+
+- `figure=off` is the default. Emit no figure heading, brief, image, empty disclosure, or other figure UI.
+- Select `figure=brief` when the user asks for a figure plan, visual brief, or drawing proposal. Render at most three collapsed briefs after Section 8. Do not invoke a figure-generation skill.
+- Select `figure=generate` when the user asks to create, draw, or generate a scientific figure. When `sci-ai-figure` is available, invoke it from the brief as a handoff contract and embed at most three usable generated images as data URIs with concise captions, alt text, and evidence IDs. Do not expose the internal handoff brief by default.
+
+Each brief contains purpose/reader, figure type, entities and relationships, evidence IDs, visual hierarchy, and content that must not be invented.
+
+If generation is unavailable or fails before producing a usable image, finish the reading, fall back to `figure=brief`, and state the reason once. This fallback does not change the paper-reading completion status.

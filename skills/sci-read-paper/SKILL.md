@@ -37,4 +37,4 @@ In `standard` mode, resolve conclusion-changing evidence, then write one self-co
 - The HTML contains the complete research story and embedded evidence ledger without duplicated inventories.
 - Mark `mode: standard|audit` and `complete|partial`; list unresolved gaps once and repeat them only where they change a judgment.
 
-Generate figure briefs only when a visual materially improves understanding. Do not invoke `sci-ai-figure` unless it is available and the user explicitly asks for a figure.
+Select `figure=off` by default and emit no figure UI. Select `figure=brief` only when the user asks for a drawing plan or visual brief. Select `figure=generate` only when the user asks to create the figure; invoke `sci-ai-figure` when available, otherwise fall back to `figure=brief` without interrupting the paper reading.
