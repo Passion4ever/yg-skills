@@ -351,6 +351,18 @@ class SkillContractTests(unittest.TestCase):
             self, HTML_TEMPLATE.read_text(encoding="utf-8")
         )
 
+    def test_template_uses_conditional_figure_output(self):
+        text = HTML_TEMPLATE.read_text(encoding="utf-8")
+        self.assertIn("{{FIGURE_OUTPUT}}", text)
+        self.assertNotIn("{{FIGURE_BRIEFS}}", text)
+        self.assertNotIn("可选科研绘图 Briefs", text)
+
+    def test_siamprom_default_report_omits_figure_output(self):
+        text = SIAMPROM_HTML.read_text(encoding="utf-8")
+        self.assertNotIn('id="figure-briefs"', text)
+        self.assertNotIn("可选科研绘图 Brief", text)
+        self.assertNotIn("sci-ai-figure 的交接契约", text)
+
     def test_siamprom_showcase_has_complete_internal_links(self):
         self.assertTrue(SIAMPROM_HTML.is_file(), "complete SiamProm HTML showcase is missing")
         text = SIAMPROM_HTML.read_text(encoding="utf-8")
