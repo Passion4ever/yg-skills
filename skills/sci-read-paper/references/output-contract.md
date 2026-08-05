@@ -2,6 +2,37 @@
 
 Deliver one offline, self-contained HTML file from a stable paper slug. Start from `../assets/report-template.html`; preserve its semantic structure and component classes while replacing all template placeholders with escaped report content.
 
+## Build Procedure
+
+Never type the report from scratch and never retype the template CSS; the stylesheet must survive byte-for-byte.
+
+1. Write to `<outdir>/<paper-slug>.html`, or `<outdir>/<paper-slug>-audit.html` in `audit` mode. Use the user's working directory as `<outdir>` unless they name one, and report the absolute path when you finish.
+2. Copy `../assets/report-template.html` to that path.
+3. Replace `{{REPORT_BODY}}` with eight empty section shells first — `id`, `class="report-section"`, chapter label, `<h2>` title, and reading cue — so the skeleton exists before any prose does.
+4. Fill one section per edit, then the remaining placeholders. Editing in place keeps a truncated write visible as a leftover `{{TOKEN}}` instead of a silently short report.
+5. Run the validator. Fix every reported violation and re-run until it exits `0`. Do not describe the report as finished before that.
+
+   ```bash
+   python3 <skill-dir>/scripts/validate_report.py --figure <off|brief|generate> <delivered file>
+   ```
+
+   `<skill-dir>` is the directory holding `SKILL.md`; the report path is relative to the user's working directory, not the skill.
+
+The template has ten placeholders and every one must be resolved — two by deletion:
+
+| Placeholder | Where | Replace with |
+|---|---|---|
+| `{{DISPLAY_TITLE}}` ×3 | `<title>`, sidebar header, hero `<h1>` | short Chinese display title, e.g. `SiamProm 深度精读` |
+| `{{PAPER_SUBTITLE}}` ×2 | `<title>`, hero | the complete original paper title |
+| `{{SIDEBAR_SUBTITLE}}` | sidebar header | one compressed line identifying the paper |
+| `{{REPORT_META}}` | hero | status badges and journal/DOI/access-date spans |
+| `{{SUMMARY_ROWS}}` | hero `论文速览` | the three labeled rows |
+| `{{REPORT_BODY}}` | `<main>` | the eight sections |
+| `{{FIGURE_OUTPUT}}` | `<main>` | `<section id="figure-output">…</section>`, or **delete the whole line** when `figure=off` |
+| `{{AUDIT_PANELS}}` | `<main>` | the four audit panels, or **delete the whole line** in `standard` mode |
+| `{{REPORT_DETAILS}}` | footer disclosure | provenance, versions, unresolved gaps |
+| `{{EVIDENCE_LEDGER}}` | footer disclosure | the complete ledger table |
+
 ## Standard Mode — Default
 
 Required output:
@@ -53,7 +84,9 @@ Continue through `CHAPTER 08`. Primary sections are continuous article chapters,
 
 Do not create a `阅读导航` report section. Use a short Chinese display title such as `SiamProm 深度精读`, then preserve the complete original paper title as the subtitle. Keep the metadata compact: record `mode: standard|audit`, `complete|partial`, journal identity, DOI/stable ID, and access date.
 
-Use one compact `论文速览` block with three labeled rows, not three cards:
+Record the mode and status as separate badges, `<span class="status-badge">mode: standard</span><span class="status-badge">partial</span>`. Do not add a `figure:` badge; the figure mode is not report metadata.
+
+Use one compact `论文速览` block with three labeled rows, not three cards. Each row is `<div class="quick-view-row"><strong>标签</strong><p>……</p></div>` — the template styles `p` inside a row and does not style `span`:
 
 - `作者主线`: intended contribution, without a verdict;
 - `证据状态`: conclusion-changing gaps and the smallest resolving material;
@@ -63,7 +96,9 @@ Use the fixed dark sidebar and group links as `论文概览` (Sections 1–2), `
 
 ## Footer Provenance
 
-Immediately before the embedded evidence ledger, use a collapsed disclosure named `来源、版本与未解决问题`. Record the paper version, code commit, conclusion-changing unavailable artifacts, affected claims, and smallest resolving material there. Do not duplicate this full provenance block in the hero.
+Immediately before the embedded evidence ledger, use the disclosure named `来源、版本与未解决问题`. Record the paper version, code commit, conclusion-changing unavailable artifacts, affected claims, and smallest resolving material there. Do not duplicate this full provenance block in the hero.
+
+Keep both footer disclosures marked `open`, as the template ships them. A closed `<details>` is hidden in print and PDF, which would strand every `〔E…〕` in the report body.
 
 ## Section Responsibilities
 
@@ -109,6 +144,7 @@ Separate observation from author interpretation. Do not add `我们的判断`; c
 Open with an explicit switch into reviewer mode. Separate data/method, computational performance, generalization, mechanism/domain-fact, and novelty claims. Rank central-conclusion threats first, generalization/domain validity second, reproducibility third, and secondary issues last. Use review cards:
 
 ```text
+处理的证据边界：B02、B05
 审查议题：...
 作者主张：...
 支持证据：...
@@ -118,7 +154,11 @@ Open with an explicit switch into reviewer mode. Separate data/method, computati
 最小解决实验：...
 ```
 
-Calibrate impact as no material effect, reduced confidence, narrowed scope, weaker supported claim, or rejected claim. End with `可以相信`, `可以暂时相信`, `当前不能推出`, and `被现有证据否定` as applicable.
+Every boundary raised in Sections 1–6 must be discharged here. A card claims the boundaries it assesses by linking each one, `<a class="boundary-link" href="#B02">B02</a>`; write `无` when a card answers a question no boundary raised. Close the section with `<section id="no-effect-boundaries">无实质影响的证据边界</section>`, linking every remaining boundary once with a one-clause reason. The link only counts from inside a review card or that closing block — a passing mention elsewhere is not a discharge, and `validate_report.py` fails on both an unlinked and a merely-mentioned boundary.
+
+Keep one boundary to one fact. A boundary bundling four unreported items can be linked by a card that addresses one of them, and the validator cannot tell the difference; a card discharges a boundary only by naming what that boundary asserts, in its own `反证或替代解释` or `证据缺少什么`.
+
+Calibrate impact as no material effect, reduced confidence, narrowed scope, weaker supported claim, or rejected claim. End with `可以相信`, `可以暂时相信`, `当前不能推出`, and `被现有证据否定` as applicable. Each verdict must survive every boundary that touches it: do not endorse a comparison a boundary flagged as confounded.
 
 ### Section 8 — Final Synthesis
 
@@ -139,21 +179,30 @@ Keep one explanatory purpose per paragraph and usually 3–5 sentences. Use Chin
 
 When any conclusion-changing fact appears—including a paper-code/data conflict, missing material, external correction, or direct logical fact—use a compact neutral handoff. For a conflict, state both the paper's report and what released evidence shows.
 
+Give every boundary a sequential ID on its own container so Section 7 can be checked against it. Use `<aside class="evidence-boundary" id="B02">`, standalone or nested inside an experiment card — the class carries the styling and the `:target` highlight the Section 7 links jump to. A `证据边界` with no B-id fails validation.
+
 ```text
 证据边界：相关材料显示……。这是理解论文必须知道的事实；其对结论的影响在第 7 节集中评估。〔E…〕
 ```
 
-The boundary states facts. Severity, alternatives, claim downgrades, and verdicts belong in Section 7.
+The boundary states facts. Severity, alternatives, claim downgrades, and verdicts belong in Section 7. Raising a boundary is a promise; Section 7 keeps it.
 
 ## Embedded Evidence Ledger
 
 Place the complete ledger in `<details id="evidence-ledger">` in the footer. Each record keeps evidence ID, one of `[论文] [代码] [外部核验] [推断] [缺失] [冲突]`, source, version/commit, locator, supported statement, and access status.
 
-Every main-report citation is an internal link such as `<a class="evidence-link" href="#E03">〔E03〕</a>`, and every ledger record has a unique matching ID such as `<tr class="ledger-row" id="E03">`. A range or cluster must link each cited claim to a resolvable record; never use evidence styling without a target.
+Every ledger record is a row with a unique matching ID, `<tr class="ledger-row" id="E03">`. Cite it with one anchor per ID, and keep `〔`, `、`, and `〕` outside the anchors so every link's visible text is exactly one resolvable evidence ID:
+
+```html
+〔<a class="evidence-link" href="#E01">E01</a>、<a class="evidence-link" href="#E02">E02</a>〕
+```
+
+Never write a range, never wrap punctuation in an anchor, and never use evidence styling without a target.
 
 ## UI and Offline Contract
 
 - Preserve the template's technical-monograph hero, fixed `280px` dark grouped sidebar, compact `论文速览`, continuous chapters, readable 820–860 px text column, evidence boundaries, experiment cards, review cards, graded takeaways, responsive tables, and print CSS.
+- Keep the template's single `<style>` element byte-for-byte. Express every report-specific need with the classes it already defines; a second stylesheet or an edited rule means the report was not built from the template.
 - Keep CSS inline. Do not use external stylesheets, fonts, scripts, Mermaid, MathJax, iframes, or non-data-URI images.
 - Escape all paper/code/data text before inserting it as HTML. Do not copy source event handlers or executable markup.
 - Use semantic HTML, visible focus states, labels in addition to color, `prefers-reduced-motion`, a basic single-column fallback below 900 px, and print rules that hide the sidebar and expose collapsed evidence. Do not add a mobile navigation drawer in the desktop-first report.
@@ -171,9 +220,11 @@ Select `mode` and `figure` independently:
 mode=standard|audit, figure=off|brief|generate
 ```
 
-- `figure=off` is the default. Emit no figure heading, brief, image, empty disclosure, or other figure UI.
-- Select `figure=brief` when the user asks for a figure plan, visual brief, or drawing proposal. Render at most three collapsed briefs after Section 8. Do not invoke a figure-generation skill.
-- Select `figure=generate` when the user asks to create, draw, or generate a scientific figure. When `sci-ai-figure` is available, invoke it from the brief as a handoff contract and embed at most three usable generated images as data URIs with concise captions, alt text, and evidence IDs. Do not expose the internal handoff brief by default.
+All figure output lives in one `<section id="figure-output">` replacing the `{{FIGURE_OUTPUT}}` placeholder after Section 8. Pass the selected mode to the validator with `--figure`; it checks both directions, so a `figure=brief` report validated as `off` fails, and so does an `off` report that emitted figure UI.
+
+- `figure=off` is the default. Delete the `{{FIGURE_OUTPUT}}` line and emit no figure heading, brief, image, empty disclosure, or other figure UI.
+- Select `figure=brief` when the user asks for a figure plan, visual brief, or drawing proposal. Render at most three collapsed briefs inside `#figure-output`. Do not invoke a figure-generation skill.
+- Select `figure=generate` when the user asks to create, draw, or generate a scientific figure. When `sci-diagram` is available, invoke it from the brief as a handoff contract and embed at most three usable generated images inside `#figure-output` as data URIs with concise captions, alt text, and evidence IDs. Do not expose the internal handoff brief by default.
 
 Each brief contains purpose/reader, figure type, entities and relationships, evidence IDs, visual hierarchy, and content that must not be invented.
 
