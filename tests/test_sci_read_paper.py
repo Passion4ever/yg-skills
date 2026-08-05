@@ -72,9 +72,12 @@ def extract_css_rule(text: str, selector: str) -> str:
 
 
 def assert_frameflow_inspired_layout(testcase: unittest.TestCase, text: str):
+    custom_styles = text[text.index(":root") :]
     sidebar_rule = extract_css_rule(text, ".sidebar")
     content_rule = extract_css_rule(text, ".content-shell")
     chapter_rule = extract_css_rule(text, "main > section.report-section")
+    root_rule = extract_css_rule(custom_styles, "html")
+    body_rule = extract_css_rule(custom_styles, "body")
 
     for declaration in (
         "width: 280px",
@@ -97,6 +100,8 @@ def assert_frameflow_inspired_layout(testcase: unittest.TestCase, text: str):
     testcase.assertIn("论文速览", text)
     testcase.assertNotIn('class="summary-grid"', text)
     testcase.assertNotIn('class="summary-card', text)
+    testcase.assertNotIn("overflow-x: clip", root_rule)
+    testcase.assertNotIn("overflow-x: clip", body_rule)
 
 
 class SkillContractTests(unittest.TestCase):
