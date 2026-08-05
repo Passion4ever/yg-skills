@@ -71,32 +71,32 @@ def extract_css_rule(text: str, selector: str) -> str:
     return match.group(1)
 
 
-def assert_compact_reading_layout(testcase: unittest.TestCase, text: str):
-    header = text.split("<header", 1)[1].split("</header>", 1)[0]
-    footer = text.split("<footer", 1)[1].split("</footer>", 1)[0]
-    title_rule = extract_css_rule(text, ".paper-title")
-    shell_rule = extract_css_rule(text, ".page-shell")
-    toc_rule = extract_css_rule(text, ".toc")
+def assert_frameflow_inspired_layout(testcase: unittest.TestCase, text: str):
+    sidebar_rule = extract_css_rule(text, ".sidebar")
+    content_rule = extract_css_rule(text, ".content-shell")
+    chapter_rule = extract_css_rule(text, "main > section.report-section")
 
-    testcase.assertIn("font-size: clamp(1.9rem, 3.2vw, 3.2rem)", title_rule)
     for declaration in (
-        "width: min(calc(100% - 64px), 1360px)",
-        "grid-template-columns: 225px minmax(0, 900px)",
-        "gap: 30px",
-        "justify-content: start",
+        "width: 280px",
+        "position: fixed",
+        "background: var(--nav)",
     ):
-        testcase.assertIn(declaration, shell_rule)
+        testcase.assertIn(declaration, sidebar_rule)
+    testcase.assertIn("margin-left: 280px", content_rule)
+    testcase.assertIn("max-width: 980px", content_rule)
     for declaration in (
-        "border-left: 3px solid var(--accent)",
+        "background: transparent",
+        "border: 0",
+        "border-radius: 0",
         "box-shadow: none",
     ):
-        testcase.assertIn(declaration, toc_rule)
+        testcase.assertIn(declaration, chapter_rule)
 
-    testcase.assertNotIn('class="report-info"', header)
-    testcase.assertIn("来源、版本与未解决问题", footer)
-    testcase.assertLess(
-        footer.index("来源、版本与未解决问题"), footer.index("evidence-ledger")
-    )
+    for group in ("论文概览", "问题与方法", "实验与审查", "最终结论", "报告附录"):
+        testcase.assertIn(group, text)
+    testcase.assertIn("论文速览", text)
+    testcase.assertNotIn('class="summary-grid"', text)
+    testcase.assertNotIn('class="summary-card', text)
 
 
 class SkillContractTests(unittest.TestCase):
@@ -307,7 +307,7 @@ class SkillContractTests(unittest.TestCase):
             "<main",
             "<footer",
             "--paper",
-            "position: sticky",
+            "position: fixed",
             "@media (max-width: 900px)",
             "@media print",
             "prefers-reduced-motion",
@@ -328,7 +328,7 @@ class SkillContractTests(unittest.TestCase):
 
     def test_report_template_uses_compact_reading_layout(self):
         self.assertTrue(HTML_TEMPLATE.is_file(), "reusable HTML report template is missing")
-        assert_compact_reading_layout(
+        assert_frameflow_inspired_layout(
             self, HTML_TEMPLATE.read_text(encoding="utf-8")
         )
 
@@ -362,7 +362,16 @@ class SkillContractTests(unittest.TestCase):
 
     def test_siamprom_showcase_uses_compact_reading_layout(self):
         self.assertTrue(SIAMPROM_HTML.is_file(), "complete SiamProm HTML showcase is missing")
-        assert_compact_reading_layout(self, SIAMPROM_HTML.read_text(encoding="utf-8"))
+        text = SIAMPROM_HTML.read_text(encoding="utf-8")
+        assert_frameflow_inspired_layout(self, text)
+        self.assertIn('<h1 class="paper-title">SiamProm 深度精读</h1>', text)
+        self.assertIn(
+            '<p class="paper-subtitle">Recognition of cyanobacteria promoters', text
+        )
+        self.assertEqual(
+            re.findall(r'<p class="chapter-label">CHAPTER (\d\d)</p>', text),
+            [f"{index:02d}" for index in range(1, 9)],
+        )
 
     def test_eval_schema_and_case_coverage(self):
         data = json.loads(EVALS_JSON.read_text(encoding="utf-8"))
