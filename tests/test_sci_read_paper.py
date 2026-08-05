@@ -45,6 +45,8 @@ class DocumentIndex(HTMLParser):
         self._main_depth = 0
         self._active_evidence_link: tuple[str, list[str]] | None = None
         self.main_report_evidence_links: list[tuple[str, str]] = []
+        self._active_evidence_citation: list[tuple[str, str]] = []
+        self.main_report_evidence_citations: list[list[tuple[str, str]]] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]):
         attributes = dict(attrs)
@@ -73,7 +75,12 @@ class DocumentIndex(HTMLParser):
     def handle_endtag(self, tag: str):
         if tag == "a" and self._active_evidence_link is not None:
             href, text = self._active_evidence_link
-            self.main_report_evidence_links.append((href, "".join(text)))
+            evidence_link = (href, "".join(text))
+            self.main_report_evidence_links.append(evidence_link)
+            self._active_evidence_citation.append(evidence_link)
+            if evidence_link[1].endswith("〕"):
+                self.main_report_evidence_citations.append(self._active_evidence_citation)
+                self._active_evidence_citation = []
             self._active_evidence_link = None
         if tag == "main":
             self._main_depth -= 1
@@ -413,6 +420,18 @@ class SkillContractTests(unittest.TestCase):
                 visible_ids,
                 [href.removeprefix("#")],
                 f"{visible_citation!r} must give every Evidence ID its own matching anchor",
+            )
+        self.assertTrue(parser.main_report_evidence_citations)
+        for citation in parser.main_report_evidence_citations:
+            rendered_citation = "".join(text for _href, text in citation)
+            implied_ids = []
+            for range_start, range_end in re.findall(r"E(\d{2})(?:–E(\d{2}))?", rendered_citation):
+                end = int(range_end or range_start)
+                implied_ids.extend(f"E{number:02d}" for number in range(int(range_start), end + 1))
+            self.assertEqual(
+                [href.removeprefix("#") for href, _text in citation],
+                implied_ids,
+                f"{rendered_citation!r} must link every ID implied by an evidence range",
             )
 
     def test_siamprom_showcase_preserves_scientific_depth(self):

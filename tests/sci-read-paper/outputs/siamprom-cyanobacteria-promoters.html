@@ -635,21 +635,21 @@
 <p class="chapter-label">CHAPTER 01</p>
 <h2>为什么要做这项研究：背景、现状与本文切入点</h2>
 <p class="chapter-intro">先厘清模型真正判断的对象，再理解负样本为何决定了这个任务的可信度。</p>
-<p>本文的机器学习任务是：输入一条 81 bp DNA 序列，输出 promoter 或 non-promoter 标签。启动子是转录起始时被 RNA 聚合酶及相关因子识别和结合的 DNA 区域；转录起始位点（transcription start site, TSS）则是 RNA 转录开始的具体碱基坐标，通常记作 +1。二者相关但不是同一个概念：TSS 只是正样本的采样锚点，作者围绕它截取 −60…+20 的窗口；模型并不负责寻找 TSS，也不直接测量转录是否发生。<a class="evidence-link" href="#E01">〔E01–</a><a class="evidence-link" href="#E02">E02〕</a></p>
+<p>本文的机器学习任务是：输入一条 81 bp DNA 序列，输出 promoter 或 non-promoter 标签。启动子是转录起始时被 RNA 聚合酶及相关因子识别和结合的 DNA 区域；转录起始位点（transcription start site, TSS）则是 RNA 转录开始的具体碱基坐标，通常记作 +1。二者相关但不是同一个概念：TSS 只是正样本的采样锚点，作者围绕它截取 −60…+20 的窗口；模型并不负责寻找 TSS，也不直接测量转录是否发生。<a class="evidence-link" href="#E01">〔E01、</a><a class="evidence-link" href="#E02">E02〕</a></p>
 <p>可靠识别一段 DNA 是否具有启动子特征，可以辅助基因调控研究和合成生物学设计。这里还要区分“数据标签”和“生物学事实”：论文把候选 TSS 周围的窗口标作 promoter 正例，这是训练数据的构造方式；一条序列在实验条件下是否真正具有启动活性，则是更强的功能性问题。后文会先按论文的二分类任务解释模型，再在第 7 节审查标签证据能够支持到哪里。<a class="evidence-link" href="#E02">〔E02、</a><a class="evidence-link" href="#E21">E21〕</a></p>
-<p>这类任务最棘手的地方不是缺少正例模式，而是缺少定义清楚的负例。候选 TSS 对齐窗口可被论文用作正样本，但“某段序列是 non-promoter”通常不能通过一次未观察到转录的实验完整证明：它可能只是在特定条件下没有被检测到，也可能含有尚未注释的替代启动子。因此，研究通常使用随机序列、编码区（coding sequence, CDS）片段或人工修改的正例作为代理负样本。模型最终学到什么，会直接受到这些代理负样本怎样生成的影响。<a class="evidence-link" href="#E03">〔E03–</a><a class="evidence-link" href="#E04">E04〕</a></p>
+<p>这类任务最棘手的地方不是缺少正例模式，而是缺少定义清楚的负例。候选 TSS 对齐窗口可被论文用作正样本，但“某段序列是 non-promoter”通常不能通过一次未观察到转录的实验完整证明：它可能只是在特定条件下没有被检测到，也可能含有尚未注释的替代启动子。因此，研究通常使用随机序列、编码区（coding sequence, CDS）片段或人工修改的正例作为代理负样本。模型最终学到什么，会直接受到这些代理负样本怎样生成的影响。<a class="evidence-link" href="#E03">〔E03、</a><a class="evidence-link" href="#E04">E04〕</a></p>
 <p>如果负样本与正样本差得太明显，模型就可能找到并不对应真实部署任务的简单判别规则。例如，随机序列可能没有细菌启动子常见的 −10 Pribnow box，CDS 片段的 GC 分布也可能与 TSS 邻域不同。此时即使一个简单分类器得到很高分，也只能说明两套人工数据容易区分，不能自动说明它能在真实基因组中排除那些“外观像启动子、实际功能未知”的困难片段。作者据此把论文的切入口放在负样本构造，而不是先扩大模型。<a class="evidence-link" href="#E04">〔E04、</a><a class="evidence-link" href="#E13">E13〕</a></p>
-<p>作者提出的 phantom sampling 试图让负例保留正例中的显眼特征：以一条启动子为模板，保留 −10 区和 TSS 附近碱基，随机化其余片段，并控制两条序列的 GC 差异。这样构造出的负例在表面上更像正例，分类器就需要利用更细的序列关系。随后，Siamese network 通过监督式对比学习把同类序列表征拉近、异类表征推远，再由分类头完成最终判断。<a class="evidence-link" href="#E04">〔E04、</a><a class="evidence-link" href="#E09">E09–</a><a class="evidence-link" href="#E12">E12〕</a></p>
+<p>作者提出的 phantom sampling 试图让负例保留正例中的显眼特征：以一条启动子为模板，保留 −10 区和 TSS 附近碱基，随机化其余片段，并控制两条序列的 GC 差异。这样构造出的负例在表面上更像正例，分类器就需要利用更细的序列关系。随后，Siamese network 通过监督式对比学习把同类序列表征拉近、异类表征推远，再由分类头完成最终判断。<a class="evidence-link" href="#E04">〔E04、</a><a class="evidence-link" href="#E09">E09、</a><a class="evidence-link" href="#E10">E10、</a><a class="evidence-link" href="#E11">E11、</a><a class="evidence-link" href="#E12">E12〕</a></p>
 <p>因此，这篇论文其实同时研究两个彼此依赖的问题：怎样构造不容易被简单捷径识别的非启动子，以及在这种更困难的正负分布上怎样学习表征。理解全文时，应把 phantom sampling 看作对“任务本身”的改造，把 SiamProm 看作对“新任务难度”的模型响应；二者共同构成作者的贡献主线。</p>
 </section>
 <section id="section-2" class="level2 report-section">
 <p class="chapter-label">CHAPTER 02</p>
 <h2>三分钟建立论文全局地图</h2>
 <p class="chapter-intro">用任务、方法、数据流、核心结果和审查入口，建立一张可以独立使用的论文地图。</p>
-<p>论文直接做的是 81 bp DNA 序列的 promoter/non-promoter 二分类。它进一步想回答：如果过去的高分主要来自过于简单的负样本，那么能否先制造更像启动子的困难负例，再用对比学习逼迫模型寻找更细的差异？作者以 Anabaena/Nostoc sp. PCC 7120 的候选 TSS 为锚点截取 13,705 个窗口，经 80% CD-HIT-EST 去冗余后将 12,566 条序列作为正例；随后分别构造 random、CDS、partial substitution 和 phantom 四套负例。论文描述的 phantom 负例保留 −10 区与 TSS，对其余片段中的 7/10 进行随机化，并将 GC 差控制在 5% 以内。<a class="evidence-link" href="#E02">〔E02、</a><a class="evidence-link" href="#E04">E04–</a><a class="evidence-link" href="#E07">E07〕</a></p>
-<p>模型把每条 81 nt 序列切成 79 个重叠 3-mer。每个 token 变成 1024 维向量后，同时进入 self-attention、双向 LSTM 和 1D-CNN 三条路径，分别汇总全局 token 关系、双向顺序上下文和局部邻域模式；三路结果经均值池化后拼接，再压缩为 128 维序列表征。训练时，两条序列共用同一编码器：contrastive loss 决定表征空间中谁应该靠近、谁应该至少相隔 margin；分类头则把单条序列的 128 维表征映射成 promoter/non-promoter logits。<a class="evidence-link" href="#E09">〔E09–</a><a class="evidence-link" href="#E12">E12〕</a></p>
-<p>作者的实验故事与这个设计顺序一致。SVM 在 random 和 CDS 数据上分别达到 90.22% 和 88.54% accuracy，换到 phantom 后降至 78.33%，说明新的负例确实让所有模型面对更难的区分任务。在 phantom 数据的报告结果中，SiamProm 达到 88.74% accuracy 和 0.7754 MCC，高于论文比较的四个模型；去掉 Siamese 表征阶段后，accuracy 降为 82.66%，MCC 降为 0.6531。作者还在 34 条 pseudo-promoter 上报告 88.23% specificity，并通过 attention 与序列频次分析提出 <code>GCGATCGC</code> 是潜在的新 motif。<a class="evidence-link" href="#E13">〔E13–</a><a class="evidence-link" href="#E17">E17〕</a></p>
-<aside class="evidence-boundary"><p><strong>证据边界：</strong> 公开 phantom 数据在 TSS 保留和逐对 GC 约束上与论文描述不一致，公开训练入口执行一次 90/10 随机划分而不是 10-fold cross-validation；34 条测试序列来自同一基因组 CDS 的规则筛选；外部文献早已把 <code>GCGATCGC</code> 记录为蓝藻高频回文 HIP1。上述事实是理解论文必须知道的边界，其对中心结论的影响统一在第 7 节评估。<a class="evidence-link" href="#E03">〔E03、</a><a class="evidence-link" href="#E05">E05–</a><a class="evidence-link" href="#E08">E08、</a><a class="evidence-link" href="#E18">E18–</a><a class="evidence-link" href="#E21">E21〕</a></p></aside>
+<p>论文直接做的是 81 bp DNA 序列的 promoter/non-promoter 二分类。它进一步想回答：如果过去的高分主要来自过于简单的负样本，那么能否先制造更像启动子的困难负例，再用对比学习逼迫模型寻找更细的差异？作者以 Anabaena/Nostoc sp. PCC 7120 的候选 TSS 为锚点截取 13,705 个窗口，经 80% CD-HIT-EST 去冗余后将 12,566 条序列作为正例；随后分别构造 random、CDS、partial substitution 和 phantom 四套负例。论文描述的 phantom 负例保留 −10 区与 TSS，对其余片段中的 7/10 进行随机化，并将 GC 差控制在 5% 以内。<a class="evidence-link" href="#E02">〔E02、</a><a class="evidence-link" href="#E04">E04、</a><a class="evidence-link" href="#E05">E05、</a><a class="evidence-link" href="#E06">E06、</a><a class="evidence-link" href="#E07">E07〕</a></p>
+<p>模型把每条 81 nt 序列切成 79 个重叠 3-mer。每个 token 变成 1024 维向量后，同时进入 self-attention、双向 LSTM 和 1D-CNN 三条路径，分别汇总全局 token 关系、双向顺序上下文和局部邻域模式；三路结果经均值池化后拼接，再压缩为 128 维序列表征。训练时，两条序列共用同一编码器：contrastive loss 决定表征空间中谁应该靠近、谁应该至少相隔 margin；分类头则把单条序列的 128 维表征映射成 promoter/non-promoter logits。<a class="evidence-link" href="#E09">〔E09、</a><a class="evidence-link" href="#E10">E10、</a><a class="evidence-link" href="#E11">E11、</a><a class="evidence-link" href="#E12">E12〕</a></p>
+<p>作者的实验故事与这个设计顺序一致。SVM 在 random 和 CDS 数据上分别达到 90.22% 和 88.54% accuracy，换到 phantom 后降至 78.33%，说明新的负例确实让所有模型面对更难的区分任务。在 phantom 数据的报告结果中，SiamProm 达到 88.74% accuracy 和 0.7754 MCC，高于论文比较的四个模型；去掉 Siamese 表征阶段后，accuracy 降为 82.66%，MCC 降为 0.6531。作者还在 34 条 pseudo-promoter 上报告 88.23% specificity，并通过 attention 与序列频次分析提出 <code>GCGATCGC</code> 是潜在的新 motif。<a class="evidence-link" href="#E13">〔E13、</a><a class="evidence-link" href="#E14">E14、</a><a class="evidence-link" href="#E15">E15、</a><a class="evidence-link" href="#E16">E16、</a><a class="evidence-link" href="#E17">E17〕</a></p>
+<aside class="evidence-boundary"><p><strong>证据边界：</strong> 公开 phantom 数据在 TSS 保留和逐对 GC 约束上与论文描述不一致，公开训练入口执行一次 90/10 随机划分而不是 10-fold cross-validation；34 条测试序列来自同一基因组 CDS 的规则筛选；外部文献早已把 <code>GCGATCGC</code> 记录为蓝藻高频回文 HIP1。上述事实是理解论文必须知道的边界，其对中心结论的影响统一在第 7 节评估。<a class="evidence-link" href="#E03">〔E03、</a><a class="evidence-link" href="#E05">E05、</a><a class="evidence-link" href="#E06">E06、</a><a class="evidence-link" href="#E07">E07、</a><a class="evidence-link" href="#E08">E08、</a><a class="evidence-link" href="#E18">E18、</a><a class="evidence-link" href="#E19">E19、</a><a class="evidence-link" href="#E20">E20、</a><a class="evidence-link" href="#E21">E21〕</a></p></aside>
 <p><strong>审查预告：</strong> 第 7 节最核心的问题不是“SiamProm 有没有报告出更高分”，而是这些分数和 motif 分析究竟在多大程度上反映启动子识别，而不是负样本生成方式留下的类别特征。</p>
 </section>
 <section id="section-3" class="level2 report-section">
@@ -660,22 +660,22 @@
 <section id="先怀疑任务而不是先怀疑模型" class="level3">
 <h3>3.1 先怀疑任务，而不是先怀疑模型</h3>
 <p>作者首先比较不同负样本构造下的分类难度。random 和 CDS 负例与真实 TSS 邻域在碱基组成和经典启动子外观上存在明显差异，简单 SVM 已能取得接近 90% 的 accuracy。这促使作者提出一个关键假设：旧基准中的一部分性能来自负样本过于容易，而不是模型真正识别到了更细的启动子模式。<a class="evidence-link" href="#E04">〔E04、</a><a class="evidence-link" href="#E13">E13〕</a></p>
-<p>这个判断自然导向 phantom sampling。它不是为了模拟某一种已知生物学非启动子，而是想构造“保留已知强特征、但类别设为负”的困难对照。按照论文描述，一条正例和它的 phantom 负例共享 −10 Pribnow box 与 TSS 两个位置，其余区域被分块并部分随机化，同时约束整体 GC 差。作者希望借此封住最直接的判别线索，使模型必须使用剩余的序列结构。<a class="evidence-link" href="#E04">〔E04–</a><a class="evidence-link" href="#E05">E05〕</a></p>
+<p>这个判断自然导向 phantom sampling。它不是为了模拟某一种已知生物学非启动子，而是想构造“保留已知强特征、但类别设为负”的困难对照。按照论文描述，一条正例和它的 phantom 负例共享 −10 Pribnow box 与 TSS 两个位置，其余区域被分块并部分随机化，同时约束整体 GC 差。作者希望借此封住最直接的判别线索，使模型必须使用剩余的序列结构。<a class="evidence-link" href="#E04">〔E04、</a><a class="evidence-link" href="#E05">E05〕</a></p>
 </section>
 <section id="困难负例为什么引出-siamese-learning" class="level3">
 <h3>3.2 困难负例为什么引出 Siamese learning</h3>
 <p>如果正负序列在 −10 区、TSS 和 GC 上更加接近，只靠一个局部 motif 分类器可能不够。作者因此使用共享权重的 Siamese encoder：两条输入通过同一映射进入 128 维空间，同类配对被拉近，异类配对被推到 margin 之外。这样，训练目标不只要求每个样本被分对，还显式规定了样本之间的几何关系。<a class="evidence-link" href="#E09">〔E09、</a><a class="evidence-link" href="#E11">E11〕</a></p>
-<p>分类损失和对比损失在作者逻辑中承担不同角色。对比损失回答“正例与负例在表征空间应怎样排列”，分类头回答“从这个空间的哪个方向划出决策边界”。公开代码在每个 batch 中同时计算两种损失，但分类路径对 encoder 使用 <code>no_grad()</code>：编码器由 contrastive loss 更新，分类头由 cross-entropy 更新。这是作者“表征学习与分类分工”在实现层面的具体形式。<a class="evidence-link" href="#E10">〔E10–</a><a class="evidence-link" href="#E12">E12〕</a></p>
+<p>分类损失和对比损失在作者逻辑中承担不同角色。对比损失回答“正例与负例在表征空间应怎样排列”，分类头回答“从这个空间的哪个方向划出决策边界”。公开代码在每个 batch 中同时计算两种损失，但分类路径对 encoder 使用 <code>no_grad()</code>：编码器由 contrastive loss 更新，分类头由 cross-entropy 更新。这是作者“表征学习与分类分工”在实现层面的具体形式。<a class="evidence-link" href="#E10">〔E10、</a><a class="evidence-link" href="#E11">E11、</a><a class="evidence-link" href="#E12">E12〕</a></p>
 </section>
 <section id="为什么要有三条并行分支" class="level3">
 <h3>3.3 为什么要有三条并行分支</h3>
-<p>作者认为启动子序列同时包含不同尺度的信息，因此没有只使用一种序列模块。self-attention 允许任意位置的 3-mer 直接建立关系；双向 LSTM 沿序列两个方向积累上下文；1D-CNN 在局部窗口内提取相邻 token 的组合。三路输出统一回到 1024 维通道，沿 79 个 token 均值池化后拼接，形成 3072 维全序列描述，再压缩到 128 维。<a class="evidence-link" href="#E09">〔E09–</a><a class="evidence-link" href="#E10">E10〕</a></p>
+<p>作者认为启动子序列同时包含不同尺度的信息，因此没有只使用一种序列模块。self-attention 允许任意位置的 3-mer 直接建立关系；双向 LSTM 沿序列两个方向积累上下文；1D-CNN 在局部窗口内提取相邻 token 的组合。三路输出统一回到 1024 维通道，沿 79 个 token 均值池化后拼接，形成 3072 维全序列描述，再压缩到 128 维。<a class="evidence-link" href="#E09">〔E09、</a><a class="evidence-link" href="#E10">E10〕</a></p>
 <p>三分支设计在全文论证中的作用，是为“已去除显眼捷径的困难任务”提供多尺度信息来源。后续消融实验分别移除 attention、Bi-LSTM 和 CNN，观察每个分支对最终性能的贡献；因此模型设计和实验设计在这里形成对应关系。需要注意的是，Bi-LSTM 的“反向”是从 token 序列末端向前读取，并不是对 DNA 做 reverse complement，这两个概念在理解模块时应分开。<a class="evidence-link" href="#E10">〔E10、</a><a class="evidence-link" href="#E15">E15〕</a></p>
 </section>
 <section id="从分类器走向-motif-分析" class="level3">
 <h3>3.4 从分类器走向 motif 分析</h3>
 <p>完成分类后，作者进一步平均并归一化正例的 attention 权重，筛选高分 3-mer/4-mer 对，将其拼成 6-mer/8-mer，再按候选序列出现频次排序。这个流程想把“模型依赖哪些 token 关系”转化为“数据中哪些较长序列可能具有功能意义”，最终把 <code>GCGATCGC</code> 作为主要候选。<a class="evidence-link" href="#E17">〔E17〕</a></p>
-<aside class="evidence-boundary"><p><strong>证据边界：</strong> <code>GCGATCGC</code> 在本文之前已经以 HIP1 的名称被精确记录，且公开数据中它在正例和 phantom 负例的出现比例明显不同。这里先保留“作者怎样从 attention 得到候选”的方法链；新颖性、启动子特异性和生成器影响在第 7 节集中判断。<a class="evidence-link" href="#E18">〔E18–</a><a class="evidence-link" href="#E20">E20〕</a></p></aside>
+<aside class="evidence-boundary"><p><strong>证据边界：</strong> <code>GCGATCGC</code> 在本文之前已经以 HIP1 的名称被精确记录，且公开数据中它在正例和 phantom 负例的出现比例明显不同。这里先保留“作者怎样从 attention 得到候选”的方法链；新颖性、启动子特异性和生成器影响在第 7 节集中判断。<a class="evidence-link" href="#E18">〔E18、</a><a class="evidence-link" href="#E19">E19、</a><a class="evidence-link" href="#E20">E20〕</a></p></aside>
 </section>
 </section>
 <section id="section-4" class="level2 report-section">
@@ -694,18 +694,18 @@ TGATGATTTTGGATTTAGGGCTTCCTGGTAAAGATGGCTTGGATGTGTTAGAAGAATTACGGGGACAAGGGGAAAATATC
 <p>与第一条正例配对的公开 phantom 序列是：</p>
 <pre class="text"><code>&gt;Phantom sampling|81bp|non_promoter|1|12567
 GTTAAACTAAAATGTTGGATATGTATAGGGGTATTTAAACTTGGATTATAGAAGGTAGTGGGGGATCAGTAGAAACAAAGT</code></pre>
-<p>按照论文算法，正例的 −12…−7 和 −1…0 应在 phantom 中保持，其余片段被切成 10 份并随机化其中 7 份，最终两条序列 GC 差小于 5%。在这对公开序列中，索引 48–53 对应的 −10 六碱基 <code>TAGAAG</code> 得到保留，而索引 59–60 从正例的 <code>CG</code> 变为负例的 <code>GG</code>。对全部 12,566 对做同样检查，所有配对均保留索引 48–53，只有 980 对同时保留论文指定的两个区域；3,825 对最终 GC 百分点差达到或超过 5，最大差为 23.457。<a class="evidence-link" href="#E04">〔E04–</a><a class="evidence-link" href="#E05">E05〕</a></p>
-<aside class="evidence-boundary"><p><strong>证据边界：</strong> 论文描述与公开 phantom 成品在 TSS 保留和最终 GC 约束上不一致，仓库也没有生成脚本可用于定位差异发生在哪个步骤。以下模型流以公开 FASTA 和公开代码为准；这一冲突对实验结论的影响在第 7 节评估。<a class="evidence-link" href="#E05">〔E05–</a><a class="evidence-link" href="#E06">E06〕</a></p></aside>
+<p>按照论文算法，正例的 −12…−7 和 −1…0 应在 phantom 中保持，其余片段被切成 10 份并随机化其中 7 份，最终两条序列 GC 差小于 5%。在这对公开序列中，索引 48–53 对应的 −10 六碱基 <code>TAGAAG</code> 得到保留，而索引 59–60 从正例的 <code>CG</code> 变为负例的 <code>GG</code>。对全部 12,566 对做同样检查，所有配对均保留索引 48–53，只有 980 对同时保留论文指定的两个区域；3,825 对最终 GC 百分点差达到或超过 5，最大差为 23.457。<a class="evidence-link" href="#E04">〔E04、</a><a class="evidence-link" href="#E05">E05〕</a></p>
+<aside class="evidence-boundary"><p><strong>证据边界：</strong> 论文描述与公开 phantom 成品在 TSS 保留和最终 GC 约束上不一致，仓库也没有生成脚本可用于定位差异发生在哪个步骤。以下模型流以公开 FASTA 和公开代码为准；这一冲突对实验结论的影响在第 7 节评估。<a class="evidence-link" href="#E05">〔E05、</a><a class="evidence-link" href="#E06">E06〕</a></p></aside>
 </section>
 <section id="一条序列怎样进入训练集和-siamese-pair" class="level3">
 <h3>4.3 一条序列怎样进入训练集和 Siamese pair</h3>
-<p>四套成品 FASTA 都把 12,566 条正例与同样数量的负例合并。论文报告使用 10-fold cross-validation；公开入口则通过 <code>random_split</code> 对单条序列执行一次 90% training / 10% validation 划分，没有独立 test split。划分单位是单条 FASTA 记录，而不是“正例模板及其派生负例”组成的组。<a class="evidence-link" href="#E07">〔E07–</a><a class="evidence-link" href="#E08">E08〕</a></p>
+<p>四套成品 FASTA 都把 12,566 条正例与同样数量的负例合并。论文报告使用 10-fold cross-validation；公开入口则通过 <code>random_split</code> 对单条序列执行一次 90% training / 10% validation 划分，没有独立 test split。划分单位是单条 FASTA 记录，而不是“正例模板及其派生负例”组成的组。<a class="evidence-link" href="#E07">〔E07、</a><a class="evidence-link" href="#E08">E08〕</a></p>
 <p>训练 DataLoader 打乱 batch 后，把前半批与后半批按位置配成 <code>batch_size/2</code> 个 Siamese pair，因此一条正例并不会固定和自己的 phantom 配对。pair label 由两条类别标签做 XOR 得到：相同类别为 0，不同类别为 1。论文公式使用相反的符号语义，但代码同步交换了损失项，所以实际优化方向仍是同类靠近、异类推远。<a class="evidence-link" href="#E11">〔E11〕</a></p>
-<aside class="evidence-boundary"><p><strong>证据边界：</strong> 论文的 10-fold 结果与公开入口的一次 90/10 划分不是同一评估流程，仓库未提供生成论文表格所需的逐折索引和驱动程序。二者可能来自未发布脚本，也可能对应不同实验版本；现有材料无法确定。<a class="evidence-link" href="#E06">〔E06–</a><a class="evidence-link" href="#E08">E08〕</a></p></aside>
+<aside class="evidence-boundary"><p><strong>证据边界：</strong> 论文的 10-fold 结果与公开入口的一次 90/10 划分不是同一评估流程，仓库未提供生成论文表格所需的逐折索引和驱动程序。二者可能来自未发布脚本，也可能对应不同实验版本；现有材料无法确定。<a class="evidence-link" href="#E06">〔E06、</a><a class="evidence-link" href="#E07">E07、</a><a class="evidence-link" href="#E08">E08〕</a></p></aside>
 </section>
 <section id="一次参数更新到底更新谁" class="level3">
 <h3>4.4 一次参数更新到底更新谁</h3>
-<p>对于一个 pair，两个 128 维表示先产生 contrastive loss；每条表示又分别通过分类头产生 cross-entropy。代码调用 <code>predict()</code> 时对 encoder 表征使用 <code>torch.no_grad()</code>，所以分类损失不会回传到三分支编码器。一次 optimizer step 中，encoder 参数来自对比损失的梯度，分类头参数来自分类损失的梯度。<a class="evidence-link" href="#E10">〔E10–</a><a class="evidence-link" href="#E12">E12〕</a></p>
+<p>对于一个 pair，两个 128 维表示先产生 contrastive loss；每条表示又分别通过分类头产生 cross-entropy。代码调用 <code>predict()</code> 时对 encoder 表征使用 <code>torch.no_grad()</code>，所以分类损失不会回传到三分支编码器。一次 optimizer step 中，encoder 参数来自对比损失的梯度，分类头参数来自分类损失的梯度。<a class="evidence-link" href="#E10">〔E10、</a><a class="evidence-link" href="#E11">E11、</a><a class="evidence-link" href="#E12">E12〕</a></p>
 <p>补充材料给出的主要超参数包括：3-mer vocabulary 64、embedding 1024、4-head attention、2-layer Bi-LSTM 且每方向 hidden size 32、CNN kernel 3、压缩表示 128、margin 2、batch size 256，并使用 Optuna TPE/Hyperband 搜索和 early stopping。当前材料没有报告随机种子重复、硬件、逐折预测、基线完整搜索空间，也没有说明超参数搜索是否嵌套在交叉验证内部。<a class="evidence-link" href="#E09">〔E09、</a><a class="evidence-link" href="#E24">E24〕</a></p>
 </section>
 <section id="条-ind-在数据链中是什么" class="level3">
@@ -764,26 +764,26 @@ pair distance → contrastive loss
 </div>
 </div>
 </div>
-<p>这张图中的主路径由补充材料和公开代码共同支持。它描述的是单条序列怎样变成表示和分类输出；Siamese 的“两支”只是同一个 encoder 对两条输入重复执行这条路径，并共享全部参数。<a class="evidence-link" href="#E09">〔E09–</a><a class="evidence-link" href="#E12">E12〕</a></p>
+<p>这张图中的主路径由补充材料和公开代码共同支持。它描述的是单条序列怎样变成表示和分类输出；Siamese 的“两支”只是同一个 encoder 对两条输入重复执行这条路径，并共享全部参数。<a class="evidence-link" href="#E09">〔E09、</a><a class="evidence-link" href="#E10">E10、</a><a class="evidence-link" href="#E11">E11、</a><a class="evidence-link" href="#E12">E12〕</a></p>
 </section>
 <section id="个碱基怎样变成-79-个-token" class="level3">
 <h3>5.2 81 个碱基怎样变成 79 个 token</h3>
-<p>长度为 81 的序列用宽度 3、步长 1 的滑窗切分，因此产生 <code>81-3+1=79</code> 个相互重叠的 3-mer。例如序列开头 <code>TGAT...</code> 依次形成 <code>TGA</code>、<code>GAT</code> 等 token。64 种 3-mer 被映射到整数 ID，再由 <code>nn.Embedding(64,1024)</code> 查成 <code>[79,1024]</code> 的向量序列；正弦/余弦位置编码随后加入每个 token，保留它在 TSS 对齐窗口中的相对位置。<a class="evidence-link" href="#E09">〔E09–</a><a class="evidence-link" href="#E10">E10〕</a></p>
-<p>补充材料用 one-hot 矩阵乘 embedding 权重来描述这一步，代码用查表实现；两者在这里表达相同的线性映射。batch size 为 <code>B</code> 时，三条分支共同接收 <code>[B,79,1024]</code>。10% dropout 作用于 embedding 与位置编码的组合。<a class="evidence-link" href="#E09">〔E09–</a><a class="evidence-link" href="#E10">E10〕</a></p>
+<p>长度为 81 的序列用宽度 3、步长 1 的滑窗切分，因此产生 <code>81-3+1=79</code> 个相互重叠的 3-mer。例如序列开头 <code>TGAT...</code> 依次形成 <code>TGA</code>、<code>GAT</code> 等 token。64 种 3-mer 被映射到整数 ID，再由 <code>nn.Embedding(64,1024)</code> 查成 <code>[79,1024]</code> 的向量序列；正弦/余弦位置编码随后加入每个 token，保留它在 TSS 对齐窗口中的相对位置。<a class="evidence-link" href="#E09">〔E09、</a><a class="evidence-link" href="#E10">E10〕</a></p>
+<p>补充材料用 one-hot 矩阵乘 embedding 权重来描述这一步，代码用查表实现；两者在这里表达相同的线性映射。batch size 为 <code>B</code> 时，三条分支共同接收 <code>[B,79,1024]</code>。10% dropout 作用于 embedding 与位置编码的组合。<a class="evidence-link" href="#E09">〔E09、</a><a class="evidence-link" href="#E10">E10〕</a></p>
 <aside class="evidence-boundary"><p><strong>证据边界：</strong> 代码按 <code>A,T,C,G</code> 构造 3-mer 字典，因此 ID 0 对应 <code>AAA</code>，但 attention mask 又把 ID 0 当作 padding；恒长输入实际上不需要 padding。这意味着 <code>AAA</code> 作为 attention key 会被屏蔽。论文没有说明这一行为，也没有公开生成 motif 图的代码；它对分类和解释的影响在第 7 节区分讨论。<a class="evidence-link" href="#E10">〔E10、</a><a class="evidence-link" href="#E17">E17〕</a></p></aside>
 </section>
 <section id="三条分支分别怎样变换信息" class="level3">
 <h3>5.3 三条分支分别怎样变换信息</h3>
-<p>self-attention 使用 4 个头，每头的 Q/K/V 维度为 64。每个 token 可以根据与其他位置的相关性汇总信息，输出经线性映射、残差连接和归一化后仍为 <code>[B,79,1024]</code>。它改变的是每个位置包含的上下文范围，不改变 token 数量。<a class="evidence-link" href="#E09">〔E09–</a><a class="evidence-link" href="#E10">E10〕</a></p>
-<p>Bi-LSTM 有两层，每个方向 hidden size 为 32。正向状态从 5′ 到 3′ 累积上下文，反向状态按相反 token 顺序累积，再通过线性层投回 1024 维。它保留顺序依赖，但反向遍历同一碱基字符串与生成 reverse-complement strand 不是同一操作。<a class="evidence-link" href="#E09">〔E09–</a><a class="evidence-link" href="#E10">E10〕</a></p>
-<p>CNN 分支把 1024 维看作通道，用 kernel size 3 的一维卷积聚合相邻 3-mer，再用 kernel size 1 融合通道，输出仍对齐 79 个 token。由于相邻 3-mer 本身高度重叠，kernel 3 的感受野覆盖的是更长的局部碱基组合。<a class="evidence-link" href="#E09">〔E09–</a><a class="evidence-link" href="#E10">E10〕</a></p>
+<p>self-attention 使用 4 个头，每头的 Q/K/V 维度为 64。每个 token 可以根据与其他位置的相关性汇总信息，输出经线性映射、残差连接和归一化后仍为 <code>[B,79,1024]</code>。它改变的是每个位置包含的上下文范围，不改变 token 数量。<a class="evidence-link" href="#E09">〔E09、</a><a class="evidence-link" href="#E10">E10〕</a></p>
+<p>Bi-LSTM 有两层，每个方向 hidden size 为 32。正向状态从 5′ 到 3′ 累积上下文，反向状态按相反 token 顺序累积，再通过线性层投回 1024 维。它保留顺序依赖，但反向遍历同一碱基字符串与生成 reverse-complement strand 不是同一操作。<a class="evidence-link" href="#E09">〔E09、</a><a class="evidence-link" href="#E10">E10〕</a></p>
+<p>CNN 分支把 1024 维看作通道，用 kernel size 3 的一维卷积聚合相邻 3-mer，再用 kernel size 1 融合通道，输出仍对齐 79 个 token。由于相邻 3-mer 本身高度重叠，kernel 3 的感受野覆盖的是更长的局部碱基组合。<a class="evidence-link" href="#E09">〔E09、</a><a class="evidence-link" href="#E10">E10〕</a></p>
 </section>
 <section id="三路信息怎样融合为-128-维表示" class="level3">
 <h3>5.4 三路信息怎样融合为 128 维表示</h3>
-<p>每条分支沿 79 个 token 取均值，得到一个 <code>[B,1024]</code> 向量。三者拼接成 <code>[B,3072]</code>，再经过 <code>3072→512→128</code> 的 compressor，最终每条 DNA 序列被表示为一个 128 维点。均值池化使不同位置共同贡献全局表示，也会丢失“哪个具体位置产生了某个通道”的直接对应关系。<a class="evidence-link" href="#E09">〔E09–</a><a class="evidence-link" href="#E10">E10〕</a></p>
+<p>每条分支沿 79 个 token 取均值，得到一个 <code>[B,1024]</code> 向量。三者拼接成 <code>[B,3072]</code>，再经过 <code>3072→512→128</code> 的 compressor，最终每条 DNA 序列被表示为一个 128 维点。均值池化使不同位置共同贡献全局表示，也会丢失“哪个具体位置产生了某个通道”的直接对应关系。<a class="evidence-link" href="#E09">〔E09、</a><a class="evidence-link" href="#E10">E10〕</a></p>
 <p>设两条序列的表示为 <code>z₁</code>、<code>z₂</code>，欧氏距离为 <code>D=||z₁-z₂||₂</code>。代码的 label <code>y=0</code> 表示同类，<code>y=1</code> 表示异类，其对比损失可写为：</p>
 <pre class="text"><code>L_con = (1-y)·D² + y·max(0, m-D)²,  m=2</code></pre>
-<p>所以同类 pair 会持续缩短距离；异类 pair 只有在小于 margin 2 时才继续被推远。分类头另将单条 128 维表示映射为 32 维，再输出两个 logits，并通过 cross-entropy 学习 promoter/non-promoter 边界。<a class="evidence-link" href="#E11">〔E11–</a><a class="evidence-link" href="#E12">E12〕</a></p>
+<p>所以同类 pair 会持续缩短距离；异类 pair 只有在小于 margin 2 时才继续被推远。分类头另将单条 128 维表示映射为 32 维，再输出两个 logits，并通过 cross-entropy 学习 promoter/non-promoter 边界。<a class="evidence-link" href="#E11">〔E11、</a><a class="evidence-link" href="#E12">E12〕</a></p>
 </section>
 <section id="输出能说明什么" class="level3">
 <h3>5.5 输出能说明什么</h3>
@@ -802,7 +802,7 @@ pair distance → contrastive loss
 <p><strong>实验怎么做：</strong> 使用同一批 12,566 条正例，分别搭配 random、CDS、partial substitution 和 phantom 负例。SVM、DeePromoter、CyaPromBERT、iPro-WAEL 与 SiamProm 在四套平衡数据上训练和评估，同时比较 accuracy、MCC、GC Wasserstein distance 与 SeqLogo。<a class="evidence-link" href="#E13">〔E13〕</a></p>
 <p><strong>观察到什么：</strong> SVM 在 random/CDS 上达到 90.22%/88.54% accuracy，在 partial/phantom 上降到 79.22%/78.33%；其他模型也呈现相同的难度变化。phantom 的总体 GC Wasserstein distance 为 1.85，低于 random 11.14、partial 7.52 和 CDS 3.73；SeqLogo 显示 phantom 保留了作者设定的 −10 外观。<a class="evidence-link" href="#E13">〔E13〕</a></p>
 <p><strong>作者据此主张：</strong> phantom 减少了容易利用的统计差异，因而构成更困难、更有意义的非启动子集合。</p>
-<aside class="evidence-boundary"><p><strong>证据边界：</strong> 总体 GC 分布和 SeqLogo 是集合层面的边际统计，不能证明每个配对都满足算法约束；公开成品的逐对 TSS/GC 检查结果见第 4 节。生成脚本缺失，影响程度在第 7 节评估。<a class="evidence-link" href="#E05">〔E05–</a><a class="evidence-link" href="#E06">E06〕</a></p></aside>
+<aside class="evidence-boundary"><p><strong>证据边界：</strong> 总体 GC 分布和 SeqLogo 是集合层面的边际统计，不能证明每个配对都满足算法约束；公开成品的逐对 TSS/GC 检查结果见第 4 节。生成脚本缺失，影响程度在第 7 节评估。<a class="evidence-link" href="#E05">〔E05、</a><a class="evidence-link" href="#E06">E06〕</a></p></aside>
 </section>
 <section id="siamprom-是否在困难负例上优于基线" class="level3 experiment-card">
 <h3>6.2 SiamProm 是否在困难负例上优于基线</h3>
@@ -838,7 +838,7 @@ pair distance → contrastive loss
 <p><strong>实验怎么做：</strong> 对正例的 attention 进行平均和归一化，筛选高分 3-mer/4-mer 对，将其拼接为 6-mer/8-mer，然后在候选集合中统计出现频次和位置。作者把排名靠前的回文 <code>GCGATCGC</code> 作为主要候选。<a class="evidence-link" href="#E17">〔E17〕</a></p>
 <p><strong>观察到什么：</strong> <code>GCGATCGC</code> 在模型候选 8-mer 中排名第一，内容相同但相对 TSS 的位置可变化，并避开作者重点保留的 −10 区。论文据此把它描述为新的潜在启动子 motif，同时在 Discussion 中说明其功能仍需 biological assays。<a class="evidence-link" href="#E17">〔E17、</a><a class="evidence-link" href="#E22">E22〕</a></p>
 <p><strong>作者据此主张：</strong> attention 分析能够提出 −10 box 之外的候选模式，并把该 8-mer 视为潜在的新启动子 motif。</p>
-<aside class="evidence-boundary"><p><strong>证据边界：</strong> 外部文献至少在 2002 年已经精确报告该序列，后续称其为 Highly Iterative Palindrome 1（HIP1）；公开 FASTA 中 10.918% 正例含 HIP1，而 phantom 负例只有 0.040%。这些事实对“新颖性、启动子特异性与替代解释”的影响在下一节集中审查。<a class="evidence-link" href="#E18">〔E18–</a><a class="evidence-link" href="#E20">E20〕</a></p></aside>
+<aside class="evidence-boundary"><p><strong>证据边界：</strong> 外部文献至少在 2002 年已经精确报告该序列，后续称其为 Highly Iterative Palindrome 1（HIP1）；公开 FASTA 中 10.918% 正例含 HIP1，而 phantom 负例只有 0.040%。这些事实对“新颖性、启动子特异性与替代解释”的影响在下一节集中审查。<a class="evidence-link" href="#E18">〔E18、</a><a class="evidence-link" href="#E19">E19、</a><a class="evidence-link" href="#E20">E20〕</a></p></aside>
 </section>
 </section>
 <section id="section-7" class="level2 report-section">
@@ -853,7 +853,7 @@ pair distance → contrastive loss
 <ul>
 <li><strong>作者主张：</strong> phantom 保留 −10 box 与 TSS，随机化其他片段中的 7/10，并把每个正负 pair 的 GC 差控制在 5% 以内；因此模型不能依赖这些显眼特征。<a class="evidence-link" href="#E04">〔E04〕</a></li>
 <li><strong>支持证据：</strong> 集合层面上，phantom 的 GC Wasserstein distance 最小，SeqLogo 也保留 −10 外观；所有模型在 phantom 上明显降分。<a class="evidence-link" href="#E13">〔E13〕</a></li>
-<li><strong>反证或替代解释：</strong> 公开的 12,566 对序列全部保留 −10 六碱基，但只有 980 对同时保留论文指定的 TSS 两位；3,825 对最终 GC 百分点差达到或超过 5。生成脚本缺失，无法判断论文表格是否使用了另一未发布版本。<a class="evidence-link" href="#E05">〔E05–</a><a class="evidence-link" href="#E06">E06〕</a></li>
+<li><strong>反证或替代解释：</strong> 公开的 12,566 对序列全部保留 −10 六碱基，但只有 980 对同时保留论文指定的 TSS 两位；3,825 对最终 GC 百分点差达到或超过 5。生成脚本缺失，无法判断论文表格是否使用了另一未发布版本。<a class="evidence-link" href="#E05">〔E05、</a><a class="evidence-link" href="#E06">E06〕</a></li>
 <li><strong>对中心结论的影响：</strong> “phantom 使任务更难”仍受到模型普遍降分支持；“模型是在论文定义的、同时匹配 −10/TSS/GC 的反事实上学习”则不能由公开数据支持。若论文表格使用公开成品，方法描述与实际任务不一致；若使用另一版本，结果不可公开复现。</li>
 <li><strong>最小解决实验：</strong> 发布负样本生成脚本和论文实际使用的成品哈希；逐对报告 −10、TSS、GC、HIP1 等约束的满足率，并在严格满足全部约束的数据上重新评估。</li>
 </ul>
@@ -863,7 +863,7 @@ pair distance → contrastive loss
 <ul>
 <li><strong>作者主张：</strong> attention 与频次分析发现新的回文 <code>GCGATCGC</code>，它可能具有启动子功能。<a class="evidence-link" href="#E17">〔E17〕</a></li>
 <li><strong>支持证据：</strong> 该 8-mer 在正例和模型高 attention 候选中高频，且其位置不固定。<a class="evidence-link" href="#E17">〔E17、</a><a class="evidence-link" href="#E20">E20〕</a></li>
-<li><strong>反证或替代解释：</strong> 精确序列至少在 2002 年已经被报告，后来被命名为 HIP1；它在蓝藻 coding 与 non-coding 区域普遍高频。2018 年对 50 个蓝藻基因组的分析没有发现 HIP1 靠近 promoter 或调控表达的证据。本文公开数据中，正例含 HIP1 的比例为 10.918%，phantom 负例仅 0.040%，相差约 273 倍。<a class="evidence-link" href="#E18">〔E18–</a><a class="evidence-link" href="#E20">E20〕</a></li>
+<li><strong>反证或替代解释：</strong> 精确序列至少在 2002 年已经被报告，后来被命名为 HIP1；它在蓝藻 coding 与 non-coding 区域普遍高频。2018 年对 50 个蓝藻基因组的分析没有发现 HIP1 靠近 promoter 或调控表达的证据。本文公开数据中，正例含 HIP1 的比例为 10.918%，phantom 负例仅 0.040%，相差约 273 倍。<a class="evidence-link" href="#E18">〔E18、</a><a class="evidence-link" href="#E19">E19、</a><a class="evidence-link" href="#E20">E20〕</a></li>
 <li><strong>对中心结论的影响：</strong> “新 motif”在新颖性层面直接不成立；现有证据也不能把 HIP1 解释成启动子特异元件。最符合数据构造的替代解释是：随机化几乎清除了天然蓝藻 genome signature，模型学会区分真实基因组片段与人工打乱序列。这个问题同时削弱 motif 主张和分类机制解释。</li>
 <li><strong>最小解决实验：</strong> 构造 HIP1、GC、−10/TSS 外观和基因组背景均匹配的负例，分别报告 HIP1 阳性/阴性分层性能；随后在匹配位点进行 HIP1 定点突变，并以 reporter 或 TSS 实验测量转录变化。</li>
 </ul>
@@ -886,7 +886,7 @@ pair distance → contrastive loss
 <ul>
 <li><strong>作者主张：</strong> 表 2 和表 4 来自 10-fold cross-validation，SiamProm 在该流程中优于四个基线。<a class="evidence-link" href="#E07">〔E07、</a><a class="evidence-link" href="#E13">E13、</a><a class="evidence-link" href="#E15">E15〕</a></li>
 <li><strong>支持证据：</strong> 论文提供了完整均值表，模型排序在多个指标和多种负样本上基本一致。<a class="evidence-link" href="#E13">〔E13〕</a></li>
-<li><strong>反证或替代解释：</strong> 公开入口仅执行一次 90/10 <code>random_split</code>，没有 KFold、test split 或逐折索引；仓库也缺少完整基线实验。数据按单条记录划分，而不是按正例模板及其派生负例分组。<a class="evidence-link" href="#E06">〔E06–</a><a class="evidence-link" href="#E08">E08〕</a></li>
+<li><strong>反证或替代解释：</strong> 公开入口仅执行一次 90/10 <code>random_split</code>，没有 KFold、test split 或逐折索引；仓库也缺少完整基线实验。数据按单条记录划分，而不是按正例模板及其派生负例分组。<a class="evidence-link" href="#E06">〔E06、</a><a class="evidence-link" href="#E07">E07、</a><a class="evidence-link" href="#E08">E08〕</a></li>
 <li><strong>对中心结论的影响：</strong> 可以准确陈述“论文报告的表格中 SiamProm 均值更高”，但无法从公开仓库复现该排序，也无法排除模板亲缘跨划分、版本差异或未公开实验驱动的影响。</li>
 <li><strong>最小解决实验：</strong> 发布逐折 group ID、每折预测、固定随机种子、训练日志和所有基线配置；按模板—派生组或基因组坐标分组后重新评估。</li>
 </ul>
@@ -922,7 +922,7 @@ pair distance → contrastive loss
 <p><strong>可以暂时相信：</strong> phantom sampling 与 Siamese representation 的组合，在作者发布的数据分布中提供了有意义的计算增益；对作者筛选的 33 条独立 CDS pseudo-promoters 也显示较好的拒绝能力。这两点值得在严格匹配的负例和独立基因组上复验。<a class="evidence-link" href="#E14">〔E14、</a><a class="evidence-link" href="#E23">E23〕</a></p>
 </article>
 <article class="takeaway-card verdict-rejected">
-<p><strong>不能由本文推出：</strong> 88.74% 或 88.23% 代表真实基因组扫描准确率；方法已经证明跨蓝藻物种泛化；<code>GCGATCGC</code> 是新 motif、启动子特异元件或具有启动功能；attention 分支已经揭示可解释的转录机制。<a class="evidence-link" href="#E14">〔E14、</a><a class="evidence-link" href="#E17">E17–</a><a class="evidence-link" href="#E20">E20〕</a></p>
+<p><strong>不能由本文推出：</strong> 88.74% 或 88.23% 代表真实基因组扫描准确率；方法已经证明跨蓝藻物种泛化；<code>GCGATCGC</code> 是新 motif、启动子特异元件或具有启动功能；attention 分支已经揭示可解释的转录机制。<a class="evidence-link" href="#E14">〔E14、</a><a class="evidence-link" href="#E17">E17、</a><a class="evidence-link" href="#E18">E18、</a><a class="evidence-link" href="#E19">E19、</a><a class="evidence-link" href="#E20">E20〕</a></p>
 </article>
 </div>
 </section>
