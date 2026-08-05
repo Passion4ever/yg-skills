@@ -17,6 +17,13 @@ HTML_TEMPLATE = SKILL_DIR / "assets" / "report-template.html"
 SIAMPROM_HTML = (
     ROOT / "tests" / "sci-read-paper" / "outputs" / "siamprom-cyanobacteria-promoters.html"
 )
+CPROMG_HTML = (
+    ROOT
+    / "tests"
+    / "sci-read-paper"
+    / "outputs"
+    / "cpromg-protein-oriented-molecule-generation.html"
+)
 EXPECTED_SECTION_TITLES = [
     "为什么要做这项研究：背景、现状与本文切入点",
     "三分钟建立论文全局地图",
@@ -446,6 +453,45 @@ class SkillContractTests(unittest.TestCase):
             self.assertIn(fact, text)
         self.assertGreaterEqual(parser.classes.count("experiment-card"), 5)
         self.assertGreaterEqual(parser.classes.count("review-card"), 6)
+
+    def test_cpromg_showcase_is_complete_traceable_and_scientifically_grounded(self):
+        """The CProMG example must remain a navigable expert reading, not a summary."""
+        self.assertTrue(CPROMG_HTML.is_file(), "complete CProMG HTML showcase is missing")
+        text = CPROMG_HTML.read_text(encoding="utf-8")
+        parser = DocumentIndex()
+        parser.feed(text)
+
+        self.assertNotRegex(text, r"\{\{[A-Z_]+\}\}", "rendered HTML contains a template token")
+        self.assertEqual(parser.section_ids, [f"section-{i}" for i in range(1, 9)])
+        self.assertEqual(len(parser.ids), len(set(parser.ids)), "HTML IDs must be unique")
+        self.assertLessEqual(set(parser.internal_targets), set(parser.ids))
+        self.assertIn("evidence-ledger", parser.ids)
+        self.assertNotIn('id="figure-briefs"', text)
+        self.assertNotIn("可选科研绘图 Brief", text)
+        assert_frameflow_inspired_layout(self, text)
+        for title in EXPECTED_SECTION_TITLES:
+            self.assertIn(title, text)
+        for fact in (
+            "CrossDocked2020",
+            "prepared 3D binding pocket",
+            "1c9fc00",
+            "AutoDock Vina",
+            "QED",
+            "SA score",
+            "AddLaplacianEigenvectorPE",
+            "50 iterations",
+        ):
+            self.assertIn(fact, text)
+        self.assertGreaterEqual(parser.classes.count("experiment-card"), 5)
+        self.assertGreaterEqual(parser.classes.count("review-card"), 6)
+        self.assertTrue(parser.main_report_evidence_links)
+        for href, visible_citation in parser.main_report_evidence_links:
+            visible_ids = re.findall(r"E\d{2}", visible_citation)
+            self.assertEqual(
+                visible_ids,
+                [href.removeprefix("#")],
+                f"{visible_citation!r} must link one visible Evidence ID to its own row",
+            )
 
     def test_siamprom_showcase_uses_compact_reading_layout(self):
         self.assertTrue(SIAMPROM_HTML.is_file(), "complete SiamProm HTML showcase is missing")
