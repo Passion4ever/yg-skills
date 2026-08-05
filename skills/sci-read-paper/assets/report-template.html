@@ -31,10 +31,9 @@
     }
 
     * { box-sizing: border-box; }
-    html { max-width: 100%; scroll-behavior: smooth; scroll-padding-top: 28px; }
+    html { scroll-behavior: smooth; scroll-padding-top: 28px; }
     body {
       margin: 0;
-      max-width: none;
       padding: 0;
       color: var(--ink);
       background: var(--paper);
@@ -272,6 +271,20 @@
       vertical-align: 0.08em;
     }
     .evidence-link:hover { text-decoration: underline; }
+    .boundary-link {
+      padding: 0 5px;
+      border: 1px solid #e7c997;
+      border-radius: 4px;
+      color: #70420e;
+      background: var(--warm-soft);
+      font-family: var(--mono);
+      font-size: 0.78em;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .boundary-link:hover { color: #70420e; border-color: var(--warm); }
+    .evidence-boundary:target { outline: 3px solid rgba(154, 91, 19, 0.34); outline-offset: 2px; }
 
     .evidence-boundary, section.experiment-card, section.review-card, .takeaway-card {
       margin: 1.3rem 0;
@@ -402,7 +415,8 @@
         box-shadow: none;
         break-inside: avoid;
       }
-      details > * { display: block !important; }
+      details > :not(summary) { display: block !important; }
+      details::details-content { content-visibility: visible !important; block-size: auto !important; }
       details { border: 0; }
       summary { padding-left: 0; }
       footer { padding: 0; }
@@ -457,11 +471,11 @@
       {{AUDIT_PANELS}}
     </main>
     <footer>
-      <details class="provenance" id="report-info">
+      <details class="provenance" id="report-info" open>
         <summary>来源、版本与未解决问题</summary>
         <div class="details-body">{{REPORT_DETAILS}}</div>
       </details>
-      <details class="ledger" id="evidence-ledger">
+      <details class="ledger" id="evidence-ledger" open>
         <summary>完整证据账本</summary>
         <div class="details-body table-scroll">{{EVIDENCE_LEDGER}}</div>
       </details>
