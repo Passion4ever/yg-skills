@@ -137,6 +137,10 @@ Start with an experiment map distinguishing main/baseline comparison, control, a
 证据边界：...
 ```
 
+All eight fields appear in every card, in this order, each as one `<strong>` label. `validate_report.py` enforces the set and the order, so a card that drops `数据与指标` or renames `实际观察到什么` fails rather than drifting.
+
+The `证据边界` field **is** a boundary, not a pointer to one: it carries its own `B01`-style id on the element holding it, exactly like a standalone boundary. When an experiment raises no conclusion-changing fact, write `证据边界：无` — that needs no id. A card whose boundary needs more than one fact gets one boundary per fact, the extras as `<aside>` blocks after the card.
+
 Separate observation from author interpretation. Do not add `我们的判断`; cumulative evaluation belongs in Section 7.
 
 ### Section 7 — Critical Review
@@ -179,7 +183,14 @@ Keep one explanatory purpose per paragraph and usually 3–5 sentences. Use Chin
 
 When any conclusion-changing fact appears—including a paper-code/data conflict, missing material, external correction, or direct logical fact—use a compact neutral handoff. For a conflict, state both the paper's report and what released evidence shows.
 
-Give every boundary a sequential ID on its own container so Section 7 can be checked against it. Use `<aside class="evidence-boundary" id="B02">`, standalone or nested inside an experiment card — the class carries the styling and the `:target` highlight the Section 7 links jump to. A `证据边界` with no B-id fails validation.
+Give every boundary a sequential ID on the element that holds its text, so Section 7 can be checked against it. There are exactly two shapes:
+
+```html
+<aside class="evidence-boundary" id="B02">…</aside>          <!-- standalone, anywhere in Sections 1–6 -->
+<li id="B06"><strong>证据边界：</strong>…</li>                <!-- the experiment card's own field -->
+```
+
+The `evidence-boundary` class carries the styling and the `:target` highlight that Section 7's links jump to; use it for every standalone boundary. A `证据边界` with no B-id fails validation unless its whole value is `无`.
 
 ```text
 证据边界：相关材料显示……。这是理解论文必须知道的事实；其对结论的影响在第 7 节集中评估。〔E…〕

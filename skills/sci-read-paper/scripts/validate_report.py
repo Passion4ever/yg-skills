@@ -37,6 +37,22 @@ REVIEW_CARD_FIELDS = [
     "对中心结论的影响",
     "最小解决实验",
 ]
+EXPERIMENT_CARD_FIELDS = [
+    "作者要回答什么",
+    "实验类型",
+    "实验怎样设计",
+    "改变了什么，控制了什么",
+    "数据与指标",
+    "实际观察到什么",
+    "作者据此主张什么",
+    "证据边界",
+]
+# a 证据边界 field that raises nothing writes exactly 无 and needs no B-id
+EMPTY_BOUNDARY = re.compile(r"证据边界\s*[：:]\s*无\s*$")
+# the label sits in an inline tag; the value it introduces belongs to the block around it
+INLINE_TAGS = {
+    "a", "b", "code", "em", "i", "mark", "small", "span", "strong", "sub", "sup", "u",
+}
 FOOTER_DISCLOSURES = ("report-info", "evidence-ledger")
 NO_EFFECT_BLOCK = "no-effect-boundaries"
 FIGURE_OUTPUT = "figure-output"
@@ -50,15 +66,20 @@ CJK = re.compile(r"[㐀-䶿一-鿿豈-﫿]")
 
 READING_LENGTH_MIN = 4500
 READING_LENGTH_MAX = 11000
+READING_LENGTH_BASE = 8000
+READING_LENGTH_PER_BOUNDARY = 350
 
 
 class Element:
-    __slots__ = ("tag", "id", "classes")
+    __slots__ = ("tag", "id", "classes", "boundary_line", "boundary_section", "buf")
 
     def __init__(self, tag: str, element_id: str, classes: set[str]) -> None:
         self.tag = tag
         self.id = element_id
         self.classes = classes
+        self.boundary_line: int | None = None
+        self.boundary_section: int | None = None
+        self.buf: list[str] | None = None
 
 
 class ReportIndex(HTMLParser):
@@ -83,6 +104,7 @@ class ReportIndex(HTMLParser):
         self.boundary_ids: list[tuple[str, int | None]] = []
         self.unlabelled_boundaries: list[tuple[int, int | None]] = []
         self.review_card_fields: list[tuple[str, list[str]]] = []
+        self.experiment_card_fields: list[tuple[str, list[str]]] = []
         self.details_open: dict[str, bool] = {}
         self.external_resources: list[str] = []
         self.structural_errors: list[str] = []
@@ -195,10 +217,14 @@ class ReportIndex(HTMLParser):
 
         if tag not in VOID_TAGS:
             self._stack.append(Element(tag, element_id, classes))
-            if "review-card" in classes:
-                card: list[str] = []
-                self._card_stack.append(card)
-                self.review_card_fields.append((element_id or f"line {line}", card))
+            for marker, sink in (
+                ("review-card", self.review_card_fields),
+                ("experiment-card", self.experiment_card_fields),
+            ):
+                if marker in classes:
+                    card: list[str] = []
+                    self._card_stack.append(card)
+                    sink.append((element_id or f"line {line}", card))
 
     def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         self.handle_starttag(tag, attrs)
@@ -216,6 +242,11 @@ class ReportIndex(HTMLParser):
         if self._in_hero():
             self.hero_text.append(data)
 
+        # A 证据边界 needs a B-id unless its whole value is 无. The verdict can only
+        # be reached once the containing element closes, so start buffering here.
+        for element in self._stack:
+            if element.buf is not None:
+                element.buf.append(data)
         section = self.section
         if (
             section is not None
@@ -223,8 +254,17 @@ class ReportIndex(HTMLParser):
             and "证据边界" in data
             and "处理的证据边界" not in data
             and not self._has_boundary_ancestor()
+            and self._stack
         ):
-            self.unlabelled_boundaries.append((self.getpos()[0], section))
+            # attach to the enclosing block, not to the <strong> holding the label
+            holder = next(
+                (e for e in reversed(self._stack) if e.tag not in INLINE_TAGS),
+                self._stack[-1],
+            )
+            if holder.boundary_line is None:
+                holder.boundary_line = self.getpos()[0]
+                holder.boundary_section = section
+                holder.buf = [data]
 
     def handle_endtag(self, tag: str) -> None:
         if tag == "style":
@@ -239,8 +279,16 @@ class ReportIndex(HTMLParser):
             return
         while self._stack:
             popped = self._stack.pop()
-            if "review-card" in popped.classes and self._card_stack:
+            if (
+                "review-card" in popped.classes or "experiment-card" in popped.classes
+            ) and self._card_stack:
                 self._card_stack.pop()
+            if popped.boundary_line is not None:
+                text = re.sub(r"\s+", "", "".join(popped.buf or []))
+                if not EMPTY_BOUNDARY.search(text):
+                    self.unlabelled_boundaries.append(
+                        (popped.boundary_line, popped.boundary_section)
+                    )
             if popped.tag == tag:
                 break
             if popped.tag == "section" and re.fullmatch(r"section-[1-8]", popped.id):
@@ -358,15 +406,28 @@ def validate(path: Path, template: Path, figure: str) -> tuple[list[str], list[s
             " conclusion-changing fact deferred to Section 7"
         )
 
-    # 7. review cards carry the full contract field set, in order
+    # 7. cards carry the full contract field set, in order
+    # Enforced on both card kinds: whatever the validator does not check drifts.
     if not index.review_card_fields:
         errors.append("Section 7 has no review cards")
-    for card_id, fields in index.review_card_fields:
-        present = [f for f in fields if f in REVIEW_CARD_FIELDS]
-        if present != REVIEW_CARD_FIELDS:
-            missing = [f for f in REVIEW_CARD_FIELDS if f not in present]
-            problem = f"missing {missing}" if missing else f"out of order: {present}"
-            errors.append(f"review card {card_id}: {problem}")
+    if not index.experiment_card_fields:
+        errors.append("Section 6 has no experiment cards")
+    for kind, expected, cards in (
+        ("review", REVIEW_CARD_FIELDS, index.review_card_fields),
+        ("experiment", EXPERIMENT_CARD_FIELDS, index.experiment_card_fields),
+    ):
+        for card_id, fields in cards:
+            present = [f for f in fields if f in expected]
+            if present != expected:
+                missing = [f for f in expected if f not in present]
+                extra = [f for f in present if present.count(f) > 1]
+                if missing:
+                    problem = f"missing {missing}"
+                elif extra:
+                    problem = f"duplicated {sorted(set(extra))}"
+                else:
+                    problem = f"out of order: {present}"
+                errors.append(f"{kind} card {card_id}: {problem}")
 
     # 8. offline and self-contained
     for resource in index.external_resources:
@@ -408,11 +469,18 @@ def validate(path: Path, template: Path, figure: str) -> tuple[list[str], list[s
         errors.append("figure=generate but no image was embedded")
 
     # -- warnings --------------------------------------------------------
+    # Every boundary costs roughly one paragraph to state and another to discharge,
+    # so a boundary-dense paper is legitimately longer than a thin one.
     body_cjk = len(CJK.findall("".join(index.main_text)))
-    if not READING_LENGTH_MIN <= body_cjk <= READING_LENGTH_MAX:
+    ceiling = max(
+        READING_LENGTH_MAX,
+        READING_LENGTH_BASE + READING_LENGTH_PER_BOUNDARY * len(index.boundary_ids),
+    )
+    if not READING_LENGTH_MIN <= body_cjk <= ceiling:
         warnings.append(
-            f"main report is {body_cjk} CJK characters; the 15–20 minute reading"
-            f" path is roughly {READING_LENGTH_MIN}–{READING_LENGTH_MAX}"
+            f"main report is {body_cjk} CJK characters; with {len(index.boundary_ids)}"
+            f" evidence boundaries the 15–20 minute reading path is roughly"
+            f" {READING_LENGTH_MIN}–{ceiling}"
         )
     cited = {label for _href, label, _line in index.evidence_links}
     uncited = sorted(i for i in known if EVIDENCE_ID.match(i) and i not in cited)

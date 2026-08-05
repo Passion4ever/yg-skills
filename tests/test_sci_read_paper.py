@@ -372,6 +372,9 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn('class="boundary-link"', contract)
         self.assertIn("无实质影响的证据边界", contract)
         self.assertIn('id="B02"', contract)
+        # the experiment card's own 证据边界 field is a boundary, not a pointer to one
+        self.assertIn('<li id="B06"><strong>证据边界：</strong>', contract)
+        self.assertIn("证据边界：无", contract)
         for text in (policy, skill):
             self.assertIn("B01", text)
         self.assertIn("validate_report.py", skill)
@@ -617,6 +620,20 @@ class ReportValidatorTests(unittest.TestCase):
             row = next(line for line in procedure.splitlines() if token in line)
             self.assertIn("delete", row.lower(), f"{token} row must say to delete the line")
 
+    def test_validator_field_lists_match_the_contract(self):
+        """The gate and the instruction must not drift apart — that is the whole bug class."""
+        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
+        source = VALIDATOR.read_text(encoding="utf-8")
+        for constant in ("REVIEW_CARD_FIELDS", "EXPERIMENT_CARD_FIELDS"):
+            block = re.search(rf"{constant} = \[(.*?)\]", source, re.DOTALL)
+            self.assertIsNotNone(block, f"{constant} not found in the validator")
+            fields = re.findall(r'"([^"]+)"', block.group(1))
+            self.assertGreaterEqual(len(fields), 7)
+            for field in fields:
+                self.assertIn(
+                    field, contract, f"{constant} field {field!r} is not in the contract"
+                )
+
     def test_validator_is_shipped_with_the_skill(self):
         self.assertTrue(VALIDATOR.is_file(), "scripts/validate_report.py is missing")
         skill = SKILL_MD.read_text(encoding="utf-8")
@@ -624,8 +641,11 @@ class ReportValidatorTests(unittest.TestCase):
         self.assertIn("validate_report.py", skill)
         self.assertIn("validate_report.py", contract)
 
-    def test_validator_accepts_both_showcases(self):
-        for showcase in (SIAMPROM_HTML, CPROMG_HTML):
+    def test_validator_accepts_every_shipped_report(self):
+        """Globbed, not enumerated: a new report must be gated the day it lands."""
+        reports = sorted((ROOT / "tests" / "sci-read-paper" / "outputs").rglob("*.html"))
+        self.assertGreaterEqual(len(reports), 2, "no showcase reports found")
+        for showcase in reports:
             with self.subTest(showcase=showcase.name):
                 result = self.run_validator(showcase)
                 self.assertEqual(
@@ -633,6 +653,60 @@ class ReportValidatorTests(unittest.TestCase):
                     0,
                     f"{showcase.name} violates the output contract:\n{result.stderr}",
                 )
+
+    def test_validator_enforces_experiment_card_fields(self):
+        """Whatever the validator does not check drifts — experiment cards proved it."""
+        broken = self.corrupt(
+            CPROMG_HTML, ("<strong>数据与指标：</strong>", "<strong>指标：</strong>")
+        )
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("experiment card", result.stderr)
+        self.assertIn("数据与指标", result.stderr)
+
+    def test_validator_rejects_a_duplicated_card_field(self):
+        source = CPROMG_HTML.read_text(encoding="utf-8")
+        label = "<strong>实验类型：</strong>"
+        self.assertIn(label, source)
+        broken = self.corrupt(CPROMG_HTML, (label, label + "占位</li><li>" + label))
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("duplicated", result.stderr)
+
+    def test_validator_allows_a_boundary_field_that_raises_nothing(self):
+        """证据边界：无 is a valid statement and needs no B-id."""
+        pattern = re.compile(
+            r'<li id="(B\d{2})"><strong>证据边界：</strong>.*?</li>', re.DOTALL
+        )
+        for report in sorted((ROOT / "tests" / "sci-read-paper" / "outputs").rglob("*.html")):
+            source = report.read_text(encoding="utf-8")
+            field = pattern.search(source)
+            if not field:
+                continue
+            target = field.group(1)
+            link = re.search(
+                rf'<a class="boundary-link" href="#{target}">{target}</a>[、]?', source
+            )
+            self.assertIsNotNone(link, f"{target} is defined but never discharged")
+            clean = self.corrupt(
+                report,
+                (field.group(0), "<li><strong>证据边界：</strong> 无</li>"),
+                (link.group(0), ""),
+            )
+            result = self.run_validator(clean)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return
+        self.skipTest("no experiment-card boundary field in any shipped report")
+
+    def test_reading_length_ceiling_scales_with_boundary_count(self):
+        """A boundary-dense paper is legitimately longer; the band must say so."""
+        result = self.run_validator(CPROMG_HTML)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        source = VALIDATOR.read_text(encoding="utf-8")
+        self.assertIn("READING_LENGTH_PER_BOUNDARY", source)
+        ceiling = re.search(r"READING_LENGTH_PER_BOUNDARY = (\d+)", source)
+        self.assertIsNotNone(ceiling)
+        self.assertGreater(int(ceiling.group(1)), 0)
 
     def test_validator_rejects_a_broken_evidence_citation(self):
         broken = self.corrupt(
