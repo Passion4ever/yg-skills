@@ -604,8 +604,9 @@
 <h3>6.1 相比已有方法，CProMG 的生成集合是否更符合选定指标</h3>
 <p><strong>作者要回答什么：</strong> 双视图、性质条件式生成是否在 binding proxy、drug-likeness proxy 与 diversity 上同时优于 protein-oriented baselines。</p>
 <p><strong>实验类型：</strong> 主实验 / baseline comparison。</p>
-<p><strong>实验怎样设计：</strong> 在 100 个 test pocket 上比较 LiGANN、3D-SBDD、Pocket2Mol、Transformer、AlphaDrug、DUD-E decoys 和 CProMG-VQS；每个蛋白报告 top-10 molecules 的集合均值。〔<a class="evidence-link" href="#E08">E08</a>〕</p>
-<p><strong>数据与指标：</strong> VS、QED、SA、HAR 与 fingerprint-based Diversity。VS 越低越好，QED/Diversity/HAR 越高越好，SA 越低越好。</p>
+<p><strong>实验怎样设计：</strong> 把 CProMG-VQS 与 LiGANN、3D-SBDD、Pocket2Mol、Transformer、AlphaDrug 以及 DUD-E decoys 的生成集合放进同一张主表横向比较。〔<a class="evidence-link" href="#E08">E08</a>〕</p>
+<p><strong>改变了什么，控制了什么：</strong> 被操纵的变量只有 generation method；100 个 test pocket、每个蛋白 top-10 molecules 的集合均值协议以及计算指标的 oracle 对所有方法一致。但 conditioning 没有被控制：baselines 都没有等价的多属性条件接口，而 CProMG-VQS 恰好在 VS、QED、SA 上被条件化。〔<a class="evidence-link" href="#E08">E08</a>〕</p>
+<p><strong>数据与指标：</strong> CrossDocked2020 派生 split 的 100 个测试口袋，每个口袋取 top-10 生成分子；指标为 VS、QED、SA、HAR 与 fingerprint-based Diversity。VS 越低越好，QED/Diversity/HAR 越高越好，SA 越低越好。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E08">E08</a>〕</p>
 <p><strong>实际观察到什么：</strong> CProMG 的 VS −7.644、QED 0.741、HAR 55.5%、Diversity 0.757 均为表内最佳；SA 2.884 优于 Reference、LiGANN、3D-SBDD、Pocket2Mol 和 decoys，但不如 Transformer 2.756 与 AlphaDrug 2.620。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E29">E29</a>〕</p>
 <p><strong>作者据此主张什么：</strong> CProMG 整体优于最近的 protein-oriented generation 方法。</p>
 <aside class="evidence-boundary" id="B06"><p><strong>证据边界：</strong> 论文文字称“over all metrics”，但表中 CProMG 并非最低 SA；基线没有同等性质条件接口，所以主表同时比较了 model architecture 与 controllable capability。严重性在第 7 节判断。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E29">E29</a>〕</p></aside>
@@ -615,16 +616,20 @@
 <p><strong>作者要回答什么：</strong> Vina、QED、SA、logP 与 TPSA 条件能否按预期控制输出，而不只是模型自然复刻训练分布。</p>
 <p><strong>实验类型：</strong> control / progressive conditioning。</p>
 <p><strong>实验怎样设计：</strong> 从无条件 CProMG-w/oC 开始，依次加入 Vina 条件（V）、QED/SA 条件（VQS），再以 logP∈{2,4}、TPSA∈{40,80} 形成四个 VQSLT setting。〔<a class="evidence-link" href="#E09">E09</a>〕</p>
+<p><strong>改变了什么，控制了什么：</strong> 被操纵的是 property prefix 中包含哪些性质及其目标取值；双视图 pocket encoder、decoder 结构、测试口袋与生成协议在各 setting 之间保持不变。论文没有报告同一 setting 下的多随机种子重复，因此条件之外的训练与采样波动并未被控制。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E14">E14</a>〕</p>
+<p><strong>数据与指标：</strong> 同一 CrossDocked2020 派生 split 的 100 个测试口袋；指标为 VS、QED、SA 的集合均值，加上 QED≥0.6 与 SA≤4.0 的阈值通过率，以及 logP、TPSA 的输出分布形状。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E09">E09</a>〕</p>
 <p><strong>实际观察到什么：</strong> w/oC 的 VS/QED/SA 为 −7.384/0.488/3.500；V 使 VS 降到 −7.849，却令 QED/SA 变为 0.452/3.655；VQS 得到 −7.644/0.741/2.884。作者报告 VQS 输出中约 99.18% 满足 QED≥0.6，99.19% 满足 SA≤4；连续条件的分布峰值靠近指定 logP/TPSA。〔<a class="evidence-link" href="#E09">E09</a>〕</p>
 <p><strong>作者据此主张什么：</strong> 条件前缀可以逐步控制多个性质，并显露性质间 trade-off。</p>
 <aside class="evidence-boundary" id="B07"><p><strong>证据边界：</strong> 三个二值条件由 AutoDock Vina 与 RDKit/Ertl 函数构造，本节的控制效果又由同一批函数评价；论文未报告换用另一套 oracle 后这些条件是否仍按预期移动输出。严重性在第 7 节判断。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E28">E28</a>〕</p></aside>
-<aside class="evidence-boundary" id="B11"><p><strong>证据边界：</strong> 被演示的控制只覆盖训练分布范围内的四个手选 logP/TPSA setting 与三个二值阈值；论文未报告训练范围之外的未见条件、连续值上的精细插值误差，也未给出 per-target control success，只有集合层面的通过率与分布峰值。严重性在第 7 节判断。〔<a class="evidence-link" href="#E09">E09</a>〕</p></aside>
 </section>
+<aside class="evidence-boundary" id="B11"><p><strong>证据边界：</strong> 被演示的控制只覆盖训练分布范围内的四个手选 logP/TPSA setting 与三个二值阈值；论文未报告训练范围之外的未见条件、连续值上的精细插值误差，也未给出 per-target control success，只有集合层面的通过率与分布峰值。严重性在第 7 节判断。〔<a class="evidence-link" href="#E09">E09</a>〕</p></aside>
 <section id="exp-ablation" class="level3 experiment-card">
 <h3>6.3 atom view、residue view、LPE 与 binding condition 是否各有贡献</h3>
 <p><strong>作者要回答什么：</strong> 主模型的四个核心选择是否与更好的 Vina/HAR 有关。</p>
 <p><strong>实验类型：</strong> ablation study。</p>
-<p><strong>实验怎样设计：</strong> 在只控制 binding 的 CProMG-V 上分别移除 amino-acid view、atom view、Laplacian PE 或全部条件，再比较 VS 与 HAR。〔<a class="evidence-link" href="#E10">E10</a>〕</p>
+<p><strong>实验怎样设计：</strong> 以只控制 binding 的 CProMG-V 为参照系统，分别移除 amino-acid view、atom view、Laplacian PE 或全部条件，得到四个变体。〔<a class="evidence-link" href="#E10">E10</a>〕</p>
+<p><strong>改变了什么，控制了什么：</strong> 每次只移除一个组件，其余架构、训练数据与评价协议保持不变，参照系统统一为 CProMG-V。但移除组件同时改变了输入信息与参数量，论文没有用参数匹配的对照把两者分开。〔<a class="evidence-link" href="#E10">E10</a>〕</p>
+<p><strong>数据与指标：</strong> 同一批 100 个测试口袋上的 CProMG-V 及其四个变体；表 3 只报告 Vina Score 与 HAR 两列，未涉及 QED、SA 或 diversity。〔<a class="evidence-link" href="#E10">E10</a>〕</p>
 <p><strong>实际观察到什么：</strong> 完整 V 的 VS/HAR 为 −7.849/56.8%；w/o AA 为 −7.593/50.6%，w/o Atom 为 −7.441/49.7%，w/o LPE 为 −7.729/53.2%，w/o C 为 −7.384/48.8%。〔<a class="evidence-link" href="#E10">E10</a>〕</p>
 <p><strong>作者据此主张什么：</strong> 两个视图、LPE 和 binding condition 都不可或缺。</p>
 <aside class="evidence-boundary" id="B08"><p><strong>证据边界：</strong> 消融改变了输入信息和参数量，结果直接支持“删除组件会降低同一 Vina oracle 下的分数”，不能单独证明 cross-attention 捕获了真实物理相互作用。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E22">E22</a>〕</p></aside>
@@ -633,7 +638,9 @@
 <h3>6.4 PAK4 个案是否展示了靶点相关结构</h3>
 <p><strong>作者要回答什么：</strong> 高分候选是否既不同于 reference ligand，又能在 docking pose 中形成看似合理的口袋接触。</p>
 <p><strong>实验类型：</strong> case study / selected examples。</p>
-<p><strong>实验怎样设计：</strong> 选择 test set 的 PDB 5I0B（PAK4），从 CProMG-VQS 结果按 VS 取 top-5，计算 QED、SA、logP、TPSA，并检查 docking polar contacts 与 reference Tanimoto similarity。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E27">E27</a>〕</p>
+<p><strong>实验怎样设计：</strong> 选择 test set 的 PDB 5I0B（PAK4），从 CProMG-VQS 的生成结果中按 VS 取 top-5 候选，逐个做性质与 docking pose 的定性检视。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E27">E27</a>〕</p>
+<p><strong>改变了什么，控制了什么：</strong> 这里没有被操纵的变量，也没有对照组：靶点、模型与筛选准则都被固定为 5I0B、CProMG-VQS 与同一 docking score，论文没有并列 baseline 生成物、随机分子或 decoys，也没有第二个靶点用来检验个案是否可复制。〔<a class="evidence-link" href="#E11">E11</a>〕</p>
+<p><strong>数据与指标：</strong> 单一测试靶点 5I0B（PAK4–KY-04045 复合物）的口袋及其 reference ligand；指标为 top-5 候选的 QED、SA、logP、TPSA，与 reference 的 Tanimoto similarity，以及 docking pose 中的 polar contacts。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E27">E27</a>〕</p>
 <p><strong>实际观察到什么：</strong> 五个候选平均 SA 2.827、QED 0.789；与 reference 的 Tanimoto similarity 为 0.221–0.263。论文称候选至少保留 ASP-458 或 LEU-398 之一的 polar contact，并出现其他 residue contacts。〔<a class="evidence-link" href="#E11">E11</a>〕</p>
 <p><strong>作者据此主张什么：</strong> CProMG 能提出新颖、具有期望性质且面向 PAK4 的候选。</p>
 <aside class="evidence-boundary" id="B09"><p><strong>证据边界：</strong> 5I0B 是 3.09 Å 的 PAK4–KY-04045 晶体结构；PDB 记录的是 reference ligand 的实验结构，不是 CProMG 候选的实验复合物。top-5 是按同一 docking score 选择的个案，不能代表生成总体，也没有合成、binding assay 或细胞实验。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E27">E27</a>〕</p></aside>
@@ -642,7 +649,11 @@
 <h3>6.5 论文是否提供了独立外部验证</h3>
 <p><strong>作者要回答什么：</strong> 论文没有设置与训练/evaluation oracle 独立的 wet-lab 或实验 affinity 验证。</p>
 <p><strong>实验类型：</strong> 缺失的 external validation。</p>
+<p><strong>实验怎样设计：</strong> 这不是论文中的一项实验，而是对其评价设置的清点：逐一核对表 1–3、PAK4 个案与 GitHub/Zenodo 发布物，看是否存在任何一处独立于训练标签所用 oracle 的读数。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E26">E26</a>〕</p>
+<p><strong>改变了什么，控制了什么：</strong> 论文在这一维度上既没有操纵也没有控制：binding 条件、模型选择与最终评价共用同一套 AutoDock Vina 与 RDKit/Ertl 函数，没有第二套 scoring protocol、matched decoys 或实验测量作为独立对照。〔<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E28">E28</a>〕</p>
+<p><strong>数据与指标：</strong> 核查范围覆盖论文报告的全部结果与公开发布物；可得读数只有 VS、HAR、QED、SA、logP、TPSA、diversity 与 Tanimoto similarity 这些计算指标，没有 Kd/Ki/IC50 或酶活数据。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E26">E26</a>〕</p>
 <p><strong>实际观察到什么：</strong> 所有中心结果来自 AutoDock Vina、RDKit QED/SA/logP/TPSA、fingerprint diversity 与 selected docking poses；Zenodo 发布模型和处理数据，但不包含实验测量。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E23">E23</a>、<a class="evidence-link" href="#E24">E24</a>、<a class="evidence-link" href="#E26">E26</a>〕</p>
+<p><strong>作者据此主张什么：</strong> 论文仍以这些计算读数主张 CProMG 能面向目标蛋白生成 high binding affinity 且 drug-like 的分子，并未把 external validation 的缺位写成对结论范围的限制。〔<a class="evidence-link" href="#E01">E01</a>、<a class="evidence-link" href="#E08">E08</a>〕</p>
 <p id="B10"><strong>证据边界：</strong> 这不妨碍把工作评价为计算生成方法，却决定了它不能直接声称候选真实高亲和、易合成或可作为药物。</p>
 </section>
 </section>
