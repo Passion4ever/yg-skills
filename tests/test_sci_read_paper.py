@@ -1,5 +1,8 @@
 import json
 import re
+import subprocess
+import sys
+import tempfile
 import unittest
 from html.parser import HTMLParser
 from pathlib import Path
@@ -10,6 +13,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_DIR = ROOT / "skills" / "sci-read-paper"
 SKILL_MD = SKILL_DIR / "SKILL.md"
+VALIDATOR = SKILL_DIR / "scripts" / "validate_report.py"
 OPENAI_YAML = SKILL_DIR / "agents" / "openai.yaml"
 EVALS_JSON = ROOT / "tests" / "sci-read-paper" / "evals.json"
 READABILITY_RUBRIC = ROOT / "tests" / "sci-read-paper" / "readability-rubric.md"
@@ -108,8 +112,22 @@ def extract_css_rule(text: str, selector: str) -> str:
     return match.group(1)
 
 
+def extract_single_style(text: str) -> str:
+    """Return the one stylesheet a contract-conforming document may carry.
+
+    The old implementation sliced from the first ``:root``, which silently
+    discarded a foreign stylesheet sitting above it. Raising here is the point.
+    """
+    blocks = re.findall(r"<style>(.*?)</style>", text, re.DOTALL)
+    if len(blocks) != 1:
+        raise AssertionError(
+            f"expected exactly one <style> block, found {len(blocks)}"
+        )
+    return blocks[0]
+
+
 def assert_frameflow_inspired_layout(testcase: unittest.TestCase, text: str):
-    custom_styles = text[text.index(":root") :]
+    custom_styles = extract_single_style(text)
     sidebar_rule = extract_css_rule(text, ".sidebar")
     visited_nav_rule = extract_css_rule(text, ".nav-link:visited")
     content_rule = extract_css_rule(text, ".content-shell")
@@ -195,7 +213,8 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("<paper-slug>-audit.html", contract)
         self.assertIn("embedded evidence ledger", contract)
         self.assertIn("audit panels", contract)
-        self.assertIn("sci-ai-figure", contract)
+        self.assertIn("sci-diagram", contract)
+        self.assertNotIn("sci-ai-figure", contract, "handoff names a skill that does not exist")
 
     def test_figure_mode_is_explicit_and_defaults_off(self):
         skill = SKILL_MD.read_text(encoding="utf-8")
@@ -240,7 +259,11 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("at most three conclusion-critical claim families", policy)
         self.assertIn("shortest conclusion-relevant path", guide)
         self.assertIn("Do not download weights", guide)
-        self.assertIn("sparse or blob-filtered repository retrieval", guide)
+        # The workflow acquires the repository at step 2, which loads evidence-policy.
+        # A guardrail that only lives in the step-4 guide fires after the clone.
+        for text in (policy, guide):
+            self.assertIn("sparse or blob-filtered repository retrieval", text)
+        self.assertIn("never download weights", policy)
 
     def test_report_records_selected_mode(self):
         contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
@@ -329,8 +352,29 @@ class SkillContractTests(unittest.TestCase):
     def test_evidence_policy_supports_lightweight_ids(self):
         policy = (SKILL_DIR / "references" / "evidence-policy.md").read_text(encoding="utf-8")
         self.assertIn("Evidence IDs", policy)
-        self.assertIn("〔E12–E15〕", policy)
         self.assertIn("never hide inference, missing information, or conflict", policy)
+
+    def test_evidence_citation_markup_is_shown_literally(self):
+        """The one citation form the reports must emit has to be copyable, not described."""
+        canonical = '〔<a class="evidence-link" href="#E01">E01</a>、'
+        for name in ("evidence-policy.md", "output-contract.md"):
+            text = (SKILL_DIR / "references" / name).read_text(encoding="utf-8")
+            self.assertIn(canonical, text, f"{name} must show the literal citation markup")
+            self.assertNotIn(
+                "E12–E15", text, f"{name} still teaches the unrenderable range form"
+            )
+
+    def test_boundary_closure_is_contractual(self):
+        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
+        policy = (SKILL_DIR / "references" / "evidence-policy.md").read_text(encoding="utf-8")
+        skill = SKILL_MD.read_text(encoding="utf-8")
+        self.assertIn("处理的证据边界", contract)
+        self.assertIn('class="boundary-link"', contract)
+        self.assertIn("无实质影响的证据边界", contract)
+        self.assertIn('id="B02"', contract)
+        for text in (policy, skill):
+            self.assertIn("B01", text)
+        self.assertIn("validate_report.py", skill)
 
     def test_ai_ml_guide_is_sample_and_question_driven(self):
         guide = (SKILL_DIR / "references" / "ai-ml-reading-guide.md").read_text(encoding="utf-8")
@@ -416,29 +460,22 @@ class SkillContractTests(unittest.TestCase):
         self.assertNotIn("<h2>阅读导航</h2>", text)
 
     def test_siamprom_main_report_evidence_links_target_each_visible_id(self):
-        """Each cited evidence ID must navigate directly to its ledger row."""
+        """Each anchor shows exactly one evidence ID and navigates to its ledger row."""
         parser = DocumentIndex()
         parser.feed(SIAMPROM_HTML.read_text(encoding="utf-8"))
 
         self.assertTrue(parser.main_report_evidence_links)
         for href, visible_citation in parser.main_report_evidence_links:
-            visible_ids = re.findall(r"E\d{2}", visible_citation)
-            self.assertEqual(
-                visible_ids,
-                [href.removeprefix("#")],
-                f"{visible_citation!r} must give every Evidence ID its own matching anchor",
+            self.assertRegex(
+                visible_citation.strip(),
+                r"^E\d{2,}$",
+                f"{visible_citation!r} must be one bare evidence ID —"
+                " keep 〔 、 〕 outside the anchor",
             )
-        self.assertTrue(parser.main_report_evidence_citations)
-        for citation in parser.main_report_evidence_citations:
-            rendered_citation = "".join(text for _href, text in citation)
-            implied_ids = []
-            for range_start, range_end in re.findall(r"E(\d{2})(?:–E(\d{2}))?", rendered_citation):
-                end = int(range_end or range_start)
-                implied_ids.extend(f"E{number:02d}" for number in range(int(range_start), end + 1))
             self.assertEqual(
-                [href.removeprefix("#") for href, _text in citation],
-                implied_ids,
-                f"{rendered_citation!r} must link every ID implied by an evidence range",
+                visible_citation.strip(),
+                href.removeprefix("#"),
+                f"{visible_citation!r} points at {href!r}",
             )
 
     def test_siamprom_showcase_preserves_scientific_depth(self):
@@ -534,6 +571,191 @@ class SkillContractTests(unittest.TestCase):
                 "nontrigger-simple-fact",
             },
         )
+
+
+class ReportValidatorTests(unittest.TestCase):
+    """The validator is the only gate that runs against generated reports.
+
+    These tests check that it exists, that it passes the shipped showcases, and
+    that it actually fails on a broken report — a validator nobody tests is the
+    same blind spot as no validator.
+    """
+
+    def run_validator(self, path: Path) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [sys.executable, str(VALIDATOR), str(path)],
+            capture_output=True,
+            text=True,
+        )
+
+    def corrupt(self, source: Path, *replacements: tuple[str, str]) -> Path:
+        text = source.read_text(encoding="utf-8")
+        for old, new in replacements:
+            self.assertIn(old, text, f"fixture no longer contains {old!r}")
+            text = text.replace(old, new, 1)
+        handle = tempfile.NamedTemporaryFile(
+            "w", suffix=".html", delete=False, encoding="utf-8"
+        )
+        handle.write(text)
+        handle.close()
+        self.addCleanup(Path(handle.name).unlink, missing_ok=True)
+        return Path(handle.name)
+
+    def test_build_procedure_resolves_every_template_placeholder(self):
+        """Any placeholder the procedure forgets becomes an unreplaced-token failure."""
+        template = HTML_TEMPLATE.read_text(encoding="utf-8")
+        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
+        procedure = contract.split("## Build Procedure", 1)[1].split("\n## ", 1)[0]
+        for token in sorted(set(re.findall(r"\{\{[A-Z_]+\}\}", template))):
+            self.assertIn(
+                token,
+                procedure,
+                f"Build Procedure never tells the model what to do with {token}",
+            )
+        # the two that must be deleted rather than filled
+        for token in ("{{FIGURE_OUTPUT}}", "{{AUDIT_PANELS}}"):
+            row = next(line for line in procedure.splitlines() if token in line)
+            self.assertIn("delete", row.lower(), f"{token} row must say to delete the line")
+
+    def test_validator_is_shipped_with_the_skill(self):
+        self.assertTrue(VALIDATOR.is_file(), "scripts/validate_report.py is missing")
+        skill = SKILL_MD.read_text(encoding="utf-8")
+        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
+        self.assertIn("validate_report.py", skill)
+        self.assertIn("validate_report.py", contract)
+
+    def test_validator_accepts_both_showcases(self):
+        for showcase in (SIAMPROM_HTML, CPROMG_HTML):
+            with self.subTest(showcase=showcase.name):
+                result = self.run_validator(showcase)
+                self.assertEqual(
+                    result.returncode,
+                    0,
+                    f"{showcase.name} violates the output contract:\n{result.stderr}",
+                )
+
+    def test_validator_rejects_a_broken_evidence_citation(self):
+        broken = self.corrupt(
+            CPROMG_HTML,
+            (
+                '<a class="evidence-link" href="#E08">E08</a>',
+                '<a class="evidence-link" href="#E08">〔E08、</a>',
+            ),
+        )
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("must be exactly one evidence ID", result.stderr)
+
+    def test_validator_rejects_a_dropped_evidence_boundary(self):
+        """The defect that shipped in a showcase must now fail the build."""
+        source = CPROMG_HTML.read_text(encoding="utf-8")
+        link = re.search(r'<a class="boundary-link" href="#(B\d{2})">\1</a>', source)
+        self.assertIsNotNone(link, "no boundary links found in the showcase")
+        broken = self.corrupt(CPROMG_HTML, (link.group(0), "无"))
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("never discharged in Section 7", result.stderr)
+
+    def test_validator_rejects_a_mention_that_is_not_a_discharge(self):
+        """A boundary link outside a review card must not count as handling it."""
+        source = CPROMG_HTML.read_text(encoding="utf-8")
+        link = re.search(r'<a class="boundary-link" href="#(B\d{2})">\1</a>', source)
+        self.assertIsNotNone(link)
+        intro = re.search(r'<section id="section-7"[^>]*>', source)
+        self.assertIsNotNone(intro)
+        broken = self.corrupt(
+            CPROMG_HTML,
+            (link.group(0), "无"),
+            (intro.group(0), intro.group(0) + f"<p>{link.group(0)}</p>"),
+        )
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("not from a review card", result.stderr)
+
+    def test_validator_rejects_an_unlabelled_boundary(self):
+        """Dropping the B-id must not make a boundary invisible to the gate."""
+        source = CPROMG_HTML.read_text(encoding="utf-8")
+        first = re.search(r'\s?id="B\d{2}"', source)
+        self.assertIsNotNone(first)
+        broken = self.corrupt(CPROMG_HTML, (first.group(0), ""))
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("with no B-id", result.stderr)
+
+    def test_validator_rejects_a_review_card_missing_a_field(self):
+        broken = self.corrupt(
+            CPROMG_HTML,
+            ("<strong>证据缺少什么：</strong>", "<strong>补充：</strong>"),
+        )
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("证据缺少什么", result.stderr)
+
+    def test_validator_rejects_a_foreign_stylesheet(self):
+        broken = self.corrupt(
+            CPROMG_HTML,
+            ("<body>", "<style>body { max-width: 36em; }</style>\n<body>"),
+        )
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("expected exactly 1 <style> element", result.stderr)
+
+    def test_validator_rejects_a_truncated_report(self):
+        broken = self.corrupt(CPROMG_HTML, ("<footer>", "{{REPORT_BODY}}<footer>"))
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("unreplaced template token", result.stderr)
+
+    def test_validator_rejects_a_collapsed_ledger(self):
+        broken = self.corrupt(
+            CPROMG_HTML, ('id="evidence-ledger" open>', 'id="evidence-ledger">')
+        )
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("must carry the open attribute", result.stderr)
+
+    def test_validator_reports_a_stray_close_tag_as_a_structural_error(self):
+        """A stray tag must not masquerade as ten dropped boundaries."""
+        broken = self.corrupt(
+            CPROMG_HTML,
+            ('<section id="section-7"', '</div><section id="section-7"'),
+        )
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("stray </div>", result.stderr)
+        self.assertNotIn("never discharged", result.stderr)
+
+    def test_validator_tolerates_a_section_title_quoted_in_prose(self):
+        """Section 2's contract requires a forward reference to Section 7."""
+        clean = self.corrupt(
+            CPROMG_HTML,
+            (
+                '<section id="section-3"',
+                "<p>第 7 章「批判性审查：证据究竟支持到哪里」会集中判断。</p>"
+                '<section id="section-3"',
+            ),
+        )
+        result = self.run_validator(clean)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_validator_checks_figure_mode_in_both_directions(self):
+        for mode in ("brief", "generate"):
+            with self.subTest(mode=mode):
+                result = subprocess.run(
+                    [sys.executable, str(VALIDATOR), "--figure", mode, str(CPROMG_HTML)],
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(
+                    result.returncode, 1, "missing figure UI must fail brief/generate"
+                )
+                self.assertIn("figure-output", result.stderr)
+        broken = self.corrupt(
+            CPROMG_HTML, ("</main>", '<section id="figure-output"></section></main>')
+        )
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1, "figure=off must reject figure UI")
+        self.assertIn("figure=off but #figure-output is present", result.stderr)
 
 
 if __name__ == "__main__":
