@@ -39,15 +39,27 @@ Use exactly these section IDs, titles, and order inside `<main>`:
 
 Follow this narrative sequence: 理解作者（Sections 1–6） → 集中审查作者（Section 7） → 形成自己的结论（Section 8）.
 
+Open every section with a sequential label, its exact title, and a one-sentence neutral reading cue:
+
+```html
+<p class="chapter-label">CHAPTER 01</p>
+<h2>为什么要做这项研究：背景、现状与本文切入点</h2>
+<p class="chapter-intro">本章要建立……</p>
+```
+
+Continue through `CHAPTER 08`. Primary sections are continuous article chapters, not cards: do not give the section container a background, border, radius, or shadow.
+
 ## Header and Navigation
 
-Do not create a `阅读导航` report section. Keep the header metadata compact: record `mode: standard|audit`, `complete|partial`, paper identity, DOI/stable ID, and access date. Fill three summary cards:
+Do not create a `阅读导航` report section. Use a short Chinese display title such as `SiamProm 深度精读`, then preserve the complete original paper title as the subtitle. Keep the metadata compact: record `mode: standard|audit`, `complete|partial`, journal identity, DOI/stable ID, and access date.
+
+Use one compact `论文速览` block with three labeled rows, not three cards:
 
 - `作者主线`: intended contribution, without a verdict;
 - `证据状态`: conclusion-changing gaps and the smallest resolving material;
 - `审查入口`: the issue assessed in Section 7, without developing the answer.
 
-Keep the template's eight-link table of contents and quick link to Section 2. Do not include a generated-file inventory.
+Use the fixed dark sidebar and group links as `论文概览` (Sections 1–2), `问题与方法` (3–5), `实验与审查` (6–7), `最终结论` (8), and `报告附录` (provenance and ledger). Do not add unfinished links or a generated-file inventory.
 
 ## Footer Provenance
 
@@ -141,10 +153,10 @@ Every main-report citation is an internal link such as `<a class="evidence-link"
 
 ## UI and Offline Contract
 
-- Preserve the template's publication-style hero, three summary cards, sticky numbered TOC, readable 820–900 px text column, evidence boundaries, experiment cards, review cards, graded takeaways, responsive tables, and print CSS.
+- Preserve the template's technical-monograph hero, fixed `280px` dark grouped sidebar, compact `论文速览`, continuous chapters, readable 820–860 px text column, evidence boundaries, experiment cards, review cards, graded takeaways, responsive tables, and print CSS.
 - Keep CSS inline. Do not use external stylesheets, fonts, scripts, Mermaid, MathJax, iframes, or non-data-URI images.
 - Escape all paper/code/data text before inserting it as HTML. Do not copy source event handlers or executable markup.
-- Use semantic HTML, visible focus states, labels in addition to color, `prefers-reduced-motion`, a single-column layout below 900 px, and print rules that expose collapsed evidence.
+- Use semantic HTML, visible focus states, labels in addition to color, `prefers-reduced-motion`, a basic single-column fallback below 900 px, and print rules that hide the sidebar and expose collapsed evidence. Do not add a mobile navigation drawer in the desktop-first report.
 - External evidence URLs may require network access, but reading and navigating the report must work offline.
 
 ## Main/Audit Boundary
