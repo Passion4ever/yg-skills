@@ -74,6 +74,7 @@ def extract_css_rule(text: str, selector: str) -> str:
 def assert_frameflow_inspired_layout(testcase: unittest.TestCase, text: str):
     custom_styles = text[text.index(":root") :]
     sidebar_rule = extract_css_rule(text, ".sidebar")
+    visited_nav_rule = extract_css_rule(text, ".nav-link:visited")
     content_rule = extract_css_rule(text, ".content-shell")
     chapter_rule = extract_css_rule(text, "main > section.report-section")
     root_rule = extract_css_rule(custom_styles, "html")
@@ -87,6 +88,7 @@ def assert_frameflow_inspired_layout(testcase: unittest.TestCase, text: str):
         testcase.assertIn(declaration, sidebar_rule)
     testcase.assertIn("margin-left: 280px", content_rule)
     testcase.assertIn("max-width: 980px", content_rule)
+    testcase.assertIn("color: rgba(255, 255, 255, 0.56)", visited_nav_rule)
     for declaration in (
         "background: transparent",
         "border: 0",
