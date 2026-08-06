@@ -279,12 +279,13 @@ class SkillContractTests(unittest.TestCase):
             "Concrete sample",
             "Progressive technical depth",
             "Chinese-first prose",
+            "Plain language",
             "Readable evidence",
             "Main/audit separation",
             "HTML reading experience",
         ):
             self.assertIn(f"| {criterion} |", text)
-        self.assertIn("at least 16/18", text)
+        self.assertIn("at least 18/20", text)
         self.assertIn("scientific-depth score", text)
 
     def test_output_contract_has_guided_reading_layers(self):
@@ -487,8 +488,10 @@ class SkillContractTests(unittest.TestCase):
         parser = DocumentIndex()
         parser.feed(text)
 
-        self.assertIn("promoter 或 non-promoter", text)
-        self.assertIn("TSS 只是正样本的采样锚点", text)
+        # Assert the fact, not the phrasing: the readability rule inserts a Chinese
+        # gloss at first use, which splits any verbatim phrase it lands inside.
+        self.assertRegex(text, r"promoter(（[^）]*）)?\s*或\s*non-promoter")
+        self.assertRegex(text, r"TSS\s*只是正样本的采样锚点")
         for fact in ("HIP1", "10-fold", "90/10", "33 条", "AAA", "margin", "E24"):
             self.assertIn(fact, text)
         self.assertGreaterEqual(parser.classes.count("experiment-card"), 5)
@@ -697,6 +700,41 @@ class ReportValidatorTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             return
         self.skipTest("no experiment-card boundary field in any shipped report")
+
+    def test_validator_rejects_a_run_on_sentence(self):
+        run_on = "这是一个被故意写得非常冗长的句子" * 9  # 135 CJK characters
+        broken = self.corrupt(
+            CPROMG_HTML,
+            ('<main id="main-content">', f'<main id="main-content"><p>{run_on}。</p>'),
+        )
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("run-on sentence", result.stderr)
+
+    def test_readability_measures_prose_not_tables(self):
+        """A long table cell is data, not a sentence — measuring it flagged clean reports."""
+        cell = "阶段形状操作说明" * 40  # 320 characters, far past the sentence cap
+        clean = self.corrupt(
+            CPROMG_HTML,
+            (
+                '<main id="main-content">',
+                f'<main id="main-content"><table><tr><td>{cell}</td></tr></table>',
+            ),
+        )
+        result = self.run_validator(clean)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_contract_states_the_readability_limits(self):
+        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
+        skill = SKILL_MD.read_text(encoding="utf-8")
+        source = VALIDATOR.read_text(encoding="utf-8")
+        for limit in ("SENTENCE_HARD_CAP", "SENTENCE_P90_CAP", "LATIN_DENSITY_WARN"):
+            self.assertIn(limit, source)
+        # the number the model is told must be the number the gate enforces
+        cap = re.search(r"SENTENCE_HARD_CAP = (\d+)", source).group(1)
+        self.assertIn(cap, contract)
+        self.assertIn(cap, skill)
+        self.assertIn("Readability", contract)
 
     def test_reading_length_ceiling_scales_with_boundary_count(self):
         """A boundary-dense paper is legitimately longer; the band must say so."""

@@ -181,6 +181,25 @@ Develop Sections 1–6 as:
 
 Keep one explanatory purpose per paragraph and usually 3–5 sentences. Use Chinese-first prose. Retain English only for precise names, metrics, code mapping, identifiers, and author-defined modules.
 
+## Readability
+
+A reader who has to re-read a sentence to parse it has been failed, however correct the content is. `validate_report.py` measures paragraph and list prose only — tables, code and flow diagrams are exempt — and fails a report whose sentences run long:
+
+- no sentence past **120 characters**; that length is a run-on, not a dense sentence;
+- 90th-percentile sentence at or under **80 characters**; the long tail is what makes a report feel impenetrable, so trimming only the worst offender does not pass;
+- median near **45 characters**, and a warning above it.
+
+Split a long sentence at its seams rather than compressing it: one clause that states the fact, one that states what follows from it. Semicolon chains carrying three independent claims are three sentences.
+
+**Gloss the load-bearing terms.** The first time an English concept word appears, say in plain Chinese what it means, then use the term freely:
+
+```text
+✗ 第一是 motif amortization，第二是 motif guidance。
+✓ 第一条路线是"把条件训进模型"（motif amortization）：训练时就把 motif 作为输入喂进去。
+```
+
+Expand an acronym once at first use. A term a domain reader knows still needs its gloss — the report is read by someone entering the field, not by the paper's authors. The validator warns when Latin script exceeds 35% of the prose, which usually means terms are being repeated instead of explained.
+
 When any conclusion-changing fact appears—including a paper-code/data conflict, missing material, external correction, or direct logical fact—use a compact neutral handoff. For a conflict, state both the paper's report and what released evidence shows.
 
 Give every boundary a sequential ID on the element that holds its text, so Section 7 can be checked against it. There are exactly two shapes:

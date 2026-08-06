@@ -69,6 +69,18 @@ READING_LENGTH_MAX = 11000
 READING_LENGTH_BASE = 8000
 READING_LENGTH_PER_BOUNDARY = 350
 
+# Readability. A Chinese technical sentence reads comfortably at 30–50 characters.
+# Both limits sit well above that, so breaching one means a genuine run-on rather
+# than a dense-but-fair sentence.
+SENTENCE_HARD_CAP = 120
+SENTENCE_P90_CAP = 80
+SENTENCE_MEDIAN_TARGET = 45
+LATIN_DENSITY_WARN = 0.35
+PROSE_TAGS = {"p", "li"}
+NON_PROSE_TAGS = {"table", "pre", "code", "style", "script"}
+SENTENCE_SPLIT = re.compile(r"[。！？]")
+CITATION = re.compile(r"〔[^〕]*〕")
+
 
 class Element:
     __slots__ = ("tag", "id", "classes", "boundary_line", "boundary_section", "buf")
@@ -111,6 +123,9 @@ class ReportIndex(HTMLParser):
         self.main_text: list[str] = []
         self.hero_text: list[str] = []
         self.images: list[str] = []
+        self.prose_blocks: list[str] = []
+        self._prose_buf: list[str] | None = None
+        self._non_prose = 0
 
         self._stack: list[Element] = []
         self._in_style = False
@@ -147,6 +162,11 @@ class ReportIndex(HTMLParser):
     def _current_card(self) -> list[str] | None:
         return self._card_stack[-1] if self._card_stack else None
 
+    def _close_prose_block(self) -> None:
+        if self._prose_buf is not None:
+            self.prose_blocks.append("".join(self._prose_buf))
+            self._prose_buf = None
+
     def _flush_capture(self) -> None:
         if self._capture is None:
             return
@@ -177,6 +197,11 @@ class ReportIndex(HTMLParser):
         if tag == "style":
             self._in_style = True
             self._style_buf = []
+        if tag in NON_PROSE_TAGS:
+            self._non_prose += 1
+        elif tag in PROSE_TAGS and self._in_main() and not self._non_prose:
+            self._close_prose_block()
+            self._prose_buf = []
 
         if element_id:
             self.ids.append(element_id)
@@ -237,6 +262,8 @@ class ReportIndex(HTMLParser):
             return
         if self._capture is not None:
             self._capture.append(data)
+        if self._prose_buf is not None and not self._non_prose:
+            self._prose_buf.append(data)
         if self._in_main():
             self.main_text.append(data)
         if self._in_hero():
@@ -270,6 +297,10 @@ class ReportIndex(HTMLParser):
         if tag == "style":
             self._in_style = False
             self.styles.append("".join(self._style_buf))
+        if tag in PROSE_TAGS:
+            self._close_prose_block()
+        if tag in NON_PROSE_TAGS:
+            self._non_prose = max(0, self._non_prose - 1)
         self._flush_capture()
 
         if not any(element.tag == tag for element in self._stack):
@@ -296,6 +327,19 @@ class ReportIndex(HTMLParser):
                     f"line {self.getpos()[0]}: </{tag}> closes across"
                     f" the still-open <section id=\"{popped.id}\">"
                 )
+
+
+def prose_sentences(blocks: list[str]) -> list[str]:
+    """Sentences a human actually reads: paragraph and list text, no tables or code.
+
+    Evidence citations are stripped first — 〔E01、E02〕 is punctuation to the eye,
+    not words, and counting it would penalise well-cited prose.
+    """
+    sentences = []
+    for block in blocks:
+        text = CITATION.sub("", re.sub(r"\s+", "", block))
+        sentences.extend(s for s in SENTENCE_SPLIT.split(text) if len(s) > 4)
+    return sentences
 
 
 def load_template_style(template: Path) -> str | None:
@@ -467,6 +511,41 @@ def validate(path: Path, template: Path, figure: str) -> tuple[list[str], list[s
         )
     elif figure == "generate" and not index.images:
         errors.append("figure=generate but no image was embedded")
+
+    # 12. readability — the deliverable is read by a person, not compiled
+    sentences = prose_sentences(index.prose_blocks)
+    if not sentences:
+        errors.append("no prose paragraphs found in <main>")
+    else:
+        lengths = sorted(len(s) for s in sentences)
+        median = lengths[len(lengths) // 2]
+        p90 = lengths[min(len(lengths) - 1, int(len(lengths) * 0.9))]
+        runons = [s for s in sentences if len(s) > SENTENCE_HARD_CAP]
+        for sentence in runons[:5]:
+            errors.append(f"run-on sentence, {len(sentence)} chars: {sentence[:36]}…")
+        if len(runons) > 5:
+            errors.append(
+                f"and {len(runons) - 5} more sentences over {SENTENCE_HARD_CAP} characters"
+            )
+        if p90 > SENTENCE_P90_CAP:
+            errors.append(
+                f"90th-percentile sentence is {p90} characters, limit {SENTENCE_P90_CAP};"
+                " the long tail is what makes a report read as dense"
+            )
+        if median > SENTENCE_MEDIAN_TARGET:
+            warnings.append(
+                f"median sentence is {median} characters; aim for {SENTENCE_MEDIAN_TARGET}"
+            )
+        prose = "".join(sentences)
+        cjk_chars = len(CJK.findall(prose))
+        latin = len(re.findall(r"[A-Za-z]", prose))
+        if cjk_chars + latin:
+            density = latin / (cjk_chars + latin)
+            if density > LATIN_DENSITY_WARN:
+                warnings.append(
+                    f"{density:.0%} of the prose is Latin script; gloss the"
+                    " load-bearing English terms in Chinese at first use"
+                )
 
     # -- warnings --------------------------------------------------------
     # Every boundary costs roughly one paragraph to state and another to discharge,
