@@ -142,8 +142,14 @@ in plain Chinese what it means, then use the term freely:
 
 Expand an acronym once at first use. A term a domain reader knows still needs its
 gloss — the report is read by someone entering the field, not by the paper's
-authors. The validator warns above 35% Latin script, which usually means terms
-are being repeated instead of explained.
+authors.
+
+Reusing a term you have glossed is not a problem — it is the point of glossing.
+Introducing many terms once each is the problem, because every one of them is
+vocabulary the reader has to carry and never sees again. The validator counts
+distinct English terms per 1000 Chinese characters and warns above 28, naming
+the ones that appear once as ordinary words. `ProteinMPNN` and `QED` have to
+stay in Latin script; `achieved`, `available` and `architecture` do not.
 
 ## Modes
 

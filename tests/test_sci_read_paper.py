@@ -773,6 +773,38 @@ class ReportValidatorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("run-on sentence", result.stderr)
 
+    def test_term_density_counts_variety_not_repetition(self):
+        """Repeating one glossed term is healthy; the metric must not punish it."""
+        sys.path.insert(0, str(VALIDATOR.parent))
+        from validate_report import prose_terms
+
+        repeated = ["模型把 motif 交给 scaffold。" * 30]
+        varied = [
+            "模型 " + " ".join(f"term{n}" for n in range(30)) + " 交给下一层。" * 8
+        ]
+        few, _ = prose_terms(repeated)
+        many, _ = prose_terms(varied)
+        self.assertLess(len(few), len(many))
+        self.assertEqual(sorted(few), ["motif", "scaffold"])
+
+    def test_term_density_survives_the_whitespace_that_sentence_length_removes(self):
+        """Stripping spaces welds `ablation study` into one token and hides a term."""
+        sys.path.insert(0, str(VALIDATOR.parent))
+        from validate_report import prose_terms
+
+        terms, _ = prose_terms(["这是一次 ablation study 的说明。"])
+        self.assertIn("ablation", terms)
+        self.assertIn("study", terms)
+        self.assertNotIn("ablationstudy", terms)
+
+    def test_term_density_ignores_evidence_and_boundary_ids(self):
+        """E01 and B07 are references, not vocabulary the reader has to learn."""
+        sys.path.insert(0, str(VALIDATOR.parent))
+        from validate_report import prose_terms
+
+        terms, _ = prose_terms(["见边界 B07 与证据〔E01、E02〕的说明。"])
+        self.assertEqual(sorted(terms), [])
+
     def test_readability_measures_prose_not_tables(self):
         """A long table cell is data, not a sentence — measuring it flagged clean reports."""
         cell = "阶段形状操作说明" * 40  # 320 characters, far past the sentence cap
@@ -790,9 +822,14 @@ class ReportValidatorTests(unittest.TestCase):
         """One number, in one place, next to the gate that enforces it."""
         contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
         source = VALIDATOR.read_text(encoding="utf-8")
-        for limit in ("SENTENCE_HARD_CAP", "SENTENCE_P90_CAP", "LATIN_DENSITY_WARN"):
+        for limit in ("SENTENCE_HARD_CAP", "SENTENCE_P90_CAP", "TERM_DENSITY_WARN"):
             self.assertIn(limit, source)
-        for constant in ("SENTENCE_HARD_CAP", "SENTENCE_P90_CAP", "SENTENCE_MEDIAN_TARGET"):
+        for constant in (
+            "SENTENCE_HARD_CAP",
+            "SENTENCE_P90_CAP",
+            "SENTENCE_MEDIAN_TARGET",
+            "TERM_DENSITY_WARN",
+        ):
             value = re.search(rf"{constant} = (\d+)", source).group(1)
             self.assertIn(value, contract, f"{constant} is enforced but never stated")
         self.assertIn("Readability", contract)

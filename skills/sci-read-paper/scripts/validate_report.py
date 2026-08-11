@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from collections import Counter
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -94,13 +95,21 @@ READING_LENGTH_PER_BOUNDARY = 350
 SENTENCE_HARD_CAP = 120
 SENTENCE_P90_CAP = 80
 SENTENCE_MEDIAN_TARGET = 45
-LATIN_DENSITY_WARN = 0.35
+# Distinct English terms per 1000 CJK characters — not the share of Latin
+# characters, which conflates two opposite things. Reusing one glossed term a
+# hundred times is the healthy pattern; introducing a hundred terms once each is
+# what makes a report unreadable, and only the second is a writing problem.
+# Calibrated on the shipped readings: 12 and 17 for the two that read cleanly,
+# 44 for the one still carrying ability/achieved/available in English.
+TERM_DENSITY_WARN = 28
 # card values live in <dd>; leaving it out would exempt every card from the
 # sentence-length limits, which is where the densest writing actually is
 PROSE_TAGS = {"p", "li", "dd"}
 NON_PROSE_TAGS = {"table", "pre", "code", "style", "script"}
 SENTENCE_SPLIT = re.compile(r"[。！？]")
 CITATION = re.compile(r"〔[^〕]*〕")
+LATIN_TERM = re.compile(r"[A-Za-z][A-Za-z0-9\-']*")
+BARE_BOUNDARY_ID = re.compile(r"\bB\d{2,}\b")
 
 
 class Element:
@@ -254,7 +263,13 @@ class ReportIndex(HTMLParser):
             field[2] = element_id
         if tag in NON_PROSE_TAGS:
             self._non_prose += 1
-        elif tag in PROSE_TAGS and self._in_main() and not self._non_prose:
+        elif (
+            tag in PROSE_TAGS
+            and self._in_main()
+            and not self._non_prose
+            # CHAPTER 07 is furniture, not a sentence the reader parses
+            and "chapter-label" not in classes
+        ):
             self._close_prose_block()
             self._prose_buf = []
 
@@ -417,6 +432,25 @@ def prose_sentences(blocks: list[str]) -> list[str]:
         text = CITATION.sub("", re.sub(r"\s+", "", block))
         sentences.extend(s for s in SENTENCE_SPLIT.split(text) if len(s) > 4)
     return sentences
+
+
+def prose_terms(blocks: list[str]) -> tuple[Counter[str], int]:
+    """Distinct English terms in the prose, and the CJK characters around them.
+
+    Whitespace is collapsed to a single space rather than removed. Removing it —
+    which is right for measuring a Chinese sentence — welds `ablation study` into
+    one token and would make the vocabulary look wider than it is.
+
+    Evidence citations and bare boundary ids are stripped first: E01 and B07 are
+    references, not terms the reader has to learn.
+    """
+    terms: Counter[str] = Counter()
+    cjk = 0
+    for block in blocks:
+        text = BARE_BOUNDARY_ID.sub("", CITATION.sub("", re.sub(r"\s+", " ", block)))
+        terms.update(match.lower() for match in LATIN_TERM.findall(text))
+        cjk += len(CJK.findall(text))
+    return terms, cjk
 
 
 def load_template_style(template: Path) -> str | None:
@@ -672,16 +706,22 @@ def validate(
             warnings.append(
                 f"median sentence is {median} characters; aim for {SENTENCE_MEDIAN_TARGET}"
             )
-        prose = "".join(sentences)
-        cjk_chars = len(CJK.findall(prose))
-        latin = len(re.findall(r"[A-Za-z]", prose))
-        if cjk_chars + latin:
-            density = latin / (cjk_chars + latin)
-            if density > LATIN_DENSITY_WARN:
-                warnings.append(
-                    f"{density:.0%} of the prose is Latin script; gloss the"
-                    " load-bearing English terms in Chinese at first use"
-                )
+    terms, prose_cjk = prose_terms(index.prose_blocks)
+    if prose_cjk:
+        density = 1000 * len(terms) / prose_cjk
+        if density > TERM_DENSITY_WARN:
+            # used once, all lower case, no digits or hyphens: almost never a
+            # proper name or a metric, almost always a word Chinese could carry
+            ordinary = sorted(
+                term for term, uses in terms.items()
+                if uses == 1 and term.isalpha() and len(term) > 3
+            )
+            warnings.append(
+                f"{len(terms)} distinct English terms in {prose_cjk} Chinese characters"
+                f" ({density:.0f} per 1000, warn above {TERM_DENSITY_WARN});"
+                f" {len(ordinary)} appear once as ordinary words —"
+                f" say those in Chinese, e.g. {', '.join(ordinary[:8])}"
+            )
 
     # 13. the ledger is a table with a fixed shape and a closed label set
     for row_id, cells in index.ledger_rows:
