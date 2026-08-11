@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
+  <meta name="sci-read-paper" content="mode=standard; figure=off">
   <title>FrameFlow motif-scaffolding 深度精读 · Improved motif-scaffolding with SE(3) flow matching</title>
   <style>
     :root {
@@ -636,79 +637,79 @@
         <p class="lead">论文只有一张主表和几张分析图，但它们回答的是五个不同的问题。下面按问题重组，只陈述设计、观察与作者主张；累积判断留给第 7 节。</p>
         <p><strong>实验地图：</strong>6.1 是主基线比较，6.2 与 6.3 是分析，6.4 是对无条件主干的控制实验，6.5 是失败个案。全文没有消融实验，也没有外部验证。</p>
 
-        <section class="level3 experiment-card">
+        <section class="experiment-card">
           <h3>6.1 两条路线相对 SOTA 表现如何</h3>
-          <ul>
-            <li><strong>作者要回答什么：</strong> 在同一基准上，FrameFlow 的两条路线能否在解出 motif 数上追平 RFdiffusion。同时，它们能否给出更多结构上不同的解。</li>
-            <li><strong>实验类型：</strong> 主基线比较。</li>
-            <li><strong>实验怎样设计：</strong> 取 RFdiffusion 提出的 motif-scaffolding 基准。25 个 motif 中排除多链的 6VW1，用余下 24 个。每个 motif 采 100 个 scaffold，长度与 motif 位置按基准规定随机。四种方法放在同一张表里比较。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E22">E22</a>〕</li>
-            <li><strong>改变了什么，控制了什么：</strong> 变的是生成方法。FrameFlow 两个变体共享主干、数据与训练设置，属受控对照。RFdiffusion 的数值取自其自行发布的样本集，未在本文协议下重跑。TDS 由作者以 <code>k=8</code> 粒子重跑。〔<a class="evidence-link" href="#E09">E09</a>〕</li>
-            <li><strong>数据与指标：</strong> 一共三个。Solved 是至少采到一个可设计 scaffold 的 motif 数。Div. 是全部可设计 scaffold 的结构簇总数，用 MaxCluster 聚类，TM-score 阈值 0.5。Speed 是 A6000 上采样一条长度 100 蛋白的秒数。〔<a class="evidence-link" href="#E13">E13</a>〕</li>
-            <li><strong>实际观察到什么：</strong> 四种方法的 Solved/Div./Speed 依次如下。FrameFlow-amortization 20/353/18s，FrameFlow-guidance 20/192/18s。RFdiffusion 20/141/50s，TDS 19/217/117s。再逐 motif 看，RFdiffusion 在 9/24 个 motif 上产出最多<em>可设计</em> scaffold。FrameFlow-amortization 是 7/24，TDS 是 6/24，另有 2 个并列。但在<em>唯一</em>可设计簇上，RFdiffusion 只在 2/24 个 motif 上领先。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E11">E11</a>〕</li>
-            <li><strong>作者据此主张什么：</strong> FrameFlow-amortization 在解出数上与 SOTA 持平，唯一可设计 scaffold 数达到 2.5 倍，而且推理更快。只看 designability 会误导，必须同时报告多样性。〔<a class="evidence-link" href="#E02">E02</a>、<a class="evidence-link" href="#E11">E11</a>〕</li>
-            <li id="B06"><strong>证据边界：</strong> 三个基线的产生方式不同。FrameFlow 两个变体由作者在统一设置下训练与采样，TDS 由作者重跑。RFdiffusion 的数值来自其自身发布的样本集，而非本文协议下的重跑。论文未报告该批样本的数量、长度分布或采样设置。严重性在第 7 节判断。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E30">E30</a>〕</li>
-          </ul>
-        </section>
+  <dl>
+    <dt>作者要回答什么</dt><dd>在同一基准上，FrameFlow 的两条路线能否在解出 motif 数上追平 RFdiffusion。同时，它们能否给出更多结构上不同的解。</dd>
+    <dt>实验类型</dt><dd>主实验 / 基线对比。</dd>
+    <dt>实验怎样设计</dt><dd>取 RFdiffusion 提出的 motif-scaffolding 基准。25 个 motif 中排除多链的 6VW1，用余下 24 个。每个 motif 采 100 个 scaffold，长度与 motif 位置按基准规定随机。四种方法放在同一张表里比较。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E22">E22</a>〕</dd>
+    <dt>改变了什么，控制了什么</dt><dd>变的是生成方法。FrameFlow 两个变体共享主干、数据与训练设置，属受控对照。RFdiffusion 的数值取自其自行发布的样本集，未在本文协议下重跑。TDS 由作者以 <code>k=8</code> 粒子重跑。〔<a class="evidence-link" href="#E09">E09</a>〕</dd>
+    <dt>数据与指标</dt><dd>一共三个。Solved 是至少采到一个可设计 scaffold 的 motif 数。Div. 是全部可设计 scaffold 的结构簇总数，用 MaxCluster 聚类，TM-score 阈值 0.5。Speed 是 A6000 上采样一条长度 100 蛋白的秒数。〔<a class="evidence-link" href="#E13">E13</a>〕</dd>
+    <dt>实际观察到什么</dt><dd>四种方法的 Solved/Div./Speed 依次如下。FrameFlow-amortization 20/353/18s，FrameFlow-guidance 20/192/18s。RFdiffusion 20/141/50s，TDS 19/217/117s。再逐 motif 看，RFdiffusion 在 9/24 个 motif 上产出最多<em>可设计</em> scaffold。FrameFlow-amortization 是 7/24，TDS 是 6/24，另有 2 个并列。但在<em>唯一</em>可设计簇上，RFdiffusion 只在 2/24 个 motif 上领先。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E11">E11</a>〕</dd>
+    <dt>作者据此主张什么</dt><dd>FrameFlow-amortization 在解出数上与 SOTA 持平，唯一可设计 scaffold 数达到 2.5 倍，而且推理更快。只看 designability 会误导，必须同时报告多样性。〔<a class="evidence-link" href="#E02">E02</a>、<a class="evidence-link" href="#E11">E11</a>〕</dd>
+    <dt>证据边界</dt><dd class="evidence-boundary" id="B06">三个基线的产生方式不同。FrameFlow 两个变体由作者在统一设置下训练与采样，TDS 由作者重跑。RFdiffusion 的数值来自其自身发布的样本集，而非本文协议下的重跑。论文未报告该批样本的数量、长度分布或采样设置。严重性在第 7 节判断。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E30">E30</a>〕</dd>
+  </dl>
+</section>
 
         <aside class="evidence-boundary" id="B07">
           <p><strong>证据边界：</strong> Div. 定义为可设计 scaffold 内部的结构簇<em>总数</em>。它是绝对计数，不是归一化比率。因此它不独立于各方法产出的可设计样本总量。论文报告了每方法的 Solved 数与逐 motif 的柱状图，但没有在表中报告各方法可设计 scaffold 的总数。于是"每个可设计样本贡献多少个簇"就算不出来。这是理解 2.5 倍这一比值必须知道的事实；其对结论的影响在第 7 节集中评估。〔<a class="evidence-link" href="#E13">E13</a>、<a class="evidence-link" href="#E10">E10</a>〕</p>
         </aside>
 
-        <section class="level3 experiment-card">
+        <section class="experiment-card">
           <h3>6.2 多样性优势在别的度量下还成立吗</h3>
-          <ul>
-            <li><strong>作者要回答什么：</strong> 簇计数上的优势会不会只是聚类阈值的产物。</li>
-            <li><strong>实验类型：</strong> 分析。</li>
-            <li><strong>实验怎样设计：</strong> 两条独立证据。其一是二级结构分析。DSSP（Define Secondary Structure of Proteins）是从坐标指认二级结构的标准工具。用它算出可设计 motif-scaffold 的螺旋/折叠组成，再画成二维核密度图，与训练数据分布并列。其二，对每个 motif 计算全部可设计 scaffold 的平均成对 TM-score，再逐 motif 列表。〔<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E17">E17</a>〕</li>
-            <li><strong>改变了什么，控制了什么：</strong> 度量变了，样本集不变。平均成对 TM-score 不依赖聚类，也不是计数量。</li>
-            <li><strong>数据与指标：</strong> DSSP 二级结构组成；平均成对 TM-score（越低越不相似）。</li>
-            <li><strong>实际观察到什么：</strong> RFdiffusion 的可设计 scaffold 几乎集中在高螺旋区。FrameFlow-amortization 在折叠方向铺开得多，更接近训练数据分布。逐 motif 的平均成对 TM-score 上，两条 FrameFlow 路线在 24 个 motif 中的 19 个上取得最低值。〔<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E17">E17</a>〕</li>
-            <li><strong>作者据此主张什么：</strong> RFdiffusion 多样性偏低源于二级结构偏好，它倾向于生成螺旋结构。FrameFlow 的多样性优势不是聚类假象。〔<a class="evidence-link" href="#E15">E15</a>〕</li>
-            <li id="B12"><strong>证据边界：</strong> 两项多样性分析均为单次训练、单次采样的结果，未报告多种子重复或方法内部方差。平均成对 TM-score 在可设计样本数很少时不稳定，表中多处为 N/A。严重性在第 7 节判断。〔<a class="evidence-link" href="#E17">E17</a>〕</li>
-          </ul>
-        </section>
+  <dl>
+    <dt>作者要回答什么</dt><dd>簇计数上的优势会不会只是聚类阈值的产物。</dd>
+    <dt>实验类型</dt><dd>分析。</dd>
+    <dt>实验怎样设计</dt><dd>两条独立证据。其一是二级结构分析。DSSP（Define Secondary Structure of Proteins）是从坐标指认二级结构的标准工具。用它算出可设计 motif-scaffold 的螺旋/折叠组成，再画成二维核密度图，与训练数据分布并列。其二，对每个 motif 计算全部可设计 scaffold 的平均成对 TM-score，再逐 motif 列表。〔<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E17">E17</a>〕</dd>
+    <dt>改变了什么，控制了什么</dt><dd>度量变了，样本集不变。平均成对 TM-score 不依赖聚类，也不是计数量。</dd>
+    <dt>数据与指标</dt><dd>DSSP 二级结构组成；平均成对 TM-score（越低越不相似）。</dd>
+    <dt>实际观察到什么</dt><dd>RFdiffusion 的可设计 scaffold 几乎集中在高螺旋区。FrameFlow-amortization 在折叠方向铺开得多，更接近训练数据分布。逐 motif 的平均成对 TM-score 上，两条 FrameFlow 路线在 24 个 motif 中的 19 个上取得最低值。〔<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E17">E17</a>〕</dd>
+    <dt>作者据此主张什么</dt><dd>RFdiffusion 多样性偏低源于二级结构偏好，它倾向于生成螺旋结构。FrameFlow 的多样性优势不是聚类假象。〔<a class="evidence-link" href="#E15">E15</a>〕</dd>
+    <dt>证据边界</dt><dd class="evidence-boundary" id="B12">两项多样性分析均为单次训练、单次采样的结果，未报告多种子重复或方法内部方差。平均成对 TM-score 在可设计样本数很少时不稳定，表中多处为 N/A。严重性在第 7 节判断。〔<a class="evidence-link" href="#E17">E17</a>〕</dd>
+  </dl>
+</section>
 
-        <section class="level3 experiment-card">
+        <section class="experiment-card">
           <h3>6.3 amortization 比 guidance 强在哪一环</h3>
-          <ul>
-            <li><strong>作者要回答什么：</strong> 两条路线的差距落在 motif 约束满足上，还是 scaffold 自洽性上。</li>
-            <li><strong>实验类型：</strong> 分析。</li>
-            <li><strong>实验怎样设计：</strong> 分别画 motif RMSD 与 scaffold RMSD 的经验累积分布，把两条路线叠在同一张图上，并标出 1 Å 与 2 Å 的判定线。〔<a class="evidence-link" href="#E17">E17</a>〕</li>
-            <li><strong>改变了什么，控制了什么：</strong> 只换条件化方式，主干、数据、评价流程不变。</li>
-            <li><strong>数据与指标：</strong> motif RMSD 与 scaffold RMSD 的 ECDF。ECDF 的全称是 empirical cumulative distribution function，即经验累积分布函数。</li>
-            <li><strong>实际观察到什么：</strong> amortization 的主要优势在于更高比例的样本跨过了 motif RMSD 阈值。两条曲线在 scaffold RMSD 上差距较小。而且 scaffold RMSD 整体小于 motif RMSD。〔<a class="evidence-link" href="#E17">E17</a>〕</li>
-            <li><strong>作者据此主张什么：</strong> guidance 的劣势来自 Eq.12 的近似误差，即用无条件模型逼近条件得分本身带来的偏差。〔<a class="evidence-link" href="#E06">E06</a>、<a class="evidence-link" href="#E17">E17</a>〕</li>
-            <li id="B13"><strong>证据边界：</strong> 把 guidance 的劣势归因于 Eq.12 的近似误差，这属于相关性描述，而非机制隔离。没有实验单独改变近似强度来检验该归因，例如扫描 <code>ω<sub>t</sub></code> 或 <code>t_min</code>。严重性在第 7 节判断。〔<a class="evidence-link" href="#E24">E24</a>〕</li>
-          </ul>
-        </section>
+  <dl>
+    <dt>作者要回答什么</dt><dd>两条路线的差距落在 motif 约束满足上，还是 scaffold 自洽性上。</dd>
+    <dt>实验类型</dt><dd>分析。</dd>
+    <dt>实验怎样设计</dt><dd>分别画 motif RMSD 与 scaffold RMSD 的经验累积分布，把两条路线叠在同一张图上，并标出 1 Å 与 2 Å 的判定线。〔<a class="evidence-link" href="#E17">E17</a>〕</dd>
+    <dt>改变了什么，控制了什么</dt><dd>只换条件化方式，主干、数据、评价流程不变。</dd>
+    <dt>数据与指标</dt><dd>motif RMSD 与 scaffold RMSD 的 ECDF。ECDF 的全称是 empirical cumulative distribution function，即经验累积分布函数。</dd>
+    <dt>实际观察到什么</dt><dd>amortization 的主要优势在于更高比例的样本跨过了 motif RMSD 阈值。两条曲线在 scaffold RMSD 上差距较小。而且 scaffold RMSD 整体小于 motif RMSD。〔<a class="evidence-link" href="#E17">E17</a>〕</dd>
+    <dt>作者据此主张什么</dt><dd>guidance 的劣势来自 Eq.12 的近似误差，即用无条件模型逼近条件得分本身带来的偏差。〔<a class="evidence-link" href="#E06">E06</a>、<a class="evidence-link" href="#E17">E17</a>〕</dd>
+    <dt>证据边界</dt><dd class="evidence-boundary" id="B13">把 guidance 的劣势归因于 Eq.12 的近似误差，这属于相关性描述，而非机制隔离。没有实验单独改变近似强度来检验该归因，例如扫描 <code>ω<sub>t</sub></code> 或 <code>t_min</code>。严重性在第 7 节判断。〔<a class="evidence-link" href="#E24">E24</a>〕</dd>
+  </dl>
+</section>
 
-        <section class="level3 experiment-card">
+        <section class="experiment-card">
           <h3>6.4 无条件主干本身是否够好</h3>
-          <ul>
-            <li><strong>作者要回答什么：</strong> guidance 路线的表现是否被一个偏弱的无条件模型拖累。</li>
-            <li><strong>实验类型：</strong> 控制实验。</li>
-            <li><strong>实验怎样设计：</strong> 抛开 motif 任务，对长度 70、100、200、300 各采 100 条主链，与 RFdiffusion 在无条件生成上直接比较。〔<a class="evidence-link" href="#E16">E16</a>〕</li>
-            <li><strong>改变了什么，控制了什么：</strong> 去掉 motif 条件，只比主干先验质量。</li>
-            <li><strong>数据与指标：</strong> Des.（可设计率）、Div.（簇数）、Nov.（新颖性，越低越好）。</li>
-            <li><strong>实际观察到什么：</strong> FrameFlow 是 0.86/155/0.61，RFdiffusion 是 0.89/159/0.65。也就是可设计率与多样性略低，新颖性更好。另外，无条件 FrameFlow 相比训练分布偏向多生成 α 螺旋。〔<a class="evidence-link" href="#E16">E16</a>〕</li>
-            <li><strong>作者据此主张什么：</strong> 无条件主干与当前 SOTA 相当，因此 motif-scaffolding 上的表现不是主干强弱造成的。〔<a class="evidence-link" href="#E16">E16</a>〕</li>
-            <li id="B14"><strong>证据边界：</strong> 无条件比较中，论文报告 FrameFlow 相对训练分布<em>更偏</em>螺旋。而在 motif-scaffolding 中，论文又把 RFdiffusion 多样性低归因于<em>偏</em>螺旋。两处关于螺旋偏好的观察方向相反。严重性在第 7 节判断。〔<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E16">E16</a>〕</li>
-          </ul>
-        </section>
+  <dl>
+    <dt>作者要回答什么</dt><dd>guidance 路线的表现是否被一个偏弱的无条件模型拖累。</dd>
+    <dt>实验类型</dt><dd>对照。</dd>
+    <dt>实验怎样设计</dt><dd>抛开 motif 任务，对长度 70、100、200、300 各采 100 条主链，与 RFdiffusion 在无条件生成上直接比较。〔<a class="evidence-link" href="#E16">E16</a>〕</dd>
+    <dt>改变了什么，控制了什么</dt><dd>去掉 motif 条件，只比主干先验质量。</dd>
+    <dt>数据与指标</dt><dd>Des.（可设计率）、Div.（簇数）、Nov.（新颖性，越低越好）。</dd>
+    <dt>实际观察到什么</dt><dd>FrameFlow 是 0.86/155/0.61，RFdiffusion 是 0.89/159/0.65。也就是可设计率与多样性略低，新颖性更好。另外，无条件 FrameFlow 相比训练分布偏向多生成 α 螺旋。〔<a class="evidence-link" href="#E16">E16</a>〕</dd>
+    <dt>作者据此主张什么</dt><dd>无条件主干与当前 SOTA 相当，因此 motif-scaffolding 上的表现不是主干强弱造成的。〔<a class="evidence-link" href="#E16">E16</a>〕</dd>
+    <dt>证据边界</dt><dd class="evidence-boundary" id="B14">无条件比较中，论文报告 FrameFlow 相对训练分布<em>更偏</em>螺旋。而在 motif-scaffolding 中，论文又把 RFdiffusion 多样性低归因于<em>偏</em>螺旋。两处关于螺旋偏好的观察方向相反。严重性在第 7 节判断。〔<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E16">E16</a>〕</dd>
+  </dl>
+</section>
 
-        <section class="level3 experiment-card">
+        <section class="experiment-card">
           <h3>6.5 解不出来的 motif 是怎么失败的</h3>
-          <ul>
-            <li><strong>作者要回答什么：</strong> 失败是"差一点"还是"根本做不到"。</li>
-            <li><strong>实验类型：</strong> 个案研究。</li>
-            <li><strong>实验怎样设计：</strong> 对 amortization 未解出的 motif，取最接近通过判据的样本，可视化并标出其 motif RMSD 与 scaffold RMSD。〔<a class="evidence-link" href="#E20">E20</a>〕</li>
-            <li><strong>改变了什么，控制了什么：</strong> 无对照，属于选取展示。</li>
-            <li><strong>数据与指标：</strong> 单样本的两个 RMSD 值。</li>
-            <li><strong>实际观察到什么：</strong> 图中列出四个未解出的 motif。它们的 motif RMSD 与 scaffold RMSD 依次是：4JHW 为 1.2 / 1.5，7MRX_60 为 1.1/1.3。7MRX_128 为 1.7/1.4，5WN9 为 0.75 / <strong>5.6</strong>。〔<a class="evidence-link" href="#E20">E20</a>〕</li>
-            <li><strong>作者据此主张什么：</strong> 失败原因是 motif RMSD 超过 1 Å，amortization 已非常接近解出基准中的全部 motif。〔<a class="evidence-link" href="#E18">E18</a>〕</li>
-            <li id="B08"><strong>证据边界：</strong> 论文内部对"解出多少个 motif"给出两个不同数字。正文第 5.2 节、表 1 与图 11 标题均为 20/24。附录 G 正文写 21/24，并称"无法解出的 3 个 motif"。而同一附录的图 10 实际展示了 4 个未解出的 motif。严重性在第 7 节判断。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E20">E20</a>〕</li>
-          </ul>
-        </section>
+  <dl>
+    <dt>作者要回答什么</dt><dd>失败是"差一点"还是"根本做不到"。</dd>
+    <dt>实验类型</dt><dd>案例研究。</dd>
+    <dt>实验怎样设计</dt><dd>对 amortization 未解出的 motif，取最接近通过判据的样本，可视化并标出其 motif RMSD 与 scaffold RMSD。〔<a class="evidence-link" href="#E20">E20</a>〕</dd>
+    <dt>改变了什么，控制了什么</dt><dd>无对照，属于选取展示。</dd>
+    <dt>数据与指标</dt><dd>单样本的两个 RMSD 值。</dd>
+    <dt>实际观察到什么</dt><dd>图中列出四个未解出的 motif。它们的 motif RMSD 与 scaffold RMSD 依次是：4JHW 为 1.2 / 1.5，7MRX_60 为 1.1/1.3。7MRX_128 为 1.7/1.4，5WN9 为 0.75 / <strong>5.6</strong>。〔<a class="evidence-link" href="#E20">E20</a>〕</dd>
+    <dt>作者据此主张什么</dt><dd>失败原因是 motif RMSD 超过 1 Å，amortization 已非常接近解出基准中的全部 motif。〔<a class="evidence-link" href="#E18">E18</a>〕</dd>
+    <dt>证据边界</dt><dd class="evidence-boundary" id="B08">论文内部对"解出多少个 motif"给出两个不同数字。正文第 5.2 节、表 1 与图 11 标题均为 20/24。附录 G 正文写 21/24，并称"无法解出的 3 个 motif"。而同一附录的图 10 实际展示了 4 个未解出的 motif。严重性在第 7 节判断。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E20">E20</a>〕</dd>
+  </dl>
+</section>
 
         <aside class="evidence-boundary" id="B09">
           <p><strong>证据边界：</strong> 正文第 5.2 节称"FrameFlow 能解出 RFdiffusion 解不出的情形（1QJG、4JHW、5YUI）"。但附录图 10 把 4JHW 列为 amortization 未解出的 motif。附录表 3 中，4JHW 与 5YUI 两行对四种方法全部为 N/A，而该表注明 N/A 表示"未采到任何可设计 scaffold"。1QJG 一行则与正文一致：FrameFlow 与 TDS 有值，RFdiffusion 为 N/A。这是理解"独有解出能力"这一主张必须知道的事实；其对结论的影响在第 7 节集中评估。〔<a class="evidence-link" href="#E19">E19</a>、<a class="evidence-link" href="#E20">E20</a>〕</p>
@@ -724,85 +725,97 @@
         <p class="chapter-intro">本章切换到审稿人视角，按对中心结论的威胁程度依次判断证据支持到哪里。</p>
         <p class="lead">从这里切换到审稿人视角。前六节按作者思路解释了这项工作，下面逐条检查每个中心主张是否排除了更简单的解释，并明确问题会把结论降到哪一级。顺序按对中心结论的威胁程度排列。</p>
 
-        <section id="review-parity" class="level4 review-card">
+        <section id="review-parity" class="review-card">
           <h4>审查议题一：以簇计数表达的"2.5 倍多样性"是否建立在等预算比较上</h4>
-          <ul>
-            <li><strong>处理的证据边界：</strong> <a class="boundary-link" href="#B01">B01</a>、<a class="boundary-link" href="#B06">B06</a>、<a class="boundary-link" href="#B07">B07</a>、<a class="boundary-link" href="#B12">B12</a>、<a class="boundary-link" href="#B14">B14</a></li>
-            <li><strong>作者主张：</strong> FrameFlow-amortization 相比 SOTA 取得 2.5 倍的唯一可设计 motif-scaffold。〔<a class="evidence-link" href="#E02">E02</a>〕</li>
-            <li><strong>支持证据：</strong> 主表是 353 对 141。逐 motif 柱状图显示，RFdiffusion 在唯一簇数上仅 2/24 个 motif 领先。还有两条独立分析在不同度量下指向同一方向，分别是二级结构密度、以及平均成对 TM-score 在 19/24 上最低。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E17">E17</a>〕</li>
-            <li><strong>反证或替代解释：</strong> Div. 是绝对计数，采得越多，簇就越多。FrameFlow 每 motif 采 100 个样本，这一点有代码为证。RFdiffusion 那 141 个簇背后的样本数论文未报告，而且该批样本并非在本文协议下重跑。仅凭主表无法排除"采样预算不同"这一更简单的解释。不过这个替代解释被论文自身的一项观察显著削弱。逐 motif 看，RFdiffusion 在 9/24 个 motif 上产出的<em>可设计</em> scaffold 数最多，多于 FrameFlow-amortization 的 7/24。也就是说，它并不缺可设计样本，却只在 2/24 个 motif 上簇数领先。这一模式与"样本更少"不相容，更符合模式坍缩。更关键的是，平均成对 TM-score 是逐 motif 的比率型度量，完全不受计数影响。FrameFlow 在其中 19/24 个 motif 上最低。不过支撑多样性的第三条证据是二级结构分析，它自身存在方向矛盾。论文在 motif-scaffolding 中把 RFdiffusion 多样性低归因于偏好螺旋。但它又在附录的无条件比较中报告，FrameFlow 相对训练分布<em>更</em>偏螺旋。同一个"偏螺旋"在两处被赋予相反的解释力。因此这条证据只能作为现象描述，不能承担机制归因。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E17">E17</a>、<a class="evidence-link" href="#E22">E22</a>〕</li>
-            <li><strong>证据缺少什么：</strong> 缺的正是把计数变成比率所需的那一个数。具体说，是各方法可设计 scaffold 的总数，以及 RFdiffusion 发布样本集的规模与采样设置。表 1 给了 Solved 与 Div.，却没给分母。因此"每个可设计样本贡献多少个不同结构"无法计算。另一处缺口是不确定性。两条多样性证据都来自单次训练、单次采样，没有多种子重复，也没有报告方法内部方差。平均成对 TM-score 在可设计样本很少时本就不稳定，表中多处为 N/A。因此 19/24 这个计票没有误差范围可言。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E30">E30</a>〕</li>
-            <li><strong>对中心结论的影响：</strong> 收窄范围。"FrameFlow 生成的可设计 scaffold 在结构上比 RFdiffusion 更分散"，这一<em>方向性</em>结论有三条互相独立的证据支持。其中一条不受计数混淆，可以接受。但"2.5 倍"这个<em>具体倍数</em>是两个绝对计数之比。在分母未公开、基线未重跑的条件下，它不构成等预算比较。它应降级为在作者报告条件下的观察值，而不是方法间的多样性比值。</li>
-            <li><strong>最小解决实验：</strong> 在表 1 中补报各方法可设计 scaffold 总数，并给出 Div. 的归一化形式，也就是簇数 ÷ 可设计样本数。或者用与 FrameFlow 相同的 100 样本/motif 预算，把 RFdiffusion 重跑一次。任一项都能把倍数从计数比值变成可比比率。</li>
-          </ul>
-        </section>
+  <dl>
+    <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B01">B01</a>、<a class="boundary-link" href="#B06">B06</a>、<a class="boundary-link" href="#B07">B07</a>、<a class="boundary-link" href="#B12">B12</a>、<a class="boundary-link" href="#B14">B14</a></dd>
+    <dt>作者主张</dt><dd>FrameFlow-amortization 相比 SOTA 取得 2.5 倍的唯一可设计 motif-scaffold。〔<a class="evidence-link" href="#E02">E02</a>〕</dd>
+    <dt>支持证据</dt><dd>主表是 353 对 141。逐 motif 柱状图显示，RFdiffusion 在唯一簇数上仅 2/24 个 motif 领先。还有两条独立分析在不同度量下指向同一方向，分别是二级结构密度、以及平均成对 TM-score 在 19/24 上最低。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E17">E17</a>〕</dd>
+    <dt>反证或替代解释</dt><dd>Div. 是绝对计数，采得越多，簇就越多。FrameFlow 每 motif 采 100 个样本，这一点有代码为证。RFdiffusion 那 141 个簇背后的样本数论文未报告，而且该批样本并非在本文协议下重跑。仅凭主表无法排除"采样预算不同"这一更简单的解释。不过这个替代解释被论文自身的一项观察显著削弱。逐 motif 看，RFdiffusion 在 9/24 个 motif 上产出的<em>可设计</em> scaffold 数最多，多于 FrameFlow-amortization 的 7/24。也就是说，它并不缺可设计样本，却只在 2/24 个 motif 上簇数领先。这一模式与"样本更少"不相容，更符合模式坍缩。更关键的是，平均成对 TM-score 是逐 motif 的比率型度量，完全不受计数影响。FrameFlow 在其中 19/24 个 motif 上最低。不过支撑多样性的第三条证据是二级结构分析，它自身存在方向矛盾。论文在 motif-scaffolding 中把 RFdiffusion 多样性低归因于偏好螺旋。但它又在附录的无条件比较中报告，FrameFlow 相对训练分布<em>更</em>偏螺旋。同一个"偏螺旋"在两处被赋予相反的解释力。因此这条证据只能作为现象描述，不能承担机制归因。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E17">E17</a>、<a class="evidence-link" href="#E22">E22</a>〕</dd>
+    <dt>证据缺少什么</dt><dd>缺的正是把计数变成比率所需的那一个数。具体说，是各方法可设计 scaffold 的总数，以及 RFdiffusion 发布样本集的规模与采样设置。表 1 给了 Solved 与 Div.，却没给分母。因此"每个可设计样本贡献多少个不同结构"无法计算。另一处缺口是不确定性。两条多样性证据都来自单次训练、单次采样，没有多种子重复，也没有报告方法内部方差。平均成对 TM-score 在可设计样本很少时本就不稳定，表中多处为 N/A。因此 19/24 这个计票没有误差范围可言。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E30">E30</a>〕</dd>
+    <dt>对中心结论的影响</dt><dd>收窄范围。"FrameFlow 生成的可设计 scaffold 在结构上比 RFdiffusion 更分散"，这一<em>方向性</em>结论有三条互相独立的证据支持。其中一条不受计数混淆，可以接受。但"2.5 倍"这个<em>具体倍数</em>是两个绝对计数之比。在分母未公开、基线未重跑的条件下，它不构成等预算比较。它应降级为在作者报告条件下的观察值，而不是方法间的多样性比值。</dd>
+    <dt>最小解决实验</dt><dd>在表 1 中补报各方法可设计 scaffold 总数，并给出 Div. 的归一化形式，也就是簇数 ÷ 可设计样本数。或者用与 FrameFlow 相同的 100 样本/motif 预算，把 RFdiffusion 重跑一次。任一项都能把倍数从计数比值变成可比比率。</dd>
+  </dl>
+</section>
 
-        <section id="review-leakage" class="level4 review-card">
+        <section id="review-leakage" class="review-card">
           <h4>审查议题二：基准原生结构进入训练集，是否推翻"泛化到原生 scaffold 之外"</h4>
-          <ul>
-            <li><strong>处理的证据边界：</strong> <a class="boundary-link" href="#B02">B02</a>、<a class="boundary-link" href="#B03">B03</a></li>
-            <li><strong>作者主张：</strong> 该基准衡量方法能否为一组生物学上重要的 motif 泛化到原生 scaffold 之外。〔<a class="evidence-link" href="#E08">E08</a>〕</li>
-            <li><strong>支持证据：</strong> 基准要求生成不同长度、不同 motif 位置的新 scaffold。训练时的 motif 划分由随机数据增强产生，模型从未见过基准定义的那一段 motif。〔<a class="evidence-link" href="#E05">E05</a>、<a class="evidence-link" href="#E08">E08</a>〕</li>
-            <li><strong>反证或替代解释：</strong> 逐条比对发现，24 个基准目标的 16 个来源 PDB 中有 6 个出现在发布的训练元数据里。其中 5 个通过了实际执行的长度过滤，对应 <strong>9/24</strong> 个基准目标的原生结构进入训练集。数据增强会以 5%–50% 的比例随机切出 motif。所以模型在训练中很可能见过这样的实例：给定这些结构的一部分残基，补出其余部分。这削弱的是基准作为"泛化测试"的定位。它并不是一个对结构本身留出的测试集。〔<a class="evidence-link" href="#E27">E27</a>、<a class="evidence-link" href="#E28">E28</a>〕</li>
-            <li><strong>证据缺少什么：</strong> 缺少任何形式的留出证据。论文与仓库都没有记录对基准结构或其同源物的排除。没有序列同一性或结构相似度阈值，也没有报告基准 motif 的来源结构与训练集之间的相似度分布。同时，<code>configs/datasets.yaml</code> 声明的 monomeric 与单链过滤在加载器中未执行。训练分布与论文"filtered PDB monomer dataset"的描述并不一致，这进一步使实际训练内容难以核定。〔<a class="evidence-link" href="#E25">E25</a>、<a class="evidence-link" href="#E26">E26</a>、<a class="evidence-link" href="#E29">E29</a>〕</li>
-            <li><strong>对中心结论的影响：</strong> 收窄范围，但不改变方法间比较。"基准衡量泛化到原生 scaffold 之外"这一表述对至少 9/24 个目标不成立。它应改述为"在部分目标上衡量的是重新设计已见结构的能力"。但这一泄漏并非本文方法独有。RFdiffusion 同样以 PDB 训练，评价用的 ProteinMPNN 与 AlphaFold2 也都在 PDB 上训练。所以它抬高的是所有方法的绝对 designability，而不是 FrameFlow 相对 RFdiffusion 的多样性差距。中心的<em>比较性</em>结论保留，基准的<em>泛化</em>定位被削弱。</li>
-            <li><strong>最小解决实验：</strong> 按来源 PDB 把 24 个目标切成两组，"训练集内"9 个，"训练集外"15 个，分别报告 Solved 与 Div.。若两组差距不大，泄漏对结论无实质影响。若差距显著，则须重述基准定位。另需修正加载器，使其执行配置中声明的过滤；或者修正论文对训练集的描述。</li>
-          </ul>
-        </section>
+  <dl>
+    <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B02">B02</a>、<a class="boundary-link" href="#B03">B03</a></dd>
+    <dt>作者主张</dt><dd>该基准衡量方法能否为一组生物学上重要的 motif 泛化到原生 scaffold 之外。〔<a class="evidence-link" href="#E08">E08</a>〕</dd>
+    <dt>支持证据</dt><dd>基准要求生成不同长度、不同 motif 位置的新 scaffold。训练时的 motif 划分由随机数据增强产生，模型从未见过基准定义的那一段 motif。〔<a class="evidence-link" href="#E05">E05</a>、<a class="evidence-link" href="#E08">E08</a>〕</dd>
+    <dt>反证或替代解释</dt><dd>逐条比对发现，24 个基准目标的 16 个来源 PDB 中有 6 个出现在发布的训练元数据里。其中 5 个通过了实际执行的长度过滤，对应 <strong>9/24</strong> 个基准目标的原生结构进入训练集。数据增强会以 5%–50% 的比例随机切出 motif。所以模型在训练中很可能见过这样的实例：给定这些结构的一部分残基，补出其余部分。这削弱的是基准作为"泛化测试"的定位。它并不是一个对结构本身留出的测试集。〔<a class="evidence-link" href="#E27">E27</a>、<a class="evidence-link" href="#E28">E28</a>〕</dd>
+    <dt>证据缺少什么</dt><dd>缺少任何形式的留出证据。论文与仓库都没有记录对基准结构或其同源物的排除。没有序列同一性或结构相似度阈值，也没有报告基准 motif 的来源结构与训练集之间的相似度分布。同时，<code>configs/datasets.yaml</code> 声明的 monomeric 与单链过滤在加载器中未执行。训练分布与论文"filtered PDB monomer dataset"的描述并不一致，这进一步使实际训练内容难以核定。〔<a class="evidence-link" href="#E25">E25</a>、<a class="evidence-link" href="#E26">E26</a>、<a class="evidence-link" href="#E29">E29</a>〕</dd>
+    <dt>对中心结论的影响</dt><dd>收窄范围，但不改变方法间比较。"基准衡量泛化到原生 scaffold 之外"这一表述对至少 9/24 个目标不成立。它应改述为"在部分目标上衡量的是重新设计已见结构的能力"。但这一泄漏并非本文方法独有。RFdiffusion 同样以 PDB 训练，评价用的 ProteinMPNN 与 AlphaFold2 也都在 PDB 上训练。所以它抬高的是所有方法的绝对 designability，而不是 FrameFlow 相对 RFdiffusion 的多样性差距。中心的<em>比较性</em>结论保留，基准的<em>泛化</em>定位被削弱。</dd>
+    <dt>最小解决实验</dt><dd>按来源 PDB 把 24 个目标切成两组，"训练集内"9 个，"训练集外"15 个，分别报告 Solved 与 Div.。若两组差距不大，泄漏对结论无实质影响。若差距显著，则须重述基准定位。另需修正加载器，使其执行配置中声明的过滤；或者修正论文对训练集的描述。</dd>
+  </dl>
+</section>
 
-        <section id="review-sampler" class="level4 review-card">
+        <section id="review-sampler" class="review-card">
           <h4>审查议题三：论文描述的采样器与公开代码不一致，结果能否被复现</h4>
-          <ul>
-            <li><strong>处理的证据边界：</strong> <a class="boundary-link" href="#B04">B04</a>、<a class="boundary-link" href="#B05">B05</a>、<a class="boundary-link" href="#B13">B13</a></li>
-            <li><strong>作者主张：</strong> 所有采样使用 Euler-Maruyama 积分器、500 个时间步；代码已公开。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E21">E21</a>〕</li>
-            <li><strong>支持证据：</strong> 仓库确实公开，含推理配置、基准定义与全部 motif 目标文件，且未跟踪权重之外的大文件；采样入口与配置结构完整。〔<a class="evidence-link" href="#E21">E21</a>、<a class="evidence-link" href="#E31">E31</a>〕</li>
-            <li><strong>反证或替代解释：</strong> 公开采样循环执行的是确定性 Euler ODE 步：平移为 <code>trans_t + trans_vf·d_t</code>，旋转为 SO(3) 测地步。循环内不存在任何布朗噪声注入路径。因此这份代码<em>无法</em>执行 Euler-Maruyama。默认步数也是 100 而非 500。此外，guidance 只在 <code>t ≥ 0.2</code> 时生效，论文未提及该阈值。可以想到的良性解释是，论文描述沿用了早期 SDE 版本，发布时改为 ODE。但仓库中没有留下任何说明或开关来支持这一推测。同一类问题也出现在对 guidance 的归因上。论文把 guidance 逊于 amortization 解释为 Eq.12 的近似误差，但没有任何实验单独改变近似强度来检验这一归因。而代码里恰好存在两个可直接扫描的旋钮，即 <code>ω<sub>t</sub></code> 的调度与 <code>t_min</code>。其中 <code>t_min</code> 甚至未在论文中出现。归因因此停留在相关性层面。〔<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E23">E23</a>、<a class="evidence-link" href="#E24">E24</a>〕</li>
-            <li><strong>证据缺少什么：</strong> 缺少把已发布检查点与论文表格连起来的那条路径。没有复现表 1 的采样脚本或命令。没有说明 500 步与 100 步、SDE 与 ODE 之间应采用哪一组，也没有报告采样随机种子。表中数值因此不能由默认配置直接重算。同样缺少的是 guidance 近似误差的隔离证据。一次 <code>t_min</code> 或 <code>ω<sub>t</sub></code> 的扫描，就能把"近似误差导致劣势"从解释变成结论，论文未做。〔<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E24">E24</a>〕</li>
-            <li><strong>对中心结论的影响：</strong> 降低置信，不改变方向。这是可复现性问题，不是有效性问题。受影响的是表 1 数值能否被逐位重算，而不是"amortization 多样性更高"这一比较结论。后者另有二级结构与成对 TM-score 两条证据支撑。但在差异澄清前，表 1 的具体数字应视为作者环境下的报告值。</li>
-            <li><strong>最小解决实验：</strong> 发布一条能重算表 1 的命令，明确积分器与步数，并在仓库中标注论文与代码的差异。若确为 ODE，则在论文勘误中改正"Euler-Maruyama 500 步"的表述。</li>
-          </ul>
-        </section>
+  <dl>
+    <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B04">B04</a>、<a class="boundary-link" href="#B05">B05</a>、<a class="boundary-link" href="#B13">B13</a></dd>
+    <dt>作者主张</dt><dd>所有采样使用 Euler-Maruyama 积分器、500 个时间步；代码已公开。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E21">E21</a>〕</dd>
+    <dt>支持证据</dt><dd>仓库确实公开，含推理配置、基准定义与全部 motif 目标文件，且未跟踪权重之外的大文件；采样入口与配置结构完整。〔<a class="evidence-link" href="#E21">E21</a>、<a class="evidence-link" href="#E31">E31</a>〕</dd>
+    <dt>反证或替代解释</dt><dd>公开采样循环执行的是确定性 Euler ODE 步：平移为 <code>trans_t + trans_vf·d_t</code>，旋转为 SO(3) 测地步。循环内不存在任何布朗噪声注入路径。因此这份代码<em>无法</em>执行 Euler-Maruyama。默认步数也是 100 而非 500。此外，guidance 只在 <code>t ≥ 0.2</code> 时生效，论文未提及该阈值。可以想到的良性解释是，论文描述沿用了早期 SDE 版本，发布时改为 ODE。但仓库中没有留下任何说明或开关来支持这一推测。同一类问题也出现在对 guidance 的归因上。论文把 guidance 逊于 amortization 解释为 Eq.12 的近似误差，但没有任何实验单独改变近似强度来检验这一归因。而代码里恰好存在两个可直接扫描的旋钮，即 <code>ω<sub>t</sub></code> 的调度与 <code>t_min</code>。其中 <code>t_min</code> 甚至未在论文中出现。归因因此停留在相关性层面。〔<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E23">E23</a>、<a class="evidence-link" href="#E24">E24</a>〕</dd>
+    <dt>证据缺少什么</dt><dd>缺少把已发布检查点与论文表格连起来的那条路径。没有复现表 1 的采样脚本或命令。没有说明 500 步与 100 步、SDE 与 ODE 之间应采用哪一组，也没有报告采样随机种子。表中数值因此不能由默认配置直接重算。同样缺少的是 guidance 近似误差的隔离证据。一次 <code>t_min</code> 或 <code>ω<sub>t</sub></code> 的扫描，就能把"近似误差导致劣势"从解释变成结论，论文未做。〔<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E24">E24</a>〕</dd>
+    <dt>对中心结论的影响</dt><dd>降低置信，不改变方向。这是可复现性问题，不是有效性问题。受影响的是表 1 数值能否被逐位重算，而不是"amortization 多样性更高"这一比较结论。后者另有二级结构与成对 TM-score 两条证据支撑。但在差异澄清前，表 1 的具体数字应视为作者环境下的报告值。</dd>
+    <dt>最小解决实验</dt><dd>发布一条能重算表 1 的命令，明确积分器与步数，并在仓库中标注论文与代码的差异。若确为 ODE，则在论文勘误中改正"Euler-Maruyama 500 步"的表述。</dd>
+  </dl>
+</section>
 
-        <section id="review-counts" class="level4 review-card">
+        <section id="review-counts" class="review-card">
           <h4>审查议题四：解出 motif 数与"独有解出能力"的内部矛盾</h4>
-          <ul>
-            <li><strong>处理的证据边界：</strong> <a class="boundary-link" href="#B08">B08</a>、<a class="boundary-link" href="#B09">B09</a>、<a class="boundary-link" href="#B10">B10</a></li>
-            <li><strong>作者主张：</strong> amortization 解出 20/24 个 motif，与 SOTA 持平，并能解出 RFdiffusion 解不出的 1QJG、4JHW、5YUI。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E19">E19</a>〕</li>
-            <li><strong>支持证据：</strong> 表 1 的 Solved=20、图 11 标题、图 11 网格中实际展示的 20 个 motif，三处一致。1QJG 在附录表 3 中确有 FrameFlow 数值，而 RFdiffusion 为 N/A，与正文相符。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E19">E19</a>〕</li>
-            <li><strong>反证或替代解释：</strong> 附录 G 正文与其余材料冲突。它写 21/24 与"3 个未解出"，而图 10 展示了 4 个未解出 motif，表 1 与图 11 均为 20/24。正文点名的 4JHW 与 5YUI 更成问题。图 10 把 4JHW 列为 amortization 未解出。附录表 3 中，4JHW 与 5YUI 两行对四种方法全部为 N/A，该表注明 N/A 即"未采到任何可设计 scaffold"。附录还把失败统一归因于 motif RMSD 超过 1 Å。但其自身图 10 中，5WN9 的 motif RMSD 只有 0.75，失败来自 scaffold RMSD 5.6。〔<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E19">E19</a>、<a class="evidence-link" href="#E20">E20</a>〕</li>
-            <li><strong>证据缺少什么：</strong> 缺少一张逐 motif 的解出/未解出对照表，把四种方法在 24 个目标上的判定结果与最优 RMSD 一并列出。目前解出情况分散在六处：正文、表 1、表 3、图 3、图 10、图 11。它们彼此不完全一致，读者无法定位哪一处是权威记录。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E17">E17</a>〕</li>
-            <li><strong>对中心结论的影响：</strong> 主结论无实质影响，子主张被削弱。Solved=20 有三处一致材料支持，可以采信。附录 G 的 21/24 与"3 个未解出"应视为笔误。但"能解出 RFdiffusion 解不出的 4JHW、5YUI"这一子主张，与同篇论文的图 10 和表 3 直接冲突，在澄清前不能采信。三个例子中只有 1QJG 有一致证据。附录"非常接近解出全部 motif"的说法也建立在略去 5WN9 之上。该案例的 scaffold RMSD 是 5.6，距 2 Å 阈值并不接近。</li>
-            <li><strong>最小解决实验：</strong> 发布逐 motif × 逐方法的判定矩阵，其中含每个目标的最优 motif RMSD 与 scaffold RMSD。另外修正附录 G 的计数与归因表述。</li>
-          </ul>
-        </section>
+  <dl>
+    <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B08">B08</a>、<a class="boundary-link" href="#B09">B09</a>、<a class="boundary-link" href="#B10">B10</a></dd>
+    <dt>作者主张</dt><dd>amortization 解出 20/24 个 motif，与 SOTA 持平，并能解出 RFdiffusion 解不出的 1QJG、4JHW、5YUI。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E19">E19</a>〕</dd>
+    <dt>支持证据</dt><dd>表 1 的 Solved=20、图 11 标题、图 11 网格中实际展示的 20 个 motif，三处一致。1QJG 在附录表 3 中确有 FrameFlow 数值，而 RFdiffusion 为 N/A，与正文相符。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E19">E19</a>〕</dd>
+    <dt>反证或替代解释</dt><dd>附录 G 正文与其余材料冲突。它写 21/24 与"3 个未解出"，而图 10 展示了 4 个未解出 motif，表 1 与图 11 均为 20/24。正文点名的 4JHW 与 5YUI 更成问题。图 10 把 4JHW 列为 amortization 未解出。附录表 3 中，4JHW 与 5YUI 两行对四种方法全部为 N/A，该表注明 N/A 即"未采到任何可设计 scaffold"。附录还把失败统一归因于 motif RMSD 超过 1 Å。但其自身图 10 中，5WN9 的 motif RMSD 只有 0.75，失败来自 scaffold RMSD 5.6。〔<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E19">E19</a>、<a class="evidence-link" href="#E20">E20</a>〕</dd>
+    <dt>证据缺少什么</dt><dd>缺少一张逐 motif 的解出/未解出对照表，把四种方法在 24 个目标上的判定结果与最优 RMSD 一并列出。目前解出情况分散在六处：正文、表 1、表 3、图 3、图 10、图 11。它们彼此不完全一致，读者无法定位哪一处是权威记录。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E17">E17</a>〕</dd>
+    <dt>对中心结论的影响</dt><dd>无实质影响——主结论不变，被削弱的是子主张。Solved=20 有三处一致材料支持，可以采信。附录 G 的 21/24 与"3 个未解出"应视为笔误。但"能解出 RFdiffusion 解不出的 4JHW、5YUI"这一子主张，与同篇论文的图 10 和表 3 直接冲突，在澄清前不能采信。三个例子中只有 1QJG 有一致证据。附录"非常接近解出全部 motif"的说法也建立在略去 5WN9 之上。该案例的 scaffold RMSD 是 5.6，距 2 Å 阈值并不接近。</dd>
+    <dt>最小解决实验</dt><dd>发布逐 motif × 逐方法的判定矩阵，其中含每个目标的最优 motif RMSD 与 scaffold RMSD。另外修正附录 G 的计数与归因表述。</dd>
+  </dl>
+</section>
 
-        <section id="review-designability" class="level4 review-card">
+        <section id="review-designability" class="review-card">
           <h4>审查议题五：designability 作为成功判据支持到什么层级</h4>
-          <ul>
-            <li><strong>处理的证据边界：</strong> 无</li>
-            <li><strong>作者主张：</strong> 通过 designability 判据的 scaffold 是"成功"的设计；作者同时声明所有结果均为计算性，未必迁移到湿实验。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E14">E14</a>〕</li>
-            <li><strong>支持证据：</strong> 该判据沿用 RFdiffusion 与既有工作的设定。前人报告 ProteinMPNN + AF2 的组合与湿实验成功率相关。本文完整复用了同一流程，以保证可比性。〔<a class="evidence-link" href="#E12">E12</a>〕</li>
-            <li><strong>反证或替代解释：</strong> designability 检验的是"存在一条序列，AF2 会把它折回这条主链"。这是生成模型与两个预测器之间的自洽性。ProteinMPNN 与 AF2 都在 PDB 上训练，对天然样结构的偏好会同时抬高与之相似的生成结果。AF2 在此以单序列、0 recycling、无 MSA 模式运行，其结构预测能力本身受限。因此，高 designability 与"这条蛋白质能折叠并行使功能"之间隔着若干未检验的环节。</li>
-            <li><strong>证据缺少什么：</strong> 缺少任何非计算证据。也缺少更换正交预测器后的稳定性检查，比如换成 ESMFold 或不同的 AF2 设置。本文明确选择只跟随 RFdiffusion 的设置。全文没有表达、纯化、结合或功能实验。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E14">E14</a>〕</li>
-            <li><strong>对中心结论的影响：</strong> 无实质影响，但限定表述层级。作者已明确保留这一点。本文的结论应完整读作"在 ProteinMPNN + AF2 自洽性判据下的可设计性与多样性"。其中的生物学层级为"基于模型的预测"，而不是"已观察的实验事实"。这不削弱论文，因为四种方法在同一判据下比较。它限定的是结论能外推到什么。</li>
-            <li><strong>最小解决实验：</strong> 用第二套正交的序列设计与结构预测组合复算 designability，检验方法排序是否稳定。长期则需要对少量候选做表达与结合实验。</li>
-          </ul>
-        </section>
+  <dl>
+    <dt>处理的证据边界</dt><dd>无</dd>
+    <dt>作者主张</dt><dd>通过 designability 判据的 scaffold 是"成功"的设计；作者同时声明所有结果均为计算性，未必迁移到湿实验。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E14">E14</a>〕</dd>
+    <dt>支持证据</dt><dd>该判据沿用 RFdiffusion 与既有工作的设定。前人报告 ProteinMPNN + AF2 的组合与湿实验成功率相关。本文完整复用了同一流程，以保证可比性。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+    <dt>反证或替代解释</dt><dd>designability 检验的是"存在一条序列，AF2 会把它折回这条主链"。这是生成模型与两个预测器之间的自洽性。ProteinMPNN 与 AF2 都在 PDB 上训练，对天然样结构的偏好会同时抬高与之相似的生成结果。AF2 在此以单序列、0 recycling、无 MSA 模式运行，其结构预测能力本身受限。因此，高 designability 与"这条蛋白质能折叠并行使功能"之间隔着若干未检验的环节。</dd>
+    <dt>证据缺少什么</dt><dd>缺少任何非计算证据。也缺少更换正交预测器后的稳定性检查，比如换成 ESMFold 或不同的 AF2 设置。本文明确选择只跟随 RFdiffusion 的设置。全文没有表达、纯化、结合或功能实验。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E14">E14</a>〕</dd>
+    <dt>对中心结论的影响</dt><dd>无实质影响，但限定表述层级。作者已明确保留这一点。本文的结论应完整读作"在 ProteinMPNN + AF2 自洽性判据下的可设计性与多样性"。其中的生物学层级为"基于模型的预测"，而不是"已观察的实验事实"。这不削弱论文，因为四种方法在同一判据下比较。它限定的是结论能外推到什么。</dd>
+    <dt>最小解决实验</dt><dd>用第二套正交的序列设计与结构预测组合复算 designability，检验方法排序是否稳定。长期则需要对少量候选做表达与结合实验。</dd>
+  </dl>
+</section>
 
-        <section id="no-effect-boundaries" class="level3">
+        <section id="no-effect-boundaries">
           <h3>无实质影响的证据边界</h3>
           <ul>
             <li><a class="boundary-link" href="#B11">B11</a>：仓库 <code>benchmark.csv</code> 多出 6X93 与 il7ra_gc 两个目标。论文报告的 24 个目标与表 1、图 3 一致。多出的两项不参与任何报告数值，只影响复现者按默认配置运行时的采样范围。</li>
           </ul>
         </section>
 
-        <section id="graded-verdict" class="level3">
+        <section id="graded-verdict">
           <h3>7.2 分级结论</h3>
           <div class="takeaway-grid">
-            <article class="takeaway-card verdict-supported"><p><strong>可以相信：</strong> 在作者的评测协议下，FrameFlow-amortization 生成的可设计 motif-scaffold 在结构上比 RFdiffusion 明显更分散。这一方向由三条证据支持：簇计数、二级结构分布、以及逐 motif 的平均成对 TM-score。其中最后一条是不受采样量影响的比率型度量。另外，它以 16.8M 参数、无需大规模预训练，就达到与 59.8M 的 RFdiffusion 同级的解出数，且采样更快。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E17">E17</a>、<a class="evidence-link" href="#E32">E32</a>〕</p></article>
-            <article class="takeaway-card verdict-qualified"><p><strong>可以暂时相信：</strong> amortization 优于 guidance，且差距主要落在 motif 约束满足上，而不是 scaffold 自洽性上。无条件主干与 RFdiffusion 大致相当，因而不是表现来源。这两项均为受控比较，但都只有单次训练，没有种子重复与方差报告。〔<a class="evidence-link" href="#E16">E16</a>、<a class="evidence-link" href="#E17">E17</a>〕</p></article>
-            <article class="takeaway-card verdict-qualified"><p><strong>当前不能推出：</strong> 有三条。第一，"2.5 倍"作为方法间的多样性比值：它是两个绝对计数之比，分母未报告，且基线未重跑。这里的分母指 RFdiffusion 发布样本数。第二，"能解出 RFdiffusion 解不出的 4JHW、5YUI"：这与本文图 10 和表 3 冲突。第三，表 1 的具体数值可由公开代码重算：公开采样器与论文描述的积分器和步数均不一致。〔<a class="evidence-link" href="#E19">E19</a>、<a class="evidence-link" href="#E23">E23</a>、<a class="evidence-link" href="#E30">E30</a>〕</p></article>
-            <article class="takeaway-card verdict-rejected"><p><strong>被现有证据否定：</strong> 有两条。其一，"该基准衡量方法泛化到原生 scaffold 之外的能力"对全部 24 个目标成立：24 个目标的来源 PDB 中有 5 个通过实际过滤进入训练集，覆盖 9 个目标。其二，附录 G"解出 21/24、3 个未解出"的表述，亦被表 1、图 10 与图 11 否定。〔<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E28">E28</a>〕</p></article>
+            <article class="takeaway-card verdict-supported">
+            <h3>可以相信</h3>
+            <p>在作者的评测协议下，FrameFlow-amortization 生成的可设计 motif-scaffold 在结构上比 RFdiffusion 明显更分散。这一方向由三条证据支持：簇计数、二级结构分布、以及逐 motif 的平均成对 TM-score。其中最后一条是不受采样量影响的比率型度量。另外，它以 16.8M 参数、无需大规模预训练，就达到与 59.8M 的 RFdiffusion 同级的解出数，且采样更快。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E17">E17</a>、<a class="evidence-link" href="#E32">E32</a>〕</p>
+          </article>
+            <article class="takeaway-card verdict-qualified">
+            <h3>可以暂时相信</h3>
+            <p>amortization 优于 guidance，且差距主要落在 motif 约束满足上，而不是 scaffold 自洽性上。无条件主干与 RFdiffusion 大致相当，因而不是表现来源。这两项均为受控比较，但都只有单次训练，没有种子重复与方差报告。〔<a class="evidence-link" href="#E16">E16</a>、<a class="evidence-link" href="#E17">E17</a>〕</p>
+          </article>
+            <article class="takeaway-card verdict-qualified">
+            <h3>当前不能推出</h3>
+            <p>有三条。第一，"2.5 倍"作为方法间的多样性比值：它是两个绝对计数之比，分母未报告，且基线未重跑。这里的分母指 RFdiffusion 发布样本数。第二，"能解出 RFdiffusion 解不出的 4JHW、5YUI"：这与本文图 10 和表 3 冲突。第三，表 1 的具体数值可由公开代码重算：公开采样器与论文描述的积分器和步数均不一致。〔<a class="evidence-link" href="#E19">E19</a>、<a class="evidence-link" href="#E23">E23</a>、<a class="evidence-link" href="#E30">E30</a>〕</p>
+          </article>
+            <article class="takeaway-card verdict-rejected">
+            <h3>被现有证据否定</h3>
+            <p>有两条。其一，"该基准衡量方法泛化到原生 scaffold 之外的能力"对全部 24 个目标成立：24 个目标的来源 PDB 中有 5 个通过实际过滤进入训练集，覆盖 9 个目标。其二，附录 G"解出 21/24、3 个未解出"的表述，亦被表 1、图 10 与图 11 否定。〔<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E28">E28</a>〕</p>
+          </article>
           </div>
         </section>
       </section>

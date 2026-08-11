@@ -1,6 +1,6 @@
 # AI/ML Reading Guide
 
-Use the eight report sections as one reading argument: orient the field in Section 1, compress the whole paper in Section 2, reconstruct design logic in Section 3, trace data and training in Section 4, trace internal model flow in Section 5, explain experiment logic in Section 6, switch explicitly to reviewer mode in Section 7, and synthesize in Section 8. Do not mix cumulative criticism into Sections 1–6.
+How to read the paper. `output-contract.md` defines what each section must contain; this file is about the thinking that fills them.
 
 ## Field Orientation
 
@@ -69,15 +69,13 @@ Explain intuition before equations. Define symbols and connect them to real obje
 
 In `standard` mode, follow the shortest conclusion-relevant path through the dataset constructor or loader, split logic, model entry point and primary `forward`, loss/training loop, evaluation entry point, and active configuration. Stop when the primary data flow and conclusion-changing paper-code conflicts are resolved. Cite paths and commits in the evidence ledger; distinguish executable paths from dead code, examples, or unused options.
 
-Acquire code with raw-file requests or sparse or blob-filtered repository retrieval. Inspect the remote tree first and exclude weight/checkpoint paths before checkout; a normal clone that fetches tracked weights does not satisfy the standard-mode boundary.
-
-Do not download weights, inspect every utility, enumerate every configuration field, or reconstruct secondary experiments unless that artifact can change a central interpretation. In `audit` mode, expand the embedded panels to the complete executable-path inventory.
+Do not inspect every utility, enumerate every configuration field, or reconstruct secondary experiments unless that artifact can change a central interpretation. `evidence-policy.md` sets how to fetch the files without spending the budget on tracked weights. In `audit` mode, expand the embedded panels to the complete executable-path inventory.
 
 ## Experiment Reasoning
 
-Organize experiments by research question rather than paper table order. Group baseline, control, ablation, robustness/generalization, case study, and external validation evidence around the claim being tested. `output-contract.md` defines the experiment card fields and the experiment-type vocabulary; use them verbatim rather than a local variant.
+Organize experiments by research question rather than paper table order. Group baseline, control, ablation, robustness/generalization, case study, and external validation evidence around the claim being tested. `../assets/fragments.html` holds the experiment card and its type vocabulary; copy it rather than writing a local variant.
 
-The evidence boundary records missing controls, uncertainty, unavailable artifacts, or direct design limits in neutral language, carries its own `B01`-style ID, and is discharged in Section 7. Concentrate the cumulative judgment there; in `audit` mode, store the exhaustive inventory in the embedded `experiment-matrix` panel.
+The evidence boundary records missing controls, uncertainty, unavailable artifacts, or direct design limits in neutral language. Concentrate the cumulative judgment in Section 7; in `audit` mode, store the exhaustive inventory in the embedded `experiment-matrix` panel.
 
 Check seeds, confidence intervals, isolated ablations, and whether analysis plots are evidence or illustration. Three checks are easy to skip and decide what the main table means:
 

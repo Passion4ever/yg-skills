@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
+  <meta name="sci-read-paper" content="mode={{MODE}}; figure={{FIGURE}}">
   <title>{{DISPLAY_TITLE}} · {{PAPER_SUBTITLE}}</title>
   <style>
     :root {
@@ -459,14 +460,81 @@
       <p class="eyebrow">SCI · DEEP READING</p>
       <h1 class="paper-title">{{DISPLAY_TITLE}}</h1>
       <p class="paper-subtitle">{{PAPER_SUBTITLE}}</p>
-      <div class="paper-meta">{{REPORT_META}}</div>
+      <div class="paper-meta"><span class="status-badge">mode: {{MODE}}</span><span class="status-badge">{{STATUS}}</span>{{META_EXTRA}}</div>
       <section class="quick-view" aria-labelledby="quick-view-title">
         <h2 id="quick-view-title">论文速览</h2>
-        {{SUMMARY_ROWS}}
+        <div class="quick-view-row"><strong>作者主线</strong><p>{{QV_MAINLINE}}</p></div>
+        <div class="quick-view-row"><strong>证据状态</strong><p>{{QV_EVIDENCE}}</p></div>
+        <div class="quick-view-row"><strong>审查入口</strong><p>{{QV_REVIEW}}</p></div>
       </section>
     </header>
     <main id="main-content">
-      {{REPORT_BODY}}
+      <section id="section-1" class="report-section">
+        <p class="chapter-label">CHAPTER 01</p>
+        <h2>为什么要做这项研究：背景、现状与本文切入点</h2>
+        <p class="chapter-intro">{{CUE_1}}</p>
+        {{BODY_1}}
+      </section>
+
+      <section id="section-2" class="report-section">
+        <p class="chapter-label">CHAPTER 02</p>
+        <h2>三分钟建立论文全局地图</h2>
+        <p class="chapter-intro">{{CUE_2}}</p>
+        {{BODY_2}}
+      </section>
+
+      <section id="section-3" class="report-section">
+        <p class="chapter-label">CHAPTER 03</p>
+        <h2>从问题到方法：作者为什么这样设计</h2>
+        <p class="chapter-intro">{{CUE_3}}</p>
+        {{BODY_3}}
+      </section>
+
+      <section id="section-4" class="report-section">
+        <p class="chapter-label">CHAPTER 04</p>
+        <h2>数据从哪里来，又怎样进入训练</h2>
+        <p class="chapter-intro">{{CUE_4}}</p>
+        {{BODY_4}}
+      </section>
+
+      <section id="section-5" class="report-section">
+        <p class="chapter-label">CHAPTER 05</p>
+        <h2>模型内部：数据怎样一步步变成输出</h2>
+        <p class="chapter-intro">{{CUE_5}}</p>
+        {{BODY_5}}
+      </section>
+
+      <section id="section-6" class="report-section">
+        <p class="chapter-label">CHAPTER 06</p>
+        <h2>实验逻辑：每项实验在回答什么问题</h2>
+        <p class="chapter-intro">{{CUE_6}}</p>
+        {{BODY_6}}
+      </section>
+
+      <section id="section-7" class="report-section">
+        <p class="chapter-label">CHAPTER 07</p>
+        <h2>批判性审查：证据究竟支持到哪里</h2>
+        <p class="chapter-intro">{{CUE_7}}</p>
+        {{BODY_7}}
+        <section id="no-effect-boundaries">
+          <h3>无实质影响的证据边界</h3>
+          {{BODY_7_NO_EFFECT}}
+        </section>
+        <h3>分级判定</h3>
+        <div class="takeaway-grid">{{BODY_7_VERDICTS}}</div>
+      </section>
+
+      <section id="section-8" class="report-section">
+        <p class="chapter-label">CHAPTER 08</p>
+        <h2>读完这篇论文，真正应该带走什么</h2>
+        <p class="chapter-intro">{{CUE_8}}</p>
+        <h3>8.1 论文真正贡献了什么</h3>
+        {{BODY_8_1}}
+        <h3>8.2 最终可以相信到哪里</h3>
+        {{BODY_8_2}}
+        <h3>8.3 如果继续这项研究，下一步最该做什么</h3>
+        {{BODY_8_3}}
+      </section>
       {{FIGURE_OUTPUT}}
       {{AUDIT_PANELS}}
     </main>

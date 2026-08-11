@@ -18,6 +18,8 @@ OPENAI_YAML = SKILL_DIR / "agents" / "openai.yaml"
 EVALS_JSON = ROOT / "tests" / "sci-read-paper" / "evals.json"
 READABILITY_RUBRIC = ROOT / "tests" / "sci-read-paper" / "readability-rubric.md"
 HTML_TEMPLATE = SKILL_DIR / "assets" / "report-template.html"
+FRAGMENTS = SKILL_DIR / "assets" / "fragments.html"
+SCAFFOLD = SKILL_DIR / "scripts" / "new_report.py"
 SIAMPROM_HTML = (
     ROOT / "tests" / "sci-read-paper" / "outputs" / "siamprom-cyanobacteria-promoters.html"
 )
@@ -162,6 +164,12 @@ def assert_frameflow_inspired_layout(testcase: unittest.TestCase, text: str):
 
 
 class SkillContractTests(unittest.TestCase):
+
+    def contract(self) -> str:
+        """Line wrapping is not a contract change; assert on collapsed whitespace."""
+        raw = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
+        return " ".join(raw.split())
+
     def test_skill_exists(self):
         self.assertTrue(SKILL_MD.is_file(), "sci-read-paper has not been implemented")
 
@@ -207,48 +215,40 @@ class SkillContractTests(unittest.TestCase):
         self.assertLessEqual(len(interface["short_description"]), 64)
         self.assertIn("$sci-read-paper", interface["default_prompt"])
 
+
     def test_output_contract_has_one_primary_report(self):
-        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
-        self.assertIn("<paper-slug>.html", contract)
-        self.assertIn("<paper-slug>-audit.html", contract)
-        self.assertIn("embedded evidence ledger", contract)
-        self.assertIn("audit panels", contract)
+        contract = self.contract()
+        self.assertIn("`<paper-slug>.html`", contract)
+        self.assertIn("`<paper-slug>-audit.html`", contract)
+        self.assertIn("embedded ledger", contract)
+        self.assertIn("panels", contract)
         self.assertIn("sci-diagram", contract)
         self.assertNotIn("sci-ai-figure", contract, "handoff names a skill that does not exist")
 
     def test_figure_mode_is_explicit_and_defaults_off(self):
-        skill = SKILL_MD.read_text(encoding="utf-8")
-        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(
-            encoding="utf-8"
-        )
+        skill = " ".join(SKILL_MD.read_text(encoding="utf-8").split())
+        contract = self.contract()
         for state in ("figure=off", "figure=brief", "figure=generate"):
             self.assertIn(state, skill)
             self.assertIn(state, contract)
         self.assertIn("default", skill)
         self.assertIn("fall back to `figure=brief`", contract)
-        self.assertIn("does not change the paper-reading completion status", contract)
+        self.assertIn("does not change the completion status", contract)
+
 
     def test_standard_mode_has_one_html_output(self):
-        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
-        standard = contract.split("## Standard Mode — Default", 1)[1].split(
-            "## Audit Mode — Explicit", 1
-        )[0]
-        tree = re.search(r"```text\n(.*?)\n```", standard, re.DOTALL)
-        self.assertIsNotNone(tree)
-        output_paths = [line.strip() for line in tree.group(1).splitlines() if line.strip()]
-        self.assertEqual(output_paths, ["<paper-slug>.html"])
-        self.assertNotIn("deep-reading.md", standard)
-        self.assertNotIn("evidence-ledger.md", standard)
+        contract = self.contract()
+        self.assertIn("`standard` delivers `<paper-slug>.html`", contract)
+        self.assertNotIn("deep-reading.md", contract)
+        self.assertNotIn("evidence-ledger.md", contract)
 
     def test_audit_mode_has_one_html_output(self):
-        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
-        audit = contract.split("## Audit Mode — Explicit", 1)[1].split("## Primary Report", 1)[0]
-        tree = re.search(r"```text\n(.*?)\n```", audit, re.DOTALL)
-        self.assertIsNotNone(tree)
-        output_paths = [line.strip() for line in tree.group(1).splitlines() if line.strip()]
-        self.assertEqual(output_paths, ["<paper-slug>-audit.html"])
+        contract = self.contract()
+        self.assertIn("`<paper-slug>-audit.html`", contract)
         for panel in ("data-training", "model-dataflow", "experiment-matrix", "critical-review"):
-            self.assertIn(panel, audit)
+            self.assertIn(panel, contract)
+        self.assertIn("not a second narrative", contract)
+
 
     def test_standard_mode_bounds_research_scope(self):
         skill = SKILL_MD.read_text(encoding="utf-8")
@@ -258,17 +258,20 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("audit", skill)
         self.assertIn("at most three conclusion-critical claim families", policy)
         self.assertIn("shortest conclusion-relevant path", guide)
-        self.assertIn("Do not download weights", guide)
-        # The workflow acquires the repository at step 2, which loads evidence-policy.
-        # A guardrail that only lives in the step-4 guide fires after the clone.
-        for text in (policy, guide):
-            self.assertIn("sparse or blob-filtered repository retrieval", text)
+        # The workflow acquires the repository at step 2, which loads evidence-policy,
+        # so the guardrail has to be there rather than in the step-4 guide.
+        self.assertIn("sparse or blob-filtered repository retrieval", policy)
         self.assertIn("never download weights", policy)
+        self.assertIn("evidence-policy.md", guide)
 
     def test_report_records_selected_mode(self):
-        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
-        self.assertIn("mode: standard|audit", contract)
-        self.assertIn("complete|partial", contract)
+        """Recorded in the file by the scaffolder, not retyped by the writer."""
+        template = HTML_TEMPLATE.read_text(encoding="utf-8")
+        validator = VALIDATOR.read_text(encoding="utf-8")
+        self.assertIn('content="mode={{MODE}}; figure={{FIGURE}}"', template)
+        self.assertIn('<span class="status-badge">mode: {{MODE}}</span>', template)
+        self.assertIn("complete|partial", validator)
+        self.assertIn("mode=standard|audit", validator)
 
     def test_readability_rubric_contract(self):
         text = READABILITY_RUBRIC.read_text(encoding="utf-8")
@@ -288,26 +291,31 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("at least 18/20", text)
         self.assertIn("scientific-depth score", text)
 
+
     def test_output_contract_has_guided_reading_layers(self):
-        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
-        positions = [contract.index(title) for title in EXPECTED_SECTION_TITLES]
-        self.assertEqual(positions, sorted(positions))
-        primary_structure = re.search(
-            r"## Primary Report.*?```html\n(.*?)\n```", contract, re.DOTALL
-        )
-        self.assertIsNotNone(primary_structure)
-        self.assertNotIn("阅读导航", primary_structure.group(1))
+        """The eight titles are the template's job now; the contract explains them."""
+        template = HTML_TEMPLATE.read_text(encoding="utf-8")
+        positions = [template.index(f"<h2>{title}</h2>") for title in EXPECTED_SECTION_TITLES]
+        self.assertEqual(positions, sorted(positions), "sections are out of order")
+        self.assertNotIn("阅读导航", template)
+        contract = self.contract()
+        for number in range(1, 9):
+            self.assertIn(f"**{number} — ", contract, f"section {number} is unexplained")
+
 
     def test_output_contract_separates_interpretation_and_critique(self):
-        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
-        self.assertIn(
-            "理解作者（Sections 1–6） → 集中审查作者（Section 7） → 形成自己的结论（Section 8）",
-            contract,
-        )
-        self.assertIn("any conclusion-changing fact", contract)
+        contract = self.contract()
+        fragments = FRAGMENTS.read_text(encoding="utf-8")
+        validator = VALIDATOR.read_text(encoding="utf-8")
+
+        self.assertIn("Sections 1–6 explain the paper as its authors would", contract)
+        self.assertIn("may not appear before Section 7", contract)
+        # the wall is not a request: the validator fails a report that leaks a verdict
+        self.assertIn("graded judgement belongs in Section 7", validator)
+
+        self.assertIn("any conclusion-changing fact", contract.lower())
         for boundary_type in ("missing material", "external correction", "direct logical fact"):
             self.assertIn(boundary_type, contract)
-        self.assertIn("其对结论的影响在第 7 节集中评估", contract)
         for descriptive_step in (
             "本节要理解什么",
             "作者为什么这样设计",
@@ -316,68 +324,72 @@ class SkillContractTests(unittest.TestCase):
         ):
             self.assertIn(descriptive_step, contract)
         self.assertNotIn("本节结论", contract)
-        self.assertNotIn("one main judgment", contract)
+        self.assertIn("do not add `我们的判断`", contract)
 
         experiment = re.search(
-            r"Organize experiments by question.*?```text\n(.*?)\n```",
-            contract,
-            re.DOTALL,
+            r'class="experiment-card">(.*?)</section>', fragments, re.DOTALL
         )
-        self.assertIsNotNone(experiment)
+        self.assertIsNotNone(experiment, "fragments.html has no experiment card")
         for field in ("作者要回答什么", "实验怎样设计", "实际观察到什么", "证据边界"):
-            self.assertIn(field, experiment.group(1))
+            self.assertIn(f"<dt>{field}</dt>", experiment.group(1))
         self.assertNotIn("我们的判断", experiment.group(1))
 
+        review = re.search(r'class="review-card">(.*?)</section>', fragments, re.DOTALL)
+        self.assertIsNotNone(review, "fragments.html has no review card")
         for field in (
-            "审查议题",
             "作者主张",
             "支持证据",
             "反证或替代解释",
             "对中心结论的影响",
             "最小解决实验",
         ):
-            self.assertIn(field, contract)
-        self.assertIn("论文真正贡献了什么", contract)
-        self.assertIn("最终可以相信到哪里", contract)
+            self.assertIn(f"<dt>{field}</dt>", review.group(1))
+
+        template = HTML_TEMPLATE.read_text(encoding="utf-8")
+        self.assertIn("论文真正贡献了什么", template)
+        self.assertIn("最终可以相信到哪里", template)
+
 
     def test_skill_enforces_chinese_first_progressive_reading(self):
-        text = SKILL_MD.read_text(encoding="utf-8")
+        text = " ".join(SKILL_MD.read_text(encoding="utf-8").split())
         for phrase in (
             "Chinese-first",
             "question → author rationale → technical detail → role in the argument",
             "3–5 sentences",
-            "15–20 minutes",
         ):
             self.assertIn(phrase, text)
+        self.assertRegex(text, r"15–20 minutes?")
 
     def test_evidence_policy_supports_lightweight_ids(self):
         policy = (SKILL_DIR / "references" / "evidence-policy.md").read_text(encoding="utf-8")
         self.assertIn("Evidence IDs", policy)
         self.assertIn("never hide inference, missing information, or conflict", policy)
 
+
     def test_evidence_citation_markup_is_shown_literally(self):
         """The one citation form the reports must emit has to be copyable, not described."""
         canonical = '〔<a class="evidence-link" href="#E01">E01</a>、'
+        self.assertIn(canonical, FRAGMENTS.read_text(encoding="utf-8"))
         for name in ("evidence-policy.md", "output-contract.md"):
             text = (SKILL_DIR / "references" / name).read_text(encoding="utf-8")
-            self.assertIn(canonical, text, f"{name} must show the literal citation markup")
             self.assertNotIn(
                 "E12–E15", text, f"{name} still teaches the unrenderable range form"
             )
 
     def test_boundary_closure_is_contractual(self):
-        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
-        policy = (SKILL_DIR / "references" / "evidence-policy.md").read_text(encoding="utf-8")
+        """The rule is prose; the markup that obeys it is a fragment; the gate is code."""
+        contract = self.contract()
+        fragments = FRAGMENTS.read_text(encoding="utf-8")
         skill = SKILL_MD.read_text(encoding="utf-8")
-        self.assertIn("处理的证据边界", contract)
-        self.assertIn('class="boundary-link"', contract)
-        self.assertIn("无实质影响的证据边界", contract)
-        self.assertIn('id="B02"', contract)
-        # the experiment card's own 证据边界 field is a boundary, not a pointer to one
-        self.assertIn('<li id="B06"><strong>证据边界：</strong>', contract)
-        self.assertIn("证据边界：无", contract)
-        for text in (policy, skill):
-            self.assertIn("B01", text)
+        self.assertIn("处理的证据边界", fragments)
+        self.assertIn('class="boundary-link"', fragments)
+        self.assertIn("无实质影响的证据边界", HTML_TEMPLATE.read_text(encoding="utf-8"))
+        # a card's own 证据边界 field is a boundary, not a pointer to one
+        self.assertIn('<dt>证据边界</dt><dd class="evidence-boundary" id="B', fragments)
+        self.assertIn("「无」", fragments)
+        self.assertIn("discharged in Section 7", contract)
+        self.assertIn("a passing mention is not a discharge", contract)
+        self.assertIn("boundary", skill)
         self.assertIn("validate_report.py", skill)
 
     def test_ai_ml_guide_is_sample_and_question_driven(self):
@@ -607,25 +619,51 @@ class ReportValidatorTests(unittest.TestCase):
         self.addCleanup(Path(handle.name).unlink, missing_ok=True)
         return Path(handle.name)
 
-    def test_build_procedure_resolves_every_template_placeholder(self):
-        """Any placeholder the procedure forgets becomes an unreplaced-token failure."""
-        template = HTML_TEMPLATE.read_text(encoding="utf-8")
-        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
-        procedure = contract.split("## Build Procedure", 1)[1].split("\n## ", 1)[0]
-        for token in sorted(set(re.findall(r"\{\{[A-Z_]+\}\}", template))):
-            self.assertIn(
-                token,
-                procedure,
-                f"Build Procedure never tells the model what to do with {token}",
-            )
-        # the two that must be deleted rather than filled
-        for token in ("{{FIGURE_OUTPUT}}", "{{AUDIT_PANELS}}"):
-            row = next(line for line in procedure.splitlines() if token in line)
-            self.assertIn("delete", row.lower(), f"{token} row must say to delete the line")
+    def test_scaffolder_resolves_every_flag_determined_placeholder(self):
+        """Deciding these by hand shipped a broken build procedure once already."""
+        for mode in ("standard", "audit"):
+            for figure in ("off", "brief", "generate"):
+                with self.subTest(mode=mode, figure=figure):
+                    outdir = tempfile.mkdtemp()
+                    result = subprocess.run(
+                        [
+                            sys.executable, str(SCAFFOLD), "--slug", "probe",
+                            "--outdir", outdir, "--mode", mode, "--figure", figure,
+                        ],
+                        capture_output=True, text=True,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    suffix = "-audit" if mode == "audit" else ""
+                    written = Path(outdir) / f"probe{suffix}.html"
+                    self.assertTrue(written.is_file(), result.stdout)
+                    text = written.read_text(encoding="utf-8")
+                    self.addCleanup(written.unlink, missing_ok=True)
 
-    def test_validator_field_lists_match_the_contract(self):
-        """The gate and the instruction must not drift apart — that is the whole bug class."""
-        contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
+                    for resolved in ("{{MODE}}", "{{FIGURE}}"):
+                        self.assertNotIn(resolved, text, "the flags must be baked in")
+                    self.assertIn(f"mode={mode}; figure={figure}", text)
+                    self.assertEqual(
+                        "{{FIGURE_OUTPUT}}" in text, figure != "off",
+                        "the figure line must be present exactly when it applies",
+                    )
+                    self.assertEqual("{{AUDIT_PANELS}}" in text, mode == "audit")
+
+    def test_scaffolded_skeleton_has_no_placeholder_the_validator_cannot_see(self):
+        """An unfilled slot must fail as an unreplaced token, never pass unnoticed."""
+        template = HTML_TEMPLATE.read_text(encoding="utf-8")
+        source = VALIDATOR.read_text(encoding="utf-8")
+        pattern = re.search(r're\.findall\(r"(\\\{\\\{\[[^"]+)"', source)
+        self.assertIsNotNone(pattern, "the unreplaced-token regex is gone")
+        seen = set(re.findall(pattern.group(1).replace("\\\\", "\\"), template))
+        self.assertEqual(
+            seen,
+            set(re.findall(r"\{\{[^}]+\}\}", template)),
+            "the template holds a placeholder shape the validator does not match",
+        )
+
+    def test_validator_field_lists_match_the_fragments(self):
+        """The gate and the thing the writer copies must not drift apart."""
+        fragments = FRAGMENTS.read_text(encoding="utf-8")
         source = VALIDATOR.read_text(encoding="utf-8")
         for constant in ("REVIEW_CARD_FIELDS", "EXPERIMENT_CARD_FIELDS"):
             block = re.search(rf"{constant} = \[(.*?)\]", source, re.DOTALL)
@@ -634,8 +672,31 @@ class ReportValidatorTests(unittest.TestCase):
             self.assertGreaterEqual(len(fields), 7)
             for field in fields:
                 self.assertIn(
-                    field, contract, f"{constant} field {field!r} is not in the contract"
+                    f"<dt>{field}</dt>",
+                    fragments,
+                    f"{constant} field {field!r} has no slot in fragments.html",
                 )
+
+    def test_closed_vocabularies_are_published_where_the_writer_looks(self):
+        """A term only the validator knows is a rule discovered by failing the build."""
+        fragments = FRAGMENTS.read_text(encoding="utf-8")
+        source = VALIDATOR.read_text(encoding="utf-8")
+        for constant in ("EXPERIMENT_TYPES", "IMPACT_CALIBRATIONS", "LEDGER_LABELS"):
+            # the labels themselves contain brackets, so stop at the line that closes
+            # the literal rather than at the first bracket character
+            block = re.search(rf"{constant} = .*?\n(?=[A-Z_]+ =|\n)", source, re.DOTALL)
+            self.assertIsNotNone(block, f"{constant} not found in the validator")
+            terms = re.findall(r'"([^"]+)"', block.group(0))
+            self.assertGreaterEqual(len(terms), 5)
+            for term in terms:
+                self.assertIn(
+                    term, fragments, f"{constant} term {term!r} is not in fragments.html"
+                )
+        verdicts = re.search(r"VERDICTS = \{(.*?)\n\}", source, re.DOTALL)
+        self.assertIsNotNone(verdicts)
+        for term, css in re.findall(r'"([^"]+)": "([^"]+)"', verdicts.group(1)):
+            self.assertIn(term, fragments, f"verdict {term!r} is not in fragments.html")
+            self.assertIn(css, fragments, f"verdict class {css!r} is not in fragments.html")
 
     def test_validator_is_shipped_with_the_skill(self):
         self.assertTrue(VALIDATOR.is_file(), "scripts/validate_report.py is missing")
@@ -660,7 +721,7 @@ class ReportValidatorTests(unittest.TestCase):
     def test_validator_enforces_experiment_card_fields(self):
         """Whatever the validator does not check drifts — experiment cards proved it."""
         broken = self.corrupt(
-            CPROMG_HTML, ("<strong>数据与指标：</strong>", "<strong>指标：</strong>")
+            CPROMG_HTML, ("<dt>数据与指标</dt>", "<dt>指标</dt>")
         )
         result = self.run_validator(broken)
         self.assertEqual(result.returncode, 1)
@@ -669,9 +730,9 @@ class ReportValidatorTests(unittest.TestCase):
 
     def test_validator_rejects_a_duplicated_card_field(self):
         source = CPROMG_HTML.read_text(encoding="utf-8")
-        label = "<strong>实验类型：</strong>"
+        label = "<dt>实验类型</dt>"
         self.assertIn(label, source)
-        broken = self.corrupt(CPROMG_HTML, (label, label + "占位</li><li>" + label))
+        broken = self.corrupt(CPROMG_HTML, (label, label + "<dd>占位</dd>" + label))
         result = self.run_validator(broken)
         self.assertEqual(result.returncode, 1)
         self.assertIn("duplicated", result.stderr)
@@ -679,7 +740,8 @@ class ReportValidatorTests(unittest.TestCase):
     def test_validator_allows_a_boundary_field_that_raises_nothing(self):
         """证据边界：无 is a valid statement and needs no B-id."""
         pattern = re.compile(
-            r'<li id="(B\d{2})"><strong>证据边界：</strong>.*?</li>', re.DOTALL
+            r'<dt>证据边界</dt><dd class="evidence-boundary" id="(B\d{2})">.*?</dd>',
+            re.DOTALL,
         )
         for report in sorted((ROOT / "tests" / "sci-read-paper" / "outputs").rglob("*.html")):
             source = report.read_text(encoding="utf-8")
@@ -693,7 +755,7 @@ class ReportValidatorTests(unittest.TestCase):
             self.assertIsNotNone(link, f"{target} is defined but never discharged")
             clean = self.corrupt(
                 report,
-                (field.group(0), "<li><strong>证据边界：</strong> 无</li>"),
+                (field.group(0), "<dt>证据边界</dt><dd>无</dd>"),
                 (link.group(0), ""),
             )
             result = self.run_validator(clean)
@@ -725,15 +787,14 @@ class ReportValidatorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_contract_states_the_readability_limits(self):
+        """One number, in one place, next to the gate that enforces it."""
         contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
-        skill = SKILL_MD.read_text(encoding="utf-8")
         source = VALIDATOR.read_text(encoding="utf-8")
         for limit in ("SENTENCE_HARD_CAP", "SENTENCE_P90_CAP", "LATIN_DENSITY_WARN"):
             self.assertIn(limit, source)
-        # the number the model is told must be the number the gate enforces
-        cap = re.search(r"SENTENCE_HARD_CAP = (\d+)", source).group(1)
-        self.assertIn(cap, contract)
-        self.assertIn(cap, skill)
+        for constant in ("SENTENCE_HARD_CAP", "SENTENCE_P90_CAP", "SENTENCE_MEDIAN_TARGET"):
+            value = re.search(rf"{constant} = (\d+)", source).group(1)
+            self.assertIn(value, contract, f"{constant} is enforced but never stated")
         self.assertIn("Readability", contract)
 
     def test_reading_length_ceiling_scales_with_boundary_count(self):
@@ -797,7 +858,7 @@ class ReportValidatorTests(unittest.TestCase):
     def test_validator_rejects_a_review_card_missing_a_field(self):
         broken = self.corrupt(
             CPROMG_HTML,
-            ("<strong>证据缺少什么：</strong>", "<strong>补充：</strong>"),
+            ("<dt>证据缺少什么</dt>", "<dt>补充</dt>"),
         )
         result = self.run_validator(broken)
         self.assertEqual(result.returncode, 1)
@@ -853,11 +914,10 @@ class ReportValidatorTests(unittest.TestCase):
     def test_validator_checks_figure_mode_in_both_directions(self):
         for mode in ("brief", "generate"):
             with self.subTest(mode=mode):
-                result = subprocess.run(
-                    [sys.executable, str(VALIDATOR), "--figure", mode, str(CPROMG_HTML)],
-                    capture_output=True,
-                    text=True,
+                declared = self.corrupt(
+                    CPROMG_HTML, ("mode=standard; figure=off", f"mode=standard; figure={mode}")
                 )
+                result = self.run_validator(declared)
                 self.assertEqual(
                     result.returncode, 1, "missing figure UI must fail brief/generate"
                 )
@@ -868,6 +928,145 @@ class ReportValidatorTests(unittest.TestCase):
         result = self.run_validator(broken)
         self.assertEqual(result.returncode, 1, "figure=off must reject figure UI")
         self.assertIn("figure=off but #figure-output is present", result.stderr)
+
+    def test_figure_flag_cannot_contradict_the_report(self):
+        """A mode the caller supplies is a mode the caller can get wrong."""
+        result = subprocess.run(
+            [sys.executable, str(VALIDATOR), "--figure", "brief", str(CPROMG_HTML)],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("contradicts the report's own figure=off", result.stderr)
+
+
+class ClosedVocabularyTests(unittest.TestCase):
+    """Every closed set the validator did not police had already drifted.
+
+    Across three shipped reports the experiment-type field appeared as 控制实验,
+    control and 对照; the graded verdicts as 被论文表格自身否定 and 不能由本文推出;
+    and pandoc's level1–level4 classes survived in all three. Each test below
+    corrupts a passing report in one of those directions, so a check that stops
+    firing shows up as a green test that should have been red.
+    """
+
+    def run_validator(self, path: Path) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [sys.executable, str(VALIDATOR), str(path)], capture_output=True, text=True
+        )
+
+    def corrupt(self, *replacements: tuple[str, str]) -> Path:
+        text = CPROMG_HTML.read_text(encoding="utf-8")
+        for old, new in replacements:
+            self.assertIn(old, text, f"fixture no longer contains {old!r}")
+            text = text.replace(old, new, 1)
+        handle = tempfile.NamedTemporaryFile(
+            "w", suffix=".html", delete=False, encoding="utf-8"
+        )
+        handle.write(text)
+        handle.close()
+        self.addCleanup(Path(handle.name).unlink, missing_ok=True)
+        return Path(handle.name)
+
+    def assert_rejected(self, needle: str, *replacements: tuple[str, str]) -> None:
+        result = self.run_validator(self.corrupt(*replacements))
+        self.assertEqual(result.returncode, 1, f"expected a failure mentioning {needle!r}")
+        self.assertIn(needle, result.stderr)
+
+    def test_experiment_type_must_come_from_the_vocabulary(self):
+        self.assert_rejected(
+            "实验类型",
+            ("<dt>实验类型</dt><dd>消融", "<dt>实验类型</dt><dd>ablation study"),
+        )
+
+    def test_impact_must_open_with_one_of_the_five_calibrations(self):
+        self.assert_rejected(
+            "对中心结论的影响",
+            ("<dt>对中心结论的影响</dt><dd>收窄范围——", "<dt>对中心结论的影响</dt><dd>大概还行，"),
+        )
+
+    def test_verdict_heading_must_come_from_the_vocabulary(self):
+        self.assert_rejected("must start with one of", ("<h3>可以相信</h3>", "<h3>基本靠谱</h3>"))
+
+    def test_verdict_colour_must_match_the_verdict(self):
+        self.assert_rejected(
+            "must carry verdict-supported",
+            ("takeaway-card verdict-supported", "takeaway-card verdict-rejected"),
+        )
+
+    def test_a_graded_verdict_may_not_leak_into_the_explaining_sections(self):
+        self.assert_rejected(
+            "graded judgement belongs in Section 7",
+            (
+                "<h2>从问题到方法：作者为什么这样设计</h2>",
+                "<h2>从问题到方法：作者为什么这样设计</h2><p>这一点可以相信。</p>",
+            ),
+        )
+
+    def test_ledger_rows_keep_all_seven_columns(self):
+        self.assert_rejected(
+            "cells, expected 7",
+            ("<td>[论文]</td>", ""),
+        )
+
+    def test_ledger_labels_come_from_the_closed_set(self):
+        self.assert_rejected(
+            "evidence label must be one of",
+            ("<td>[论文]</td>", "<td>[文献]</td>"),
+        )
+
+    def test_classes_outside_the_template_stylesheet_are_rejected(self):
+        """pandoc's level1–level4 survived in every shipped report until now."""
+        self.assert_rejected(
+            "no rule in the template stylesheet",
+            ('id="section-4" class="report-section"', 'id="section-4" class="report-section level2"'),
+        )
+
+    def test_the_no_material_effect_block_is_never_optional(self):
+        self.assert_rejected(
+            "missing #no-effect-boundaries",
+            ('id="no-effect-boundaries"', 'id="other-boundaries"'),
+        )
+
+    def test_a_boundary_must_carry_the_class_that_makes_it_visible(self):
+        self.assert_rejected(
+            'does not carry class="evidence-boundary"',
+            ('<aside class="evidence-boundary" id="B01">', '<aside id="B01">'),
+        )
+
+    def test_a_card_boundary_needs_its_own_id(self):
+        self.assert_rejected(
+            "needs its own Bnn id",
+            ('<dd class="evidence-boundary" id="B06">', '<dd class="evidence-boundary">'),
+        )
+
+    def test_the_status_badges_are_never_restated(self):
+        """One report carried a duplicate pair plus a figure badge the contract forbids."""
+        self.assert_rejected(
+            "exactly two status badges",
+            (
+                '<span class="status-badge">complete</span>',
+                '<span class="status-badge">complete</span>'
+                '<span class="status-badge">figure: off</span>',
+            ),
+        )
+
+    def test_the_report_declares_the_mode_it_was_built_in(self):
+        self.assert_rejected(
+            "must declare mode",
+            ('<meta name="sci-read-paper" content="mode=standard; figure=off">', ""),
+        )
+
+    def test_a_truncated_section_is_not_mistaken_for_a_concise_one(self):
+        source = CPROMG_HTML.read_text(encoding="utf-8")
+        body = re.search(
+            r'<section id="section-3"[^>]*>(.*?)</section>\s*<section id="section-4"',
+            source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(body, "section 3 is no longer where the fixture puts it")
+        kept = body.group(1)[: body.group(1).index("</p>") + 4]
+        self.assert_rejected("below the", (body.group(1), kept))
 
 
 if __name__ == "__main__":

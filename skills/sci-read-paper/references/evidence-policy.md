@@ -33,17 +33,9 @@ These labels define epistemic status and remain mandatory in the embedded eviden
 
 ## Evidence IDs in the Main Report
 
-Assign stable dossier-local IDs such as `E01`, `E02`, and `E03`. Cite a natural paragraph at its end, not sentence by sentence; do not append clusters of source labels to every clause.
+Assign stable dossier-local IDs such as `E01`, `E02`, and `E03`. Cite a natural paragraph at its end, not sentence by sentence; do not append clusters of source labels to every clause. `../assets/fragments.html` holds the citation and ledger-row markup — one anchor per ID, never a range, because a range renders as one link for several records and leaves the rest unresolvable.
 
-One anchor carries exactly one ID, with the brackets and separators outside it:
-
-```html
-〔<a class="evidence-link" href="#E01">E01</a>、<a class="evidence-link" href="#E02">E02</a>〕
-```
-
-Never compress several IDs into a range. A range renders as one anchor for several records, which leaves the rest unresolvable, and punctuation swallowed into an anchor turns brackets into stray links.
-
-Each ID maps to one embedded ledger row with a unique HTML `id`, label, source, version/commit, locator, supported statement, and access status. Every citation in the report must link to that row with an internal anchor. Reuse an ID only for the statement it actually supports.
+Each ID maps to one ledger row, and every citation links to it. Reuse an ID only for the statement it actually supports.
 
 Lightweight IDs never hide inference, missing information, or conflict. When epistemic status changes the interpretation, write it directly in Chinese: “论文报告……”, “公开代码实际执行……”, “我们据此推断……”, or “当前材料无法确定……”.
 
@@ -54,8 +46,7 @@ Lightweight IDs never hide inference, missing information, or conflict. When epi
 - Paper-only behavior absent from released code is a reproducibility limitation.
 - Identify conflicting versions and whether the difference changes a conclusion. Pause only when the choice changes the analysis materially.
 - Put conclusion-changing conflicts in the primary eight-section reading; move secondary implementation differences to the relevant embedded audit panel.
-- Before Section 7, present any conclusion-changing fact—a conflict, missing material, external correction, or direct logical fact—as a neutral factual boundary carrying its own `B01`-style ID. State the fact needed for understanding, and defer severity, alternatives, and claim impact to Section 7. For a conflict, state both what the paper reports and what released evidence shows. Never hide a critical fact merely to preserve narrative separation.
-- In Section 7, discharge every boundary ID: rank its impact, test alternative explanations, and state how the supported conclusion changes. A boundary that no review card claims, and that the closing `无实质影响的证据边界` list does not name, is a dropped fact — and the verdict most likely to be wrong is the one a dropped boundary was about.
+- Never hide a critical fact merely to preserve narrative separation. `output-contract.md` defines how a conclusion-changing fact becomes a labelled boundary and how Section 7 discharges it; the verdict most likely to be wrong is the one a dropped boundary was about.
 
 ## Calibration
 

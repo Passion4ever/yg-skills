@@ -26,6 +26,8 @@ An otherwise strong report does not pass if it emits multiple deliverable files,
 
 Score only reports for which `skills/sci-read-paper/scripts/validate_report.py` already exits `0`. The rubric judges what the validator cannot: whether the reasoning is right. A report that fails the validator is not eligible for scoring.
 
+Do not spend scoring effort on anything the gate already decides — section order and headings, card fields, the experiment-type/impact/verdict/ledger vocabularies, boundary labelling and discharge, citation resolution, badges, figure mode, template-only classes, sentence length, or section length. Those are closed sets or fixed strings, and a report that reached the rubric has already satisfied all of them. Judge the open questions instead: is the causal chain real, does the concrete sample actually trace, does each discharge answer what its boundary asserts, and does any verdict outrun its evidence.
+
 GREEN requires at least 18/22 and no `0` on a critical criterion. A run with fabricated evidence fails regardless of total score.
 
 For trigger cases, show the case prompt and the metadata descriptions available to the agent, but do not show the expected selection. A trigger run passes only when the agent selects `sci-read-paper`; a non-trigger run passes only when it rejects it.

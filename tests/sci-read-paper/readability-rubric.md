@@ -19,7 +19,7 @@ Score the single primary HTML report from 0 to 2 on every criterion. Judge both 
 | Main/audit separation | The eight-section report contains the complete research story; the embedded ledger and optional audit panels remain available without duplicating inventories in the narrative. |
 | HTML reading experience | The page has a clear publication-style hierarchy, useful sticky contents, readable line length, responsive tables/cards, working internal links, and no external UI dependency. |
 
-Score only reports for which `validate_report.py` already exits `0` — it enforces the mechanical half of Plain language (sentence length) and the rubric judges the half it cannot measure (whether the words were actually explained).
+Score only reports for which `validate_report.py` already exits `0` — it enforces the mechanical half of Plain language across paragraphs, lists and card fields alike, and the rubric judges the half it cannot measure: whether the words were actually explained, and whether a sentence that passes the length limit is still one a reader can parse on the first pass.
 
 Readability GREEN requires at least 18/20 and no criterion at `0`.
 
