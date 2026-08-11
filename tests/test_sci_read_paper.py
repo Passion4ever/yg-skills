@@ -702,6 +702,31 @@ class ReportValidatorTests(unittest.TestCase):
             self.assertIn(term, fragments, f"verdict {term!r} is not in fragments.html")
             self.assertIn(css, fragments, f"verdict class {css!r} is not in fragments.html")
 
+    def test_no_dead_css_in_the_template_stylesheet(self):
+        """A rule nothing uses is where the markup silently drifts away from the design.
+
+        This has already happened three times: cards were styled as dl/dt/dd and every
+        report wrote <p><strong>; verdict cards were styled .takeaway-card h3 and every
+        report wrote <p><strong>, which left a validator check that could never fire.
+        """
+        style = re.search(
+            r"<style>(.*?)</style>", HTML_TEMPLATE.read_text(encoding="utf-8"), re.DOTALL
+        ).group(1)
+        defined = set(re.findall(r"\.([A-Za-z][\w-]*)", style))
+        used: set[str] = set()
+        sources = [HTML_TEMPLATE, FRAGMENTS]
+        sources += sorted((ROOT / "tests" / "sci-read-paper" / "outputs").rglob("*.html"))
+        for source in sources:
+            text = source.read_text(encoding="utf-8")
+            body = text.split("</style>", 1)[-1]
+            for attribute in re.findall(r'class="([^"]+)"', body):
+                used.update(attribute.split())
+        self.assertEqual(
+            sorted(defined - used),
+            [],
+            "the stylesheet defines classes nothing uses — delete them or use them",
+        )
+
     def test_validator_is_shipped_with_the_skill(self):
         self.assertTrue(VALIDATOR.is_file(), "scripts/validate_report.py is missing")
         skill = SKILL_MD.read_text(encoding="utf-8")
@@ -766,6 +791,27 @@ class ReportValidatorTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             return
         self.skipTest("no experiment-card boundary field in any shipped report")
+
+    def test_a_boundary_that_raises_nothing_may_be_quoted_or_punctuated(self):
+        """The gate must not reject what the fragment library tells the writer to do.
+
+        fragments.html says to write 无 in the field; a writer copying that prose kept
+        the quotation marks and the validator failed the report. The instruction and
+        the gate disagreeing is the exact bug class this contract exists to remove.
+        """
+        plain = "<dt>证据边界</dt><dd>无</dd>"
+        reports = sorted((ROOT / "tests" / "sci-read-paper" / "outputs").rglob("*.html"))
+        showcase = next(
+            (r for r in reports if plain in r.read_text(encoding="utf-8")), None
+        )
+        self.assertIsNotNone(showcase, "no shipped report has an empty boundary field")
+        for form in ("无", "「无」", "无。", "“无”"):
+            with self.subTest(form=form):
+                variant = self.corrupt(
+                    showcase, (plain, f"<dt>证据边界</dt><dd>{form}</dd>")
+                )
+                result = self.run_validator(variant)
+                self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_validator_rejects_a_run_on_sentence(self):
         run_on = "这是一个被故意写得非常冗长的句子" * 9  # 135 CJK characters

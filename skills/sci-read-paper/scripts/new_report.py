@@ -27,6 +27,37 @@ from pathlib import Path
 TEMPLATE = Path(__file__).resolve().parent.parent / "assets" / "report-template.html"
 PLACEHOLDER = re.compile(r"\{\{[A-Z0-9_]+\}\}")
 
+# What goes in each slot. Printing the bare names makes the writer cross-reference
+# the contract to tell BODY_7_NO_EFFECT from BODY_7_VERDICTS; one line each removes
+# a lookup from every run.
+SLOTS = {
+    "DISPLAY_TITLE": "短中文标题，如 Transformer 深度精读",
+    "PAPER_SUBTITLE": "论文原标题，完整不缩写",
+    "SIDEBAR_SUBTITLE": "一行认出这篇论文：作者、编号、任务",
+    "STATUS": "complete 或 partial",
+    "META_EXTRA": "期刊或预印本编号、DOI、代码地址、访问日期，各一个 <span>",
+    "QV_MAINLINE": "速览·作者主线：作者想贡献什么，不下判断",
+    "QV_EVIDENCE": "速览·证据状态：会改变结论的缺口，及最小解决材料",
+    "QV_REVIEW": "速览·审查入口：第 7 章要处理的问题，不展开答案",
+    "CUE_n": "第 n 章的一句中性导读：本章要建立什么",
+    "BODY_n": "第 n 章正文（n=1..7）",
+    "BODY_7_NO_EFFECT": "第 7 章收尾：逐条列出无实质影响的边界；一条都没有也要说明",
+    "BODY_7_VERDICTS": "四档判定卡，只放适用的几档，见 assets/fragments.html 第 6 节",
+    "BODY_8_1": "第 8 章：论文真正贡献了什么",
+    "BODY_8_2": "第 8 章：最终可以相信到哪里",
+    "BODY_8_3": "第 8 章：下一步最该做什么",
+    "REPORT_DETAILS": "页脚来源块：论文版本、代码 commit、未解决问题、完成状态",
+    "EVIDENCE_LEDGER": "完整证据台账表，七列，见 assets/fragments.html 第 7 节",
+}
+
+
+def describe(name: str) -> str:
+    key = name.strip("{}")
+    if key in SLOTS:
+        return SLOTS[key]
+    generic = re.sub(r"_\d+$", "_n", key)
+    return SLOTS.get(generic, "")
+
 
 def scaffold(template_text: str, mode: str, figure: str) -> str:
     """Resolve every placeholder whose value the two flags already determine."""
@@ -70,8 +101,9 @@ def main(argv: list[str] | None = None) -> int:
     remaining = list(dict.fromkeys(PLACEHOLDER.findall(text)))
     print(target)
     print(f"mode={args.mode} figure={args.figure}; {len(remaining)} placeholders to fill:")
+    width = max(len(name) for name in remaining)
     for name in remaining:
-        print(f"  {name}")
+        print(f"  {name:<{width}}  {describe(name)}")
     print("\nFill one section per edit, then run:")
     print(f"  python3 {Path(__file__).resolve().parent / 'validate_report.py'} {target}")
     return 0

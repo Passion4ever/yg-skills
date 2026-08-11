@@ -607,7 +607,11 @@ def validate(
                         f"experiment card {card_id}: 实验类型 {actual[:24]!r} must start"
                         f" with one of {EXPERIMENT_TYPES}"
                     )
-                boundary = values.get("证据边界", "").rstrip("。 ")
+                # 无 may arrive quoted or punctuated; the fragment library says
+                # "write 无" in prose and a writer copying it reasonably keeps the
+                # brackets. Rejecting that would be the gate contradicting the
+                # instruction, which is the bug class this contract exists to kill.
+                boundary = values.get("证据边界", "").strip("「」“”\"'。. \t")
                 boundary_id = field_ids.get("证据边界", "")
                 if boundary and boundary != "无" and not BOUNDARY_ID.match(boundary_id):
                     errors.append(
