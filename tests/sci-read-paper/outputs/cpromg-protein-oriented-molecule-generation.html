@@ -459,7 +459,7 @@
     <header class="paper-hero">
       <p class="eyebrow">SCI · DEEP READING</p>
       <h1 class="paper-title">CProMG 深度精读</h1>
-      <p class="paper-subtitle">CProMG: controllable protein-oriented molecule generation with desired binding affinity and drug-like properties</p>
+      <p class="paper-subtitle">CProMG: controllable protein-oriented molecule generation with desired 结合亲和力 and drug-like properties</p>
       <div class="paper-meta"><span class="status-badge">mode: standard</span>
 <span class="status-badge">complete</span>
 <span>Bioinformatics · 2023</span>
@@ -477,21 +477,21 @@
 <p class="chapter-label">CHAPTER 01</p>
 <h2>为什么要做这项研究：背景、现状与本文切入点</h2>
 <p class="chapter-intro">先明确模型真正接收什么、生成什么，再理解“面向蛋白”和“性质可控”为什么是两个不同难题。</p>
-<p>CProMG 的直接任务不是“输入一个蛋白，得到一颗已经能结合的药物”。它的真实输入是一个<strong>预先准备好的三维结合口袋</strong>（prepared 3D binding pocket）。除口袋之外，用户还要给出希望满足的性质条件。输出是一条候选小分子的 SMILES 字符串。SMILES 是用一行字符写出分子结构的记法，原子、化学键和成环都被编码成字符。这条字符串语法有效、算出来的性质合格、docking（分子对接，把小分子摆进口袋算打分）得分较低，都仍然只是计算结果。它们不等于分子已经被合成出来。更不等于实验测得它对该蛋白具有活性。〔<a class="evidence-link" href="#E01">E01</a>、<a class="evidence-link" href="#E02">E02</a>、<a class="evidence-link" href="#E30">E30</a>〕</p>
+<p>CProMG 的直接任务不是“输入一个蛋白，得到一颗已经能结合的药物”。它的真实输入是一个<strong>预先准备好的三维结合口袋</strong>。除口袋之外，用户还要给出希望满足的性质条件。输出是一条候选小分子的 SMILES 字符串。SMILES 是用一行字符写出分子结构的记法，原子、化学键和成环都被编码成字符。这条字符串语法有效、算出来的性质合格、docking（分子对接，把小分子摆进口袋算打分）得分较低，都仍然只是计算结果。它们不等于分子已经被合成出来。更不等于实验测得它对该蛋白具有活性。〔<a class="evidence-link" href="#E01">E01</a>、<a class="evidence-link" href="#E02">E02</a>、<a class="evidence-link" href="#E30">E30</a>〕</p>
 <p>这项任务重要，是因为传统虚拟筛选只能在已有分子库中排序。可生成模型则试图直接提出未收录的新结构。但“像一个合理分子”与“适合某个靶点”并不是同一目标。前者主要涉及化学语法和分子性质。后者还需要口袋几何、相互作用以及可靠的结合证据。若只学习配体集合，模型可能生成一般意义上像药的分子，却不知道它应当服务哪个蛋白。〔<a class="evidence-link" href="#E01">E01</a>〕</p>
 <p>已有的面向蛋白生成（protein-oriented generation）大致沿两条路线发展。一条是序列到 SMILES 的 Transformer。它能直接把蛋白序列当作源语言，却丢失局部结合口袋的三维信息。另一条是基于三维口袋的生成方法。它能在空间中逐原子生成，却较难显式控制 QED、SA、logP 或 TPSA 等性质。〔<a class="evidence-link" href="#E01">E01</a>〕</p>
-<p>这四个名字在全文反复出现，先说清各自量的是什么。QED（quantitative estimate of drug-likeness）是 0 到 1 的“像不像药”打分，越高越接近常见口服药的性质分布。SA（synthetic accessibility）是合成难度估计，分数越低表示越容易合成。logP 是分子在正辛醇与水之间的分配系数取对数，越大越亲脂、越不溶于水。TPSA（topological polar surface area）是拓扑极性表面积。它把分子里极性原子的表面积加起来，常用来估计口服吸收与透膜能力。</p>
+<p>这四个名字在全文反复出现，先说清各自量的是什么。QED（类药性定量估计）是 0 到 1 的“像不像药”打分，越高越接近常见口服药的性质分布。SA（合成可及性）是合成难度估计，分数越低表示越容易合成。logP 是分子在正辛醇与水之间的分配系数取对数，越大越亲脂、越不溶于水。TPSA（拓扑极性表面积）把分子里极性原子的表面积加起来，常用来估计口服吸收与透膜能力。</p>
 <p>作者把剩余缺口概括成一句话：既要利用三维口袋，又要让生成过程同时听从结合与类药性质条件。〔<a class="evidence-link" href="#E01">E01</a>〕</p>
-<p>CProMG 的切入点因此是一个组合设计。它用原子视图（atom view）保留精细几何。它用残基视图（residue view）表达蛋白层级。再用 cross-attention（交叉注意力，让一路表示去查询另一路）把两种粒度融合。同时，docking 与性质条件被放在 SMILES 的 token 之前。这里的 token 指 SMILES 串被切开后的一个符号单元，也就是序列里的一个位置。条件排在最前面，后续每个 token 就都在条件下生成。作者的创新主线不是发明一种新的化学实验。它是把双视图口袋编码与条件式序列解码连接成一个端到端生成框架。〔<a class="evidence-link" href="#E02">E02</a>、<a class="evidence-link" href="#E04">E04</a>、<a class="evidence-link" href="#E05">E05</a>、<a class="evidence-link" href="#E06">E06</a>〕</p>
+<p>CProMG 的切入点因此是一个组合设计。它用原子视图保留精细几何。它用残基视图表达蛋白层级。再用 cross-attention（交叉注意力，让一路表示去查询另一路）把两种粒度融合。同时，docking 与性质条件被放在 SMILES 的 token 之前。这里的 token 指 SMILES 串被切开后的一个符号单元，也就是序列里的一个位置。条件排在最前面，后续每个 token 就都在条件下生成。作者的创新主线不是发明一种新的化学实验。它是把双视图口袋编码与条件式序列解码连接成一个端到端生成框架。〔<a class="evidence-link" href="#E02">E02</a>、<a class="evidence-link" href="#E04">E04</a>、<a class="evidence-link" href="#E05">E05</a>、<a class="evidence-link" href="#E06">E06</a>〕</p>
 </section>
 
 <section id="section-2" class="report-section">
 <p class="chapter-label">CHAPTER 02</p>
 <h2>三分钟建立论文全局地图</h2>
 <p class="chapter-intro">用任务、数据流、核心结果和一个审查入口，先建立可以独立使用的全文地图。</p>
-<p>给定一个从蛋白–配体复合物数据中预先截取的口袋，CProMG 同时构建原子图与残基图。节点类型和 Laplacian positional encoding（图拉普拉斯位置编码，文中简称 LPE 或 LapPE）被映射到 256 维。两个六层图注意力编码器分别处理细粒度的原子视图与粗粒度的残基视图。第 3、6 层把原子表示单向融合到残基表示。两路节点序列随后拼接，作为分子 decoder 的 key/value。〔<a class="evidence-link" href="#E04">E04</a>、<a class="evidence-link" href="#E05">E05</a>、<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
-<p>训练分子被规范化为最长 200 个 token 的 SMILES。docking score 被阈值化为是否 ≤ −7.5。QED 与 SA 分别阈值化为是否 ≥ 0.6、≤ 4.0。logP 与 TPSA 则可以保留连续值。这些条件经线性层变成一个 property token，放在 SMILES 开始 token 之前。masked self-attention 只看已知前缀。cross-attention 再读取蛋白节点。最后逐个 token 预测下一项。〔<a class="evidence-link" href="#E06">E06</a>、<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E17">E17</a>〕</p>
-<p>论文从 CrossDocked2020 派生数据中使用 99,000 个训练 pair、1,000 个 validation pair。测试则用 100 个口袋生成候选。主表报告 CProMG-VQS 的平均 Vina Score（VS，即对接打分）为 −7.644。同一行的 QED 为 0.741、SA 为 2.884、Diversity 为 0.757。HAR（high-affinity ratio，高亲和比例）为 55.5%。HAR 与 VS 由同一个 Vina 打分函数定义，数值越高越好。性质控制实验进一步显示，不同条件会移动输出分布。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E13">E13</a>〕</p>
+<p>给定一个从蛋白–配体复合物数据中预先截取的口袋，CProMG 同时构建原子图与残基图。节点类型和 Laplacian 位置编码（图拉普拉斯位置编码，文中简称 LPE 或 LapPE）被映射到 256 维。两个六层图注意力编码器分别处理细粒度的原子视图与粗粒度的残基视图。第 3、6 层把原子表示单向融合到残基表示。两路节点序列随后拼接，作为分子 decoder 的键与值。〔<a class="evidence-link" href="#E04">E04</a>、<a class="evidence-link" href="#E05">E05</a>、<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
+<p>训练分子被规范化为最长 200 个 token 的 SMILES。对接打分被阈值化为是否 ≤ −7.5。QED 与 SA 分别阈值化为是否 ≥ 0.6、≤ 4.0。logP 与 TPSA 则可以保留连续值。这些条件经线性层变成一个 property token，放在 SMILES 开始 token 之前。掩码自注意力只看已知前缀。cross-attention 再读取蛋白节点。最后逐个 token 预测下一项。〔<a class="evidence-link" href="#E06">E06</a>、<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E17">E17</a>〕</p>
+<p>论文从 CrossDocked2020 派生数据中使用 99,000 个训练 pair、1,000 个验证对。测试则用 100 个口袋生成候选。主表报告 CProMG-VQS 的平均 Vina Score（VS，即对接打分）为 −7.644。同一行的 QED 为 0.741、SA 为 2.884、Diversity 为 0.757。HAR（高亲和比例）为 55.5%。HAR 与 VS 由同一个 Vina 打分函数定义，数值越高越好。性质控制实验进一步显示，不同条件会移动输出分布。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E13">E13</a>〕</p>
 <aside class="evidence-boundary" id="B01"><p><strong>证据边界：</strong> 公开 split 的确包含 99,000/1,000/100 个条目。但生成该 split 的 MMseqs2 记录没有发布。公开的 <code>CProMG-VQS.yml</code> 只设 50 iterations，而训练脚本只在 250,000 iterations 之后保存 checkpoint。Laplacian PE 预处理调用也会触发公开 issue 报告的 TypeError。它们对复现与中心结论的影响，在第 7 节集中评估。〔<a class="evidence-link" href="#E13">E13</a>、<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E19">E19</a>〕</p></aside>
 <p><strong>审查预告：</strong> CProMG 最可靠的贡献是一句带限定的话：在作者的计算环境中，条件 token 能操纵若干计算指标。全文把这类充当“标准答案”的打分程序称为 oracle。最需要警惕的一步跨越，是把同一套 docking/QED/SA oracle 下的优化，直接说成真实亲和力、真实可合成性或药物有效性。</p>
 </section>
@@ -508,16 +508,16 @@
 <section id="one-resolution-is-not-enough">
 <h3>3.2 只看原子或只看残基，都缺少另一层信息</h3>
 <p>原子图能区分元素、骨架位置和精细距离，但节点多、语义碎。残基图把多个原子聚合为一个氨基酸中心，结构更紧凑，却会丢失具体的原子环境。作者假设二者不是竞争关系，而是同一口袋的层级视图。所以他为两者各建一个平行的 encoder（编码器）。〔<a class="evidence-link" href="#E04">E04</a>〕</p>
-<p>两个图都没有天然的一维顺序，普通 Transformer 的正弦位置编码不能直接套用。作者改取图 Laplacian 的低频 eigenvectors 当作节点位置。他又把节点间的距离映射为 RBF edge features。这样，注意力在聚合邻居时能同时看到节点身份、相对距离与图位置。〔<a class="evidence-link" href="#E04">E04</a>〕</p>
+<p>两个图都没有天然的一维顺序，普通 Transformer 的正弦位置编码不能直接套用。作者改取图 Laplacian 的低频特征向量当作节点位置。他又把节点间的距离映射为 RBF 边特征。这样，注意力在聚合邻居时能同时看到节点身份、相对距离与图位置。〔<a class="evidence-link" href="#E04">E04</a>〕</p>
 </section>
 <section id="dual-view-needs-fusion">
 <h3>3.3 两种视图若只在最后拼接，层级关系仍没有发生交互</h3>
-<p>仅仅并行编码会得到两套各自封闭的表示。CProMG 在第 3、6 个 residue encoder block 中，用 residue query 读取 atom key/value。粗粒度残基因此能在更新时吸收细粒度的原子信息。最终 atom 与 residue token 再沿序列维拼接。这里的融合是 atom → residue 的单向 cross-attention，不是双向消息传递。〔<a class="evidence-link" href="#E05">E05</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
+<p>仅仅并行编码会得到两套各自封闭的表示。CProMG 在第 3、6 个残基编码器块中，用残基查询向量读取原子的键与值。粗粒度残基因此能在更新时吸收细粒度的原子信息。最终 atom 与 residue token 再沿序列维拼接。这里的融合是 atom → residue 的单向 cross-attention，不是双向消息传递。〔<a class="evidence-link" href="#E05">E05</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
 </section>
 <section id="protein-conditioning-is-not-property-control">
 <h3>3.4 知道口袋，并不自动得到指定的 QED、SA 或 docking</h3>
 <p>蛋白表示只能告诉 decoder “面向谁”，不能告诉它“性质应落在哪里”。作者把 binding 与分子性质变成一个额外的 token，并把它放在 SMILES 开头。对自回归模型而言，这意味着从第一个化学 token 起，每一步条件概率都能读取目标属性。〔<a class="evidence-link" href="#E06">E06</a>、<a class="evidence-link" href="#E15">E15</a>〕</p>
-<p>最后一步分三件事做完。masked self-attention 维持 SMILES 前缀的因果性。protein-interactive attention（面向蛋白的交叉注意力）让每个分子 token 读取口袋节点。beam search 再从条件分布中选出完整序列。于是整条论证链闭合：口袋提供靶点上下文，property token 提供可控性，decoder 把两者共同转成 SMILES。〔<a class="evidence-link" href="#E06">E06</a>、<a class="evidence-link" href="#E17">E17</a>〕</p>
+<p>最后一步分三件事做完。掩码自注意力维持 SMILES 前缀的因果性。蛋白交互注意力（面向蛋白的交叉注意力）让每个分子 token 读取口袋节点。束搜索再从条件分布中选出完整序列。于是整条论证链闭合：口袋提供靶点上下文，property token 提供可控性，decoder 把两者共同转成 SMILES。〔<a class="evidence-link" href="#E06">E06</a>、<a class="evidence-link" href="#E17">E17</a>〕</p>
 </section>
 </section>
 
@@ -527,25 +527,25 @@
 <p class="chapter-intro">跟踪一个 CrossDocked 口袋–配体对，看它如何变成双图、条件 token、teacher-forcing 样本与验证损失。</p>
 <section id="one-pair">
 <h3>4.1 一条样本的语义身份</h3>
-<p>以公开 split 的训练条目 <code>4xe6_X_rec_3fqc_55v_lig_tt_docked_4</code> 为例。一条记录包含一个 <code>pocket10.pdb</code> 与对应的 ligand SDF。口袋文件来自一个已知蛋白–配体结构周围的预截取区域。SDF 提供训练目标 SMILES，同时用于计算 QED、SA、logP、MW 与 TPSA。另一个 CSV 以 ligand 文件名匹配预计算的 docking score。〔<a class="evidence-link" href="#E13">E13</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E30">E30</a>〕</p>
-<p>因此，同一个 ligand 在训练中扮演三种角色。它的结构被转成 teacher-forcing 的 SMILES 目标。它的 RDKit descriptors 形成 property condition。它的预计算 docking score 形成 binding condition。模型并不从实验亲和力学习“≤ −7.5”这条线。它学的是 AutoDock Vina 派生标签与分子序列之间的条件分布。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E28">E28</a>〕</p>
+<p>以公开 split 的训练条目 <code>4xe6_X_rec_3fqc_55v_lig_tt_docked_4</code> 为例。一条记录包含一个 <code>pocket10.pdb</code> 与对应的 ligand SDF。口袋文件来自一个已知蛋白–配体结构周围的预截取区域。SDF 提供训练目标 SMILES，同时用于计算 QED、SA、logP、MW 与 TPSA。另一个 CSV 以 ligand 文件名匹配预计算的对接打分。〔<a class="evidence-link" href="#E13">E13</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E30">E30</a>〕</p>
+<p>因此，同一个 ligand 在训练中扮演三种角色。它的结构被转成 teacher-forcing 的 SMILES 目标。它的 RDKit 描述符形成性质条件。它的预计算对接打分形成结合条件。模型并不从实验亲和力学习“≤ −7.5”这条线。它学的是 AutoDock Vina 派生标签与分子序列之间的条件分布。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E28">E28</a>〕</p>
 </section>
 <section id="split">
 <h3>4.2 划分单位与规模</h3>
-<p>论文称先用 MMseqs2 在 30% sequence identity（序列一致度）下聚类蛋白。25 个 cluster 被取作 test clusters，其余作为 training clusters。作者再从训练侧抽取 100,000 个 pair，其中 99,000 个 train、1,000 个 validation。测试侧则从 test cluster 中选 100 个 protein。公开的 <code>split_by_name1000.pt</code> 与代码加载器对应的条目数是 99,000、1,000 和 100。划分元素是 <code>(pocket filename, ligand filename)</code>。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E13">E13</a>〕</p>
-<aside class="evidence-boundary" id="B02"><p><strong>证据边界：</strong> 论文还称 100 个测试蛋白涉及约 18,000 个 protein–ligand pairs。但发布的 split 与 <code>test_list.tsv</code> 只列 100 个 pair。仓库里也没有 MMseqs2 clustering 脚本或 18K reference inventory。现有材料能核对条目数量，不能独立核对 30% identity 与 reference 聚合过程。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E13">E13</a>、<a class="evidence-link" href="#E21">E21</a>〕</p></aside>
-<p>CrossDocked2020 本身包含 cross-docked poses 与模型生成的 counterexamples。它的原始作者明确指出，cross-docked 的 affinity/pose 标签更嘈杂。他们还提醒，target-based split 仍可能在 train/test 之间保留 ligand similarity。CProMG 的 30% sequence split 面向新的蛋白序列。但论文没有额外报告 scaffold、ligand 或 pocket-structure 层面的分离。〔<a class="evidence-link" href="#E25">E25</a>〕</p>
+<p>论文称先用 MMseqs2 在 30% 序列一致性（序列一致度）下聚类蛋白。25 个 cluster 被取作测试聚类，其余作为训练聚类。作者再从训练侧抽取 100,000 个 pair，其中 99,000 个 train、1,000 个 validation。测试侧则从测试聚类中选 100 个 protein。公开的 <code>split_by_name1000.pt</code> 与代码加载器对应的条目数是 99,000、1,000 和 100。划分元素是 <code>(pocket filename, ligand filename)</code>。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E13">E13</a>〕</p>
+<aside class="evidence-boundary" id="B02"><p><strong>证据边界：</strong> 论文还称 100 个测试蛋白涉及约 18,000 个 protein–配体对。但发布的 split 与 <code>test_list.tsv</code> 只列 100 个 pair。仓库里也没有 MMseqs2 聚类脚本或 18K reference 清单。现有材料能核对条目数量，不能独立核对 30% identity 与 reference 聚合过程。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E13">E13</a>、<a class="evidence-link" href="#E21">E21</a>〕</p></aside>
+<p>CrossDocked2020 本身包含交叉对接构象与模型生成的反例。它的原始作者明确指出，cross-docked 的 affinity/pose 标签更嘈杂。他们还提醒，按靶点划分仍可能在训练/测试之间保留配体相似度。CProMG 的 30% 按序列划分面向新的蛋白序列。但论文没有额外报告 scaffold、ligand 或 pocket-structure 层面的分离。〔<a class="evidence-link" href="#E25">E25</a>〕</p>
 </section>
 <section id="preprocess">
 <h3>4.3 从口袋文件到 batch</h3>
-<p>PDB 被读取两次。atom view 把六种元素的 one-hot 与一个 backbone bit 拼成 7 维节点特征。residue view 把 20 种 amino acid 编成 20 维 one-hot，并以原子质量加权中心作为残基坐标。代码为 atom graph 取 48-NN，为 residue graph 固定 30-NN。它再预计算 8 维的 Laplacian eigenvector PE，其中 PE 即 positional encoding，位置编码。训练时还给 atom 与 residue 坐标分别加入标准差 0.1 的 Gaussian noise。〔<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
-<aside class="evidence-boundary" id="B03"><p><strong>证据边界：</strong> 方法正文 2.2 把 residue/atom 的 K 写成 48/30。参数段与模型代码则使用 atom/residue = 48/30。论文的 atom types 写作 H/C/N/O/S/P，代码用的是 H/C/N/O/S/Se。以下数据流一律按发布代码描述。〔<a class="evidence-link" href="#E04">E04</a>、<a class="evidence-link" href="#E20">E20</a>〕</p></aside>
-<p>ligand SDF 被 RDKit 转为 canonical SMILES。这串字符再用正则切成 token，每个 token 取自一份 112 项的 vocabulary。输入前加 <code>&amp;</code>，目标末尾加 <code>$</code>，并用 <code>^</code> 补齐到长度 200。batch size 为 4。训练 DataLoader 会 shuffle，validation 不 shuffle。〔<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E15">E15</a>〕</p>
+<p>PDB 被读取两次。原子视图把六种元素的 one-hot 与一个主链位拼成 7 维节点特征。残基视图把 20 种氨基酸编成 20 维 one-hot，并以原子质量加权中心作为残基坐标。代码为原子图取 48-NN，为残基图固定 30-NN。它再预计算 8 维的 Laplacian 特征向量位置编码，其中 PE 即位置编码，位置编码。训练时还给 atom 与 residue 坐标分别加入标准差 0.1 的 Gaussian 噪声。〔<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
+<aside class="evidence-boundary" id="B03"><p><strong>证据边界：</strong> 方法正文 2.2 把 residue/atom 的 K 写成 48/30。参数段与模型代码则使用原子与残基 = 48/30。论文的原子类型写作 H/C/N/O/S/P，代码用的是 H/C/N/O/S/Se。以下数据流一律按发布代码描述。〔<a class="evidence-link" href="#E04">E04</a>、<a class="evidence-link" href="#E20">E20</a>〕</p></aside>
+<p>ligand SDF 被 RDKit 转为标准 SMILES。这串字符再用正则切成 token，每个 token 取自一份 112 项的词表。输入前加 <code>&amp;</code>，目标末尾加 <code>$</code>，并用 <code>^</code> 补齐到长度 200。批大小为 4。训练 DataLoader 会打乱，validation 不打乱。〔<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E15">E15</a>〕</p>
 </section>
 <section id="training-signal">
 <h3>4.4 条件、损失与 checkpoint</h3>
-<p>VQS 配置选择 <code>vina_score, qed, sas</code> 三个 property。训练脚本把它们分别阈值化为 <code>VS&lt;−7.5</code>、<code>QED&gt;0.6</code>、<code>SA&lt;4.0</code> 的 0/1 值。VQSLT 再加入连续的 logP 与 TPSA。模型在 teacher forcing 下为每个位置输出 112 个 logits。cross-entropy 对所有 SMILES 目标 token 优化。〔<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
-<p>公开配置记录了 seed 2022、Adam、learning rate 1e−4、β₁=0.99、β₂=0.999。validation 每 1,000 iterations 做一次。连续 5 次未改善便将学习率乘 0.6，最低降到 1e−5。early stopping 的 patience 为 20、delta 为 5e−5。论文和仓库都没有报告硬件、训练时长与最终 iteration。用于论文表格的 checkpoint hash 同样没有报告。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E15">E15</a>〕</p>
+<p>VQS 配置选择 <code>vina_score, qed, sas</code> 三个 property。训练脚本把它们分别阈值化为 <code>VS&lt;−7.5</code>、<code>QED&gt;0.6</code>、<code>SA&lt;4.0</code> 的 0/1 值。VQSLT 再加入连续的 logP 与 TPSA。模型在教师强制下为每个位置输出 112 个 logits。cross-entropy 对所有 SMILES 目标 token 优化。〔<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
+<p>公开配置记录了 seed 2022、Adam、学习率 1e−4、β₁=0.99、β₂=0.999。validation 每 1,000 iterations 做一次。连续 5 次未改善便将学习率乘 0.6，最低降到 1e−5。早停的耐心轮数为 20、delta 为 5e−5。论文和仓库都没有报告硬件、训练时长与最终 iteration。用于论文表格的权重哈希同样没有报告。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E15">E15</a>〕</p>
 <aside class="evidence-boundary" id="B04"><p><strong>证据边界：</strong> 发布的 VQSLT 配置允许 500,000 iterations。主结果所用的 VQS 配置却只有 50 iterations。训练脚本虽会在最后一次 iteration 做 validation，但保存 checkpoint 另有条件。它只在 iteration &gt; 250,000 且为 10,000 的倍数时保存。因此这份 VQS 配置无法按公开入口产出新的 checkpoint。Zenodo 提供了预训练模型，但这不能补回论文实际的训练轨迹。〔<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E26">E26</a>〕</p></aside>
 </section>
 </section>
@@ -558,7 +558,7 @@
 <h3>5.1 先看主数据流</h3>
 <div class="flow-wrap" role="img" aria-label="CProMG 从双视图口袋和性质条件到 SMILES 的数据流">
 <div class="flow-chain">
-<div class="flow-branches"><div>atom graph<br><small>Nₐ×7 + Nₐ×3</small></div><div>residue graph<br><small>Nᵣ×20 + Nᵣ×3</small></div></div>
+<div class="flow-branches"><div>原子图<br><small>Nₐ×7 + Nₐ×3</small></div><div>残基图<br><small>Nᵣ×20 + Nᵣ×3</small></div></div>
 <span class="flow-arrow">→</span>
 <div class="flow-node"><small>EMBED</small><strong>type + LapPE + RBF edge</strong><span>节点宽度 256</span></div>
 <span class="flow-arrow">→</span>
@@ -570,32 +570,32 @@
 <span class="flow-arrow">→</span>
 <div class="flow-node"><small>DECODER</small><strong>masked self-attn + protein cross-attn</strong><span>6 层</span></div>
 <span class="flow-arrow">→</span>
-<div class="flow-node"><small>OUTPUT</small><strong>next-token logits</strong><span>112 vocabulary → beam search</span></div>
+<div class="flow-node"><small>OUTPUT</small><strong>next-token logits</strong><span>112 词表 → 束搜索</span></div>
 </div>
 </div>
-<p>图中所有主路径都能在 <code>Transformer.forward</code>、两个 encoder 与 decoder 中找到。有一点需要特别注意。decoder attention 算的是 learned representation similarity，也就是学到的表示之间的相似度。它不是分子 token 与口袋节点之间的物理距离，因为 SMILES token 没有三维坐标。〔<a class="evidence-link" href="#E16">E16</a>、<a class="evidence-link" href="#E17">E17</a>〕</p>
+<p>图中所有主路径都能在 <code>Transformer.forward</code>、两个 encoder 与 decoder 中找到。有一点需要特别注意。解码器注意力算的是学到的表示相似度，也就是学到的表示之间的相似度。它不是分子 token 与口袋节点之间的物理距离，因为 SMILES token 没有三维坐标。〔<a class="evidence-link" href="#E16">E16</a>、<a class="evidence-link" href="#E17">E17</a>〕</p>
 </section>
 <section id="protein-embedding">
 <h3>5.2 两个图如何获得初始表示</h3>
-<p>设一个 batch 中第 i 个口袋有 Nₐ 个原子和 Nᵣ 个残基。原子节点的 7 维特征经 linear layer 变为 <code>[Nₐ,256]</code>。残基节点的 20 维特征变为 <code>[Nᵣ,256]</code>。各自的 8 维 Laplacian PE 也投影到 256 维，然后相加。这一相加让“节点是什么”和“它处在图的哪个低频位置”进入同一个隐空间。〔<a class="evidence-link" href="#E04">E04</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
-<p>encoder 每次前向都按坐标重新构建 KNN edge。距离先经 64 个 Gaussian basis 展开。edge-conditioned attention 再用它调制 key/value。局部邻居消息聚合之后，经过 residual、LayerNorm 和 256→1024→256 的 feed-forward。六层堆叠扩大了信息传播范围。但 KNN 图和 LapPE 都只基于已给定的口袋，不负责找到口袋。〔<a class="evidence-link" href="#E04">E04</a>、<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
+<p>设一个 batch 中第 i 个口袋有 Nₐ 个原子和 Nᵣ 个残基。原子节点的 7 维特征经线性层变为 <code>[Nₐ,256]</code>。残基节点的 20 维特征变为 <code>[Nᵣ,256]</code>。各自的 8 维 Laplacian PE 也投影到 256 维，然后相加。这一相加让“节点是什么”和“它处在图的哪个低频位置”进入同一个隐空间。〔<a class="evidence-link" href="#E04">E04</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
+<p>encoder 每次前向都按坐标重新构建 KNN 边。距离先经 64 个 Gaussian 基函数展开。边条件注意力再用它调制键与值。局部邻居消息聚合之后，经过残差、LayerNorm 和 256→1024→256 的 feed-forward。六层堆叠扩大了信息传播范围。但 KNN 图和 LapPE 都只基于已给定的口袋，不负责找到口袋。〔<a class="evidence-link" href="#E04">E04</a>、<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
 </section>
 <section id="fusion">
 <h3>5.3 atom → residue 的 cross-fusion 怎样发生</h3>
-<p>atom encoder 保存每一层 self-attention 之后的 dense atom states。residue encoder 运行到 index 2 和 5 时会做一次 cross-attention。它以 residue states 为 query，以相应 atom states 为 key/value，共四个头。输出经 residual 与 LayerNorm 加回 residue states。直观上，一个残基可以从整个口袋的原子表示中，读取与当前 query 最相关的信息。〔<a class="evidence-link" href="#E05">E05</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
-<p>最后，atom 与 residue outputs 沿 token 维拼接，而不是池化成一个向量。对 batch 做 padding 之后，protein memory 的形状可写为 <code>[B,Nₐ,max+Nᵣ,max,256]</code>。相应的 mask 告诉 decoder 哪些节点只是 padding。这样，每个生成出来的 token 都可以直接 attention 到不同的原子或残基位置。〔<a class="evidence-link" href="#E16">E16</a>〕</p>
+<p>原子编码器保存每一层 self-attention 之后的稠密原子状态。残基编码器运行到 index 2 和 5 时会做一次 cross-attention。它以残基状态为 query，以相应原子状态为键与值，共四个头。输出经残差与 LayerNorm 加回残基状态。直观上，一个残基可以从整个口袋的原子表示中，读取与当前 query 最相关的信息。〔<a class="evidence-link" href="#E05">E05</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
+<p>最后，atom 与残基输出沿 token 维拼接，而不是池化成一个向量。对 batch 做补位之后，蛋白记忆的形状可写为 <code>[B,Nₐ,max+Nᵣ,max,256]</code>。相应的 mask 告诉 decoder 哪些节点只是补位。这样，每个生成出来的 token 都可以直接 attention 到不同的原子或残基位置。〔<a class="evidence-link" href="#E16">E16</a>〕</p>
 </section>
 <section id="property-and-smiles">
 <h3>5.4 性质条件如何进入自回归序列</h3>
-<p>SMILES token 先查表变成 <code>[B,t,256]</code>，再加入 sinusoidal position encoding。m 个 property 值并不是 m 个独立 token。整个向量通过一个 <code>m→256</code> 的 linear layer，变成单个 <code>[B,1,256]</code> token。这个 token 再拼到 SMILES 前缀前面。因此模型能读到联合条件，却无法从结构上保证每个性质彼此独立。〔<a class="evidence-link" href="#E06">E06</a>、<a class="evidence-link" href="#E17">E17</a>〕</p>
-<p>每个 decoder block 先做 causal masked self-attention，使位置 t 看不到未来的 SMILES。接着，它以当前分子 states 为 query、protein memory 为 key/value 做 cross-attention。最后通过 feed-forward。一层 projection 把 256 维映射到 112 个 vocabulary logits。训练目标是：</p>
+<p>SMILES token 先查表变成 <code>[B,t,256]</code>，再加入正弦位置编码。m 个 property 值并不是 m 个独立 token。整个向量通过一个 <code>m→256</code> 的线性层，变成单个 <code>[B,1,256]</code> token。这个 token 再拼到 SMILES 前缀前面。因此模型能读到联合条件，却无法从结构上保证每个性质彼此独立。〔<a class="evidence-link" href="#E06">E06</a>、<a class="evidence-link" href="#E17">E17</a>〕</p>
+<p>每个解码器块先做因果掩码自注意力，使位置 t 看不到未来的 SMILES。接着，它以当前分子 states 为 query、蛋白记忆为键与值做 cross-attention。最后通过 feed-forward。一层 projection 把 256 维映射到 112 个词表 logits。训练目标是：</p>
 <pre><code>L = − Σₜ log P(xₜ | property, x&lt;t, atom graph, residue graph)</code></pre>
-<p>这条公式准确表达了模型学到的对象：给定训练分布里的口袋、条件和已有前缀，下一个 SMILES token 的概率。它没有直接优化实验 binding affinity、合成路线、细胞活性或毒性。〔<a class="evidence-link" href="#E06">E06</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
+<p>这条公式准确表达了模型学到的对象：给定训练分布里的口袋、条件和已有前缀，下一个 SMILES token 的概率。它没有直接优化实验结合亲和力、合成路线、细胞活性或毒性。〔<a class="evidence-link" href="#E06">E06</a>、<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E16">E16</a>〕</p>
 </section>
 <section id="generation">
 <h3>5.5 从概率分布到候选分子</h3>
-<p>发布的生成入口对一个 pocket 使用 20 beams、length penalty 0.7，遇到 <code>$</code> 结束。当前 <code>topk=1</code>，因此每次只写出一条最高分的 SMILES。配置里的 <code>[1,1,1]</code> 表示请求 Vina/QED/SA 三个二值条件都为真。VQSLT 则可以追加连续值，例如 logP=2、TPSA=80。〔<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E17">E17</a>〕</p>
-<aside class="evidence-boundary" id="B05"><p><strong>证据边界：</strong> 论文主比较称每个测试蛋白生成 top-10 molecules。公开的 <code>gen.py</code> 却固定返回 top-1。仓库里也没有论文表 1–3 用到的批量 generation、去重、无效 SMILES 处理、docking 汇总与统计检验入口。仓库含一个 QVina utility，但无法证明它就是论文表格的执行路径。〔<a class="evidence-link" href="#E21">E21</a>〕</p></aside>
+<p>发布的生成入口对一个 pocket 使用 20 beams、长度惩罚 0.7，遇到 <code>$</code> 结束。当前 <code>topk=1</code>，因此每次只写出一条最高分的 SMILES。配置里的 <code>[1,1,1]</code> 表示请求 Vina/QED/SA 三个二值条件都为真。VQSLT 则可以追加连续值，例如 logP=2、TPSA=80。〔<a class="evidence-link" href="#E14">E14</a>、<a class="evidence-link" href="#E17">E17</a>〕</p>
+<aside class="evidence-boundary" id="B05"><p><strong>证据边界：</strong> 论文主比较称每个测试蛋白生成 top-10 molecules。公开的 <code>gen.py</code> 却固定返回 top-1。仓库里也没有论文表 1–3 用到的批量 generation、去重、无效 SMILES 处理、docking 汇总与统计检验入口。仓库含一个 QVina 工具，但无法证明它就是论文表格的执行路径。〔<a class="evidence-link" href="#E21">E21</a>〕</p></aside>
 </section>
 </section>
 
@@ -606,66 +606,66 @@
 <section id="exp-main" class="experiment-card">
 <h3>6.1 相比已有方法，CProMG 的生成集合是否更符合选定指标</h3>
   <dl>
-    <dt>作者要回答什么</dt><dd>双视图加性质条件的生成，是否在三类指标上同时优于面向蛋白的 baselines。三类指标是 binding proxy、drug-likeness proxy 与 diversity。proxy 指代理指标，即用计算打分替代真实测量。</dd>
-    <dt>实验类型</dt><dd>主实验 / 基线对比（baseline comparison）。</dd>
+    <dt>作者要回答什么</dt><dd>双视图加性质条件的生成，是否在三类指标上同时优于面向蛋白的 baselines。三类指标是结合代理指标、类药性代理指标与 diversity。proxy 指代理指标，即用计算打分替代真实测量。</dd>
+    <dt>实验类型</dt><dd>主实验 / 基线对比。</dd>
     <dt>实验怎样设计</dt><dd>把 CProMG-VQS 与以下方法的生成集合放进同一张主表横向比较。它们是 LiGANN、3D-SBDD、Pocket2Mol、Transformer、AlphaDrug 以及 DUD-E decoys。〔<a class="evidence-link" href="#E08">E08</a>〕</dd>
-    <dt>改变了什么，控制了什么</dt><dd>被操纵的变量只有生成方法本身。100 个 test pocket 对所有方法一致。每个蛋白取 top-10 molecules 的集合均值协议也一致。计算指标所用的 oracle 同样一致。但 conditioning 没有被控制。baselines 都没有等价的多属性条件接口。而 CProMG-VQS 恰好就在 VS、QED、SA 三个量上被条件化。〔<a class="evidence-link" href="#E08">E08</a>〕</dd>
-    <dt>数据与指标</dt><dd>CrossDocked2020 派生 split 的 100 个测试口袋，每个口袋取 top-10 生成分子。指标为 VS、QED、SA、HAR 与 fingerprint-based Diversity。方向上，VS 越低越好，QED/Diversity/HAR 越高越好，SA 越低越好。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E08">E08</a>〕</dd>
+    <dt>改变了什么，控制了什么</dt><dd>被操纵的变量只有生成方法本身。100 个测试口袋对所有方法一致。每个蛋白取 top-10 molecules 的集合均值协议也一致。计算指标所用的 oracle 同样一致。但 conditioning 没有被控制。baselines 都没有等价的多属性条件接口。而 CProMG-VQS 恰好就在 VS、QED、SA 三个量上被条件化。〔<a class="evidence-link" href="#E08">E08</a>〕</dd>
+    <dt>数据与指标</dt><dd>CrossDocked2020 派生 split 的 100 个测试口袋，每个口袋取 top-10 生成分子。指标为 VS、QED、SA、HAR 与基于指纹的 Diversity。方向上，VS 越低越好，QED/Diversity/HAR 越高越好，SA 越低越好。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E08">E08</a>〕</dd>
     <dt>实际观察到什么</dt><dd>CProMG 的 VS −7.644、QED 0.741、HAR 55.5%、Diversity 0.757 均为表内最佳。SA 2.884 优于 Reference、LiGANN、3D-SBDD、Pocket2Mol 和 decoys。但 SA 不如 Transformer 的 2.756 与 AlphaDrug 的 2.620。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E29">E29</a>〕</dd>
     <dt>作者据此主张什么</dt><dd>CProMG 整体优于最近的 protein-oriented generation 方法。</dd>
-    <dt>证据边界</dt><dd class="evidence-boundary" id="B06">论文文字称“over all metrics”，但表中 CProMG 并非最低 SA。基线没有同等的性质条件接口。所以主表同时比较了两样东西：model architecture 与 controllable capability。严重性在第 7 节判断。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E29">E29</a>〕</dd>
+    <dt>证据边界</dt><dd class="evidence-boundary" id="B06">论文文字称“over all metrics”，但表中 CProMG 并非最低 SA。基线没有同等的性质条件接口。所以主表同时比较了两样东西：模型架构与可控能力。严重性在第 7 节判断。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E29">E29</a>〕</dd>
   </dl>
 </section>
 <section id="exp-control" class="experiment-card">
 <h3>6.2 条件 token 是否真的移动生成分布</h3>
   <dl>
     <dt>作者要回答什么</dt><dd>Vina、QED、SA、logP 与 TPSA 这些条件，能否按预期控制输出。还是说，模型只是自然复刻了训练分布。</dd>
-    <dt>实验类型</dt><dd>对照：渐进加条件（progressive conditioning）。</dd>
+    <dt>实验类型</dt><dd>对照：渐进加条件。</dd>
     <dt>实验怎样设计</dt><dd>从无条件的 CProMG-w/oC 开始，先加入 Vina 条件（V），再加入 QED/SA 条件（VQS）。最后以 logP∈{2,4} 与 TPSA∈{40,80} 的组合形成四个 VQSLT setting。〔<a class="evidence-link" href="#E09">E09</a>〕</dd>
-    <dt>改变了什么，控制了什么</dt><dd>被操纵的是 property prefix 里包含哪些性质，以及它们的目标取值。双视图 pocket encoder、decoder 结构、测试口袋与生成协议在各 setting 之间保持不变。论文没有报告同一 setting 下的多随机种子重复。因此条件之外的训练与采样波动并未被控制。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E14">E14</a>〕</dd>
+    <dt>改变了什么，控制了什么</dt><dd>被操纵的是性质前缀里包含哪些性质，以及它们的目标取值。双视图口袋编码器、decoder 结构、测试口袋与生成协议在各 setting 之间保持不变。论文没有报告同一 setting 下的多随机种子重复。因此条件之外的训练与采样波动并未被控制。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E14">E14</a>〕</dd>
     <dt>数据与指标</dt><dd>同一 CrossDocked2020 派生 split 的 100 个测试口袋。指标为 VS、QED、SA 的集合均值。另外还有 QED≥0.6 与 SA≤4.0 的阈值通过率，以及 logP、TPSA 的输出分布形状。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E09">E09</a>〕</dd>
     <dt>实际观察到什么</dt><dd>w/oC 的 VS/QED/SA 为 −7.384/0.488/3.500。V 使 VS 降到 −7.849，却令 QED/SA 变为 0.452/3.655。VQS 得到 −7.644/0.741/2.884。作者报告，VQS 输出中约 99.18% 满足 QED≥0.6，99.19% 满足 SA≤4。连续条件的分布峰值也靠近指定的 logP/TPSA。〔<a class="evidence-link" href="#E09">E09</a>〕</dd>
     <dt>作者据此主张什么</dt><dd>条件前缀可以逐步控制多个性质，并显露性质间的 trade-off。</dd>
     <dt>证据边界</dt><dd class="evidence-boundary" id="B07">三个二值条件由 AutoDock Vina 与 RDKit/Ertl 函数构造。本节的控制效果又由同一批函数评价。论文未报告换用另一套 oracle 之后，这些条件是否仍按预期移动输出。严重性在第 7 节判断。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E28">E28</a>〕</dd>
   </dl>
 </section>
-<aside class="evidence-boundary" id="B11"><p><strong>证据边界：</strong> 被演示的控制只覆盖两类取值。一类是训练分布范围内四个手选的 logP/TPSA setting，另一类是三个二值阈值。论文未报告训练范围之外的未见条件。它也没有给出连续值上的精细插值误差和 per-target control success。可得的只有集合层面的通过率与分布峰值。严重性在第 7 节判断。〔<a class="evidence-link" href="#E09">E09</a>〕</p></aside>
+<aside class="evidence-boundary" id="B11"><p><strong>证据边界：</strong> 被演示的控制只覆盖两类取值。一类是训练分布范围内四个手选的 logP/TPSA setting，另一类是三个二值阈值。论文未报告训练范围之外的未见条件。它也没有给出连续值上的精细插值误差和逐靶点控制成功。可得的只有集合层面的通过率与分布峰值。严重性在第 7 节判断。〔<a class="evidence-link" href="#E09">E09</a>〕</p></aside>
 <section id="exp-ablation" class="experiment-card">
-<h3>6.3 atom view、residue view、LPE 与 binding condition 是否各有贡献</h3>
+<h3>6.3 原子视图、残基视图、LPE 与结合条件是否各有贡献</h3>
   <dl>
     <dt>作者要回答什么</dt><dd>主模型的四个核心选择，是否与更好的 Vina/HAR 有关。</dd>
-    <dt>实验类型</dt><dd>消融（ablation study）。</dd>
-    <dt>实验怎样设计</dt><dd>以只控制 binding 的 CProMG-V 为参照系统。再分别移除 amino-acid view、atom view、Laplacian PE 或全部条件，得到四个变体。〔<a class="evidence-link" href="#E10">E10</a>〕</dd>
+    <dt>实验类型</dt><dd>消融（消融实验）。</dd>
+    <dt>实验怎样设计</dt><dd>以只控制 binding 的 CProMG-V 为参照系统。再分别移除氨基酸视图、原子视图、Laplacian PE 或全部条件，得到四个变体。〔<a class="evidence-link" href="#E10">E10</a>〕</dd>
     <dt>改变了什么，控制了什么</dt><dd>每次只移除一个组件，其余架构、训练数据与评价协议保持不变。参照系统统一为 CProMG-V。但移除组件同时改变了两件事：输入信息和参数量。论文没有用参数匹配的对照把两者分开。〔<a class="evidence-link" href="#E10">E10</a>〕</dd>
     <dt>数据与指标</dt><dd>同一批 100 个测试口袋上的 CProMG-V 及其四个变体。表 3 只报告 Vina Score 与 HAR 两列。它没有涉及 QED、SA 或 diversity。〔<a class="evidence-link" href="#E10">E10</a>〕</dd>
     <dt>实际观察到什么</dt><dd>完整的 V 在 VS/HAR 上是 −7.849/56.8%。w/o AA 为 −7.593/50.6%，w/o Atom 为 −7.441/49.7%。w/o LPE 为 −7.729/53.2%，w/o C 为 −7.384/48.8%。〔<a class="evidence-link" href="#E10">E10</a>〕</dd>
-    <dt>作者据此主张什么</dt><dd>两个视图、LPE 和 binding condition 都不可或缺。</dd>
+    <dt>作者据此主张什么</dt><dd>两个视图、LPE 和结合条件都不可或缺。</dd>
     <dt>证据边界</dt><dd class="evidence-boundary" id="B08">消融同时改变了输入信息和参数量。结果直接支持的是一句窄得多的话：删除组件会降低同一 Vina oracle 下的分数。它不能单独证明 cross-attention 捕获了真实的物理相互作用。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E22">E22</a>〕</dd>
   </dl>
 </section>
 <section id="exp-case" class="experiment-card">
 <h3>6.4 PAK4 个案是否展示了靶点相关结构</h3>
   <dl>
-    <dt>作者要回答什么</dt><dd>高分候选是否既不同于 reference ligand，又能在 docking pose 中形成看似合理的口袋接触。</dd>
-    <dt>实验类型</dt><dd>案例研究（case study）：选例展示。</dd>
-    <dt>实验怎样设计</dt><dd>选择 test set 里的 PDB 5I0B（PAK4）。再从 CProMG-VQS 的生成结果中按 VS 取 top-5 候选。然后逐个做性质与 docking pose 的定性检视。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E27">E27</a>〕</dd>
-    <dt>改变了什么，控制了什么</dt><dd>这里没有被操纵的变量，也没有对照组。靶点、模型与筛选准则被固定为 5I0B、CProMG-VQS 与同一个 docking score。论文没有并列 baseline 生成物、随机分子或 decoys。它也没有第二个靶点，用来检验个案是否可复制。〔<a class="evidence-link" href="#E11">E11</a>〕</dd>
-    <dt>数据与指标</dt><dd>单一测试靶点 5I0B（PAK4–KY-04045 复合物）的口袋及其 reference ligand。指标为 top-5 候选的 QED、SA、logP、TPSA。另有与 reference 的 Tanimoto similarity，这是基于分子指纹的相似度，越接近 1 越像。还有 docking pose 中的 polar contacts，即极性接触。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E27">E27</a>〕</dd>
-    <dt>实际观察到什么</dt><dd>五个候选平均 SA 2.827、QED 0.789。它们与 reference 的 Tanimoto similarity 为 0.221–0.263。论文称候选至少保留 ASP-458 或 LEU-398 之一的 polar contact。此外还出现了其他 residue contacts。〔<a class="evidence-link" href="#E11">E11</a>〕</dd>
+    <dt>作者要回答什么</dt><dd>高分候选是否既不同于参照配体，又能在对接构象中形成看似合理的口袋接触。</dd>
+    <dt>实验类型</dt><dd>案例研究：选例展示。</dd>
+    <dt>实验怎样设计</dt><dd>选择测试集里的 PDB 5I0B（PAK4）。再从 CProMG-VQS 的生成结果中按 VS 取 top-5 候选。然后逐个做性质与对接构象的定性检视。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E27">E27</a>〕</dd>
+    <dt>改变了什么，控制了什么</dt><dd>这里没有被操纵的变量，也没有对照组。靶点、模型与筛选准则被固定为 5I0B、CProMG-VQS 与同一个对接打分。论文没有并列 baseline 生成物、随机分子或 decoys。它也没有第二个靶点，用来检验个案是否可复制。〔<a class="evidence-link" href="#E11">E11</a>〕</dd>
+    <dt>数据与指标</dt><dd>单一测试靶点 5I0B（PAK4–KY-04045 复合物）的口袋及其参照配体。指标为 top-5 候选的 QED、SA、logP、TPSA。另有与 reference 的 Tanimoto 相似度，这是基于分子指纹的相似度，越接近 1 越像。还有对接构象中的极性接触，即极性接触。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E27">E27</a>〕</dd>
+    <dt>实际观察到什么</dt><dd>五个候选平均 SA 2.827、QED 0.789。它们与 reference 的 Tanimoto 相似度为 0.221–0.263。论文称候选至少保留 ASP-458 或 LEU-398 之一的极性接触。此外还出现了其他残基接触。〔<a class="evidence-link" href="#E11">E11</a>〕</dd>
     <dt>作者据此主张什么</dt><dd>CProMG 能提出新颖、具有期望性质且面向 PAK4 的候选。</dd>
-    <dt>证据边界</dt><dd class="evidence-boundary" id="B09">5I0B 是 3.09 Å 的 PAK4–KY-04045 晶体结构。PDB 记录的是 reference ligand 的实验结构。它不是 CProMG 候选的实验复合物。top-5 是按同一 docking score 选出的个案，不能代表生成总体。这批候选也没有合成、binding assay 或细胞实验。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E27">E27</a>〕</dd>
+    <dt>证据边界</dt><dd class="evidence-boundary" id="B09">5I0B 是 3.09 Å 的 PAK4–KY-04045 晶体结构。PDB 记录的是参照配体的实验结构。它不是 CProMG 候选的实验复合物。top-5 是按同一对接打分选出的个案，不能代表生成总体。这批候选也没有合成、结合实验或细胞实验。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E27">E27</a>〕</dd>
   </dl>
 </section>
 <section id="exp-repro" class="experiment-card">
 <h3>6.5 论文是否提供了独立外部验证</h3>
   <dl>
     <dt>作者要回答什么</dt><dd>论文没有设置与训练/evaluation oracle 独立的 wet-lab 或实验 affinity 验证。</dd>
-    <dt>实验类型</dt><dd>外部验证（external validation）：本文缺失。</dd>
+    <dt>实验类型</dt><dd>外部验证：本文缺失。</dd>
     <dt>实验怎样设计</dt><dd>这不是论文中的一项实验，而是对其评价设置的清点。做法是逐一核对表 1–3、PAK4 个案与 GitHub/Zenodo 发布物。要看的是有没有任何一处读数，独立于训练标签所用的 oracle。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E26">E26</a>〕</dd>
-    <dt>改变了什么，控制了什么</dt><dd>论文在这一维度上既没有操纵也没有控制。binding 条件、模型选择与最终评价共用同一套 AutoDock Vina 与 RDKit/Ertl 函数。没有第二套 scoring protocol、matched decoys 或实验测量作为独立对照。〔<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E28">E28</a>〕</dd>
-    <dt>数据与指标</dt><dd>核查范围覆盖论文报告的全部结果与公开发布物。可得读数只有 VS、HAR、QED、SA、logP、TPSA、diversity 与 Tanimoto similarity。它们全是计算指标。没有 Kd/Ki/IC50 或酶活数据。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E26">E26</a>〕</dd>
-    <dt>实际观察到什么</dt><dd>所有中心结果来自四类计算读数。它们是 AutoDock Vina 与 RDKit 的 QED/SA/logP/TPSA。还有 fingerprint diversity 与 selected docking poses。Zenodo 发布了模型和处理后的数据，但不包含实验测量。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E23">E23</a>、<a class="evidence-link" href="#E24">E24</a>、<a class="evidence-link" href="#E26">E26</a>〕</dd>
-    <dt>作者据此主张什么</dt><dd>论文仍以这些计算读数主张一件事：CProMG 能面向目标蛋白生成 high binding affinity 且 drug-like 的分子。它并未把 external validation 的缺位，写成对结论范围的限制。〔<a class="evidence-link" href="#E01">E01</a>、<a class="evidence-link" href="#E08">E08</a>〕</dd>
+    <dt>改变了什么，控制了什么</dt><dd>论文在这一维度上既没有操纵也没有控制。binding 条件、模型选择与最终评价共用同一套 AutoDock Vina 与 RDKit/Ertl 函数。没有第二套打分流程、匹配的 decoys 或实验测量作为独立对照。〔<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E28">E28</a>〕</dd>
+    <dt>数据与指标</dt><dd>核查范围覆盖论文报告的全部结果与公开发布物。可得读数只有 VS、HAR、QED、SA、logP、TPSA、diversity 与 Tanimoto 相似度。它们全是计算指标。没有 Kd/Ki/IC50 或酶活数据。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E26">E26</a>〕</dd>
+    <dt>实际观察到什么</dt><dd>所有中心结果来自四类计算读数。它们是 AutoDock Vina 与 RDKit 的 QED/SA/logP/TPSA。还有指纹多样性与选出的对接构象。Zenodo 发布了模型和处理后的数据，但不包含实验测量。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E23">E23</a>、<a class="evidence-link" href="#E24">E24</a>、<a class="evidence-link" href="#E26">E26</a>〕</dd>
+    <dt>作者据此主张什么</dt><dd>论文仍以这些计算读数主张一件事：CProMG 能面向目标蛋白生成高结合亲和力且 drug-like 的分子。它并未把外部验证的缺位，写成对结论范围的限制。〔<a class="evidence-link" href="#E01">E01</a>、<a class="evidence-link" href="#E08">E08</a>〕</dd>
     <dt>证据边界</dt><dd class="evidence-boundary" id="B10">这不妨碍把这项工作评价为一种计算生成方法。它却决定了论文不能直接声称：候选真实高亲和、易合成或可作为药物。</dd>
   </dl>
 </section>
@@ -677,39 +677,39 @@
 <p class="chapter-intro">从这里切换到审稿人视角，按中心结论、泛化与复现依次判断。</p>
 <p>前六节按照作者思路解释了 CProMG。下面不再替作者展开设计动机。这里要检查每个中心主张是否排除了更简单的解释。也要明确，问题会让结论降到哪一级。</p>
 <section id="review-oracle" class="review-card">
-<h4>审查议题一：更低 Vina Score 能否等同于更高真实 binding affinity</h4>
+<h4>审查议题一：更低 Vina Score 能否等同于更高真实结合亲和力</h4>
   <dl>
     <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B07">B07</a>、<a class="boundary-link" href="#B10">B10</a></dd>
-    <dt>作者主张</dt><dd>CProMG 生成对目标蛋白具有 high-binding affinity 的分子。〔<a class="evidence-link" href="#E01">E01</a>、<a class="evidence-link" href="#E08">E08</a>〕</dd>
+    <dt>作者主张</dt><dd>CProMG 生成对目标蛋白具有高结合亲和力的分子。〔<a class="evidence-link" href="#E01">E01</a>、<a class="evidence-link" href="#E08">E08</a>〕</dd>
     <dt>支持证据</dt><dd>CProMG-VQS 的平均 VS 与 HAR 优于表内 baselines。Vina condition 和相关 ablation 也按预期改变了 VS。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E10">E10</a>〕</dd>
-    <dt>反证或替代解释</dt><dd>训练条件与评价都来自 AutoDock Vina 的阈值和得分。Vina 是一个经验 scoring function，即经验打分函数。它给出的是对 pose 与 predicted free energy 的近似。它不是实验测得的 Kd/Ki/IC50。模型因此可能学会并利用这个 oracle 的偏好。〔<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E28">E28</a>〕</dd>
-    <dt>证据缺少什么</dt><dd>论文没有给出任何一个独立于 AutoDock Vina 的 binding 读数。VS 与 HAR 由同一个 scoring function 定义。没有第二套 docking/scoring protocol 对同一批生成分子做交叉核对。也没有一条 Kd/Ki/IC50 或酶活测量。Zenodo 发布物同样只有 checkpoints 与处理后的数据集，不含任何实验 affinity。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E26">E26</a>、<a class="evidence-link" href="#E28">E28</a>〕</dd>
+    <dt>反证或替代解释</dt><dd>训练条件与评价都来自 AutoDock Vina 的阈值和得分。Vina 是一个经验打分函数，即经验打分函数。它给出的是对 pose 与预测自由能的近似。它不是实验测得的 Kd/Ki/IC50。模型因此可能学会并利用这个 oracle 的偏好。〔<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E28">E28</a>〕</dd>
+    <dt>证据缺少什么</dt><dd>论文没有给出任何一个独立于 AutoDock Vina 的 binding 读数。VS 与 HAR 由同一个打分函数定义。没有第二套对接与打分流程对同一批生成分子做交叉核对。也没有一条 Kd/Ki/IC50 或酶活测量。Zenodo 发布物同样只有 checkpoints 与处理后的数据集，不含任何实验 affinity。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E26">E26</a>、<a class="evidence-link" href="#E28">E28</a>〕</dd>
     <dt>对中心结论的影响</dt><dd>收窄范围——支持的结论应收窄为一句话：在 AutoDock Vina 评价体系中生成更高分的候选。它不能提升为真实的高亲和结合。中心计算结论保留，生物物理解释被拒绝。</dd>
-    <dt>最小解决实验</dt><dd>先用未参与训练与筛选的 docking/scoring protocol 复核。再对预注册候选做 SPR、ITC 或酶活实验。同时测试 matched decoys 与已知 actives。</dd>
+    <dt>最小解决实验</dt><dd>先用未参与训练与筛选的对接与打分流程复核。再对预注册候选做 SPR、ITC 或酶活实验。同时测试匹配的 decoys 与已知活性分子。</dd>
   </dl>
 </section>
 <section id="review-properties" class="review-card">
 <h4>审查议题二：QED 与 SA 是否证明“drug-like 且易合成”</h4>
   <dl>
     <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B09">B09</a>、<a class="boundary-link" href="#B10">B10</a></dd>
-    <dt>作者主张</dt><dd>条件控制生成 desired drug-like properties，case-study molecules 容易合成。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E11">E11</a>〕</dd>
+    <dt>作者主张</dt><dd>条件控制生成目标类药性质，案例分子容易合成。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E11">E11</a>〕</dd>
     <dt>支持证据</dt><dd>QED/SA 条件显著移动了输出分布。VQS 中绝大多数输出跨过了作者设的阈值。连续 logP/TPSA 的峰值也接近期望。〔<a class="evidence-link" href="#E09">E09</a>〕</dd>
-    <dt>反证或替代解释</dt><dd>QED 是基于已知药物属性分布的 desirability ranking，即合意度排序。SA score 由 fragment frequency 与 complexity penalty 估算。SA 的原论文明确说，关键开发决策不能用它替代完整的 synthesis-path 方法。二者都不是实验测得的性质。〔<a class="evidence-link" href="#E23">E23</a>、<a class="evidence-link" href="#E24">E24</a>〕</dd>
+    <dt>反证或替代解释</dt><dd>QED 是基于已知药物属性分布的综合优度排序，即合意度排序。SA score 由片段频率与复杂度惩罚估算。SA 的原论文明确说，关键开发决策不能用它替代完整的 synthesis-path 方法。二者都不是实验测得的性质。〔<a class="evidence-link" href="#E23">E23</a>、<a class="evidence-link" href="#E24">E24</a>〕</dd>
     <dt>证据缺少什么</dt><dd>缺的是把这两个 proxy 锚回真实结果的任何一个数据点。全文没有一个生成分子拥有实测理化性质或已完成的合成记录。99.18%/99.19% 的阈值通过率也从未与任何非 RDKit 的可合成性评估对齐。PAK4 个案报告的 QED 0.789 与 SA 2.827，仍全部出自同一套计算函数。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E24">E24</a>〕</dd>
-    <dt>对中心结论的影响</dt><dd>收窄范围——“可控制 RDKit/Ertl proxies”得到支持。“已证明 drug-like、可合成”则是过强表述。case study 只能产生待检验的候选。</dd>
-    <dt>最小解决实验</dt><dd>先做 retrosynthesis planning 与 medicinal-chemist blinded review。再实际合成代表性候选，并记录 yield、步骤数和失败案例。</dd>
+    <dt>对中心结论的影响</dt><dd>收窄范围——“可控制 RDKit/Ertl 代理指标”得到支持。“已证明 drug-like、可合成”则是过强表述。案例研究只能产生待检验的候选。</dd>
+    <dt>最小解决实验</dt><dd>先做逆合成路线规划与药化专家盲评。再实际合成代表性候选，并记录得到、步骤数和失败案例。</dd>
   </dl>
 </section>
 <section id="review-generalization" class="review-card">
-<h4>审查议题三：30% protein sequence split 是否证明新靶点泛化</h4>
+<h4>审查议题三：30% protein 按序列划分是否证明新靶点泛化</h4>
   <dl>
     <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B02">B02</a></dd>
-    <dt>作者主张</dt><dd>test proteins 与训练蛋白显著不同，因此结果反映对新蛋白的 generation ability。〔<a class="evidence-link" href="#E03">E03</a>〕</dd>
-    <dt>支持证据</dt><dd>论文报告了 MMseqs2 的 30% identity clustering。发布 split 的数量与 train/valid/test 规模一致。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E13">E13</a>〕</dd>
-    <dt>反证或替代解释</dt><dd>这个 split 没有控制 ligand scaffold，也没有控制 pocket 的结构相似度。CrossDocked2020 的原作者还指出，target-based split 可能保留 train/test 之间的 ligand similarity。〔<a class="evidence-link" href="#E13">E13</a>、<a class="evidence-link" href="#E25">E25</a>〕</dd>
-    <dt>证据缺少什么</dt><dd>支撑这一主张所需的 split provenance 与相似度证据，都不在公开材料里。MMseqs2 clustering script 没有发布。30% identity 的聚类报告没有发布。论文所称约 18,000 个 test reference pairs 的清单也没有发布。报告中同样没有 train/test 之间 ligand scaffold 重叠率或 pocket 结构相似度的任何一个数值。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E13">E13</a>、<a class="evidence-link" href="#E21">E21</a>〕</dd>
-    <dt>对中心结论的影响</dt><dd>收窄范围——可以称它为作者声明的 protein-sequence cluster split。不能称它已充分证明跨 chemotype 或跨 pocket family 的泛化。也不能称它证明了 prospective target generalization。</dd>
-    <dt>最小解决实验</dt><dd>发布 cluster provenance。同时施加 protein family/pocket structure 与 Bemis–Murcko scaffold 两层分离。再在时间切分或完全外部的靶点上盲测。</dd>
+    <dt>作者主张</dt><dd>测试蛋白与训练蛋白显著不同，因此结果反映对新蛋白的生成能力。〔<a class="evidence-link" href="#E03">E03</a>〕</dd>
+    <dt>支持证据</dt><dd>论文报告了 MMseqs2 的 30% 同一性聚类。发布 split 的数量与训练/验证/测试规模一致。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E13">E13</a>〕</dd>
+    <dt>反证或替代解释</dt><dd>这个 split 没有控制配体骨架，也没有控制 pocket 的结构相似度。CrossDocked2020 的原作者还指出，按靶点划分可能保留训练/测试之间的配体相似度。〔<a class="evidence-link" href="#E13">E13</a>、<a class="evidence-link" href="#E25">E25</a>〕</dd>
+    <dt>证据缺少什么</dt><dd>支撑这一主张所需的划分来源与相似度证据，都不在公开材料里。MMseqs2 聚类脚本没有发布。30% identity 的聚类报告没有发布。论文所称约 18,000 个测试参照对的清单也没有发布。报告中同样没有训练/测试之间配体骨架重叠率或 pocket 结构相似度的任何一个数值。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E13">E13</a>、<a class="evidence-link" href="#E21">E21</a>〕</dd>
+    <dt>对中心结论的影响</dt><dd>收窄范围——可以称它为作者声明的蛋白序列聚类划分。不能称它已充分证明跨化学型或跨口袋家族的泛化。也不能称它证明了前瞻性靶点泛化。</dd>
+    <dt>最小解决实验</dt><dd>发布聚类来源。同时施加蛋白家族与口袋结构与 Bemis–Murcko 骨架两层分离。再在时间切分或完全外部的靶点上盲测。</dd>
   </dl>
 </section>
 <section id="review-pocket" class="review-card">
@@ -717,35 +717,35 @@
   <dl>
     <dt>处理的证据边界</dt><dd>无</dd>
     <dt>作者主张</dt><dd>给定新蛋白即可生成面向该蛋白的分子。〔<a class="evidence-link" href="#E02">E02</a>〕</dd>
-    <dt>支持证据</dt><dd>生成入口只需要 pocket PDB 与 property vector，不需要 reference ligand 的 SMILES。双视图确实编码了口袋的三维原子/残基信息。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E16">E16</a>、<a class="evidence-link" href="#E17">E17</a>〕</dd>
-    <dt>反证或替代解释</dt><dd>训练与测试文件是由已知 ligand 定义的 <code>pocket10</code>。代码不负责从整个蛋白里发现 binding site。若真实的新靶点没有可靠口袋或结构，任务前提就不成立。〔<a class="evidence-link" href="#E30">E30</a>〕</dd>
-    <dt>证据缺少什么</dt><dd>训练、测试与 README demo 用到的每一个口袋，都截自 holo 复合物中已知 ligand 的邻域。报告里没有一个口袋样例来自 apo 结构、预测结构或独立的 pocket detector。也没有任何一处量化过口袋定义误差对生成结果的影响。这类误差包括中心偏移、截取半径与残基组成差异。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E13">E13</a>、<a class="evidence-link" href="#E30">E30</a>〕</dd>
-    <dt>对中心结论的影响</dt><dd>收窄范围——“prepared-pocket-conditioned generation”成立。“任意新蛋白到候选分子”的范围则需要收窄。</dd>
-    <dt>最小解决实验</dt><dd>在 apo 结构、预测结构与独立 pocket detector 产生的口袋上评估。并把 pocket-selection error 纳入端到端结果。</dd>
+    <dt>支持证据</dt><dd>生成入口只需要 pocket PDB 与性质向量，不需要参照配体的 SMILES。双视图确实编码了口袋的三维原子/残基信息。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E16">E16</a>、<a class="evidence-link" href="#E17">E17</a>〕</dd>
+    <dt>反证或替代解释</dt><dd>训练与测试文件是由已知 ligand 定义的 <code>pocket10</code>。代码不负责从整个蛋白里发现结合位点。若真实的新靶点没有可靠口袋或结构，任务前提就不成立。〔<a class="evidence-link" href="#E30">E30</a>〕</dd>
+    <dt>证据缺少什么</dt><dd>训练、测试与 README 示例用到的每一个口袋，都截自 holo 复合物中已知 ligand 的邻域。报告里没有一个口袋样例来自 apo 结构、预测结构或独立的口袋识别工具。也没有任何一处量化过口袋定义误差对生成结果的影响。这类误差包括中心偏移、截取半径与残基组成差异。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E13">E13</a>、<a class="evidence-link" href="#E30">E30</a>〕</dd>
+    <dt>对中心结论的影响</dt><dd>收窄范围——“以预处理口袋为条件的生成”成立。“任意新蛋白到候选分子”的范围则需要收窄。</dd>
+    <dt>最小解决实验</dt><dd>在 apo 结构、预测结构与独立口袋识别工具产生的口袋上评估。并把选错口袋纳入端到端结果。</dd>
   </dl>
 </section>
 <section id="review-mechanism" class="review-card">
 <h4>审查议题五：cross-attention 是否捕获了关键物理相互作用</h4>
   <dl>
     <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B08">B08</a></dd>
-    <dt>作者主张</dt><dd>protein-interactive attention 计算的是 molecule tokens 与 residues/atoms 的 proximity。它以此捕获 crucial interactions。〔<a class="evidence-link" href="#E01">E01</a>、<a class="evidence-link" href="#E06">E06</a>〕</dd>
-    <dt>支持证据</dt><dd>decoder 的每个 SMILES position 都能读取 atom/residue memory。删除 atom view 或 residue view 会降低 VS/HAR。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E16">E16</a>〕</dd>
-    <dt>反证或替代解释</dt><dd>SMILES token 没有三维坐标。attention score 是 learned dot-product compatibility，不是物理距离。〔<a class="evidence-link" href="#E16">E16</a>〕</dd>
-    <dt>证据缺少什么</dt><dd>论文自始至终没有展示或量化任何一张 attention map。表 3 的消融只给出 VS 与 HAR 两列。它从未把 attention weight 与真实的 contact map 或 interaction energy 对齐。PAK4 个案报告的 polar contacts 也是 docking pose 的读数，而不是模型内部表示的证据。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E16">E16</a>〕</dd>
+    <dt>作者主张</dt><dd>蛋白交互注意力计算的是分子 token 与 residues/atoms 的邻近性。它以此捕获关键相互作用。〔<a class="evidence-link" href="#E01">E01</a>、<a class="evidence-link" href="#E06">E06</a>〕</dd>
+    <dt>支持证据</dt><dd>decoder 的每个 SMILES 位置都能读取原子与残基记忆。删除原子视图或残基视图会降低 VS/HAR。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E16">E16</a>〕</dd>
+    <dt>反证或替代解释</dt><dd>SMILES token 没有三维坐标。注意力分数是学到的点积匹配度，不是物理距离。〔<a class="evidence-link" href="#E16">E16</a>〕</dd>
+    <dt>证据缺少什么</dt><dd>论文自始至终没有展示或量化任何一张注意力图。表 3 的消融只给出 VS 与 HAR 两列。它从未把注意力权重与真实的接触图或相互作用能对齐。PAK4 个案报告的极性接触也是对接构象的读数，而不是模型内部表示的证据。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E16">E16</a>〕</dd>
     <dt>对中心结论的影响</dt><dd>削弱主张——证据支持“模型利用了两类口袋表示”。它不支持“attention 已解释真实接触机制”。这条机制性主张应降为可检验的假设。</dd>
-    <dt>最小解决实验</dt><dd>在未用于训练的 crystal complexes 上，把 attention 与三样东西做定量对齐。它们是原子 contact、pharmacophore 与 mutation sensitivity。同时进行 attention-randomization control。</dd>
+    <dt>最小解决实验</dt><dd>在未用于训练的晶体复合物上，把 attention 与三样东西做定量对齐。它们是原子 contact、药效团与突变敏感性。同时进行注意力随机化对照。</dd>
   </dl>
 </section>
 <section id="review-reproducibility" class="review-card">
 <h4>审查议题六：公开材料能否重建论文表格</h4>
   <dl>
     <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B01">B01</a>、<a class="boundary-link" href="#B04">B04</a>、<a class="boundary-link" href="#B05">B05</a></dd>
-    <dt>作者主张</dt><dd>code 与 data freely available。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E26">E26</a>〕</dd>
-    <dt>支持证据</dt><dd>GitHub 提供模型、train/gen 入口、配置与 split。Zenodo 提供两个 186.1 MB 的 pretrained checkpoints 和一个 6.7 GB dataset。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E13">E13</a>、<a class="evidence-link" href="#E26">E26</a>〕</dd>
-    <dt>反证或替代解释</dt><dd>VQS 配置的 50 iterations 无法触发 checkpoint 保存。Laplacian transform 调用已被 issue 复现为 TypeError。生成入口返回 top-1，而论文用的是 top-10。〔<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E19">E19</a>、<a class="evidence-link" href="#E21">E21</a>〕</dd>
-    <dt>证据缺少什么</dt><dd>公开材料里没有一条能把 checkpoint 接回论文数值的路径。Zenodo 的两个 checkpoint 未附训练日志、iteration 或 hash。因此无从说明哪一个产生了表 1–3。仓库也没有对应的 top-10 批量生成、validity/dedup、docking 汇总与统计检验入口。任何一个报告数值都因此无法被端到端重算。〔<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E21">E21</a>、<a class="evidence-link" href="#E26">E26</a>〕</dd>
-    <dt>对中心结论的影响</dt><dd>降低置信——架构能够审计，预训练模型也可以获取。但从 raw data 训练并重建表 1–3 的端到端 reproducibility 不成立。报告数值可以引用，不能称已由公开代码复现。</dd>
-    <dt>最小解决实验</dt><dd>修复并锁定 PyG API。发布真实的 VQS training config，以及 checkpoint 的 iteration 与 hash。发布完整的 generation/evaluation commands、validity filtering 与 docking protocol。再公开随机种子和逐目标的原始结果。</dd>
+    <dt>作者主张</dt><dd>code 与数据完全公开。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E26">E26</a>〕</dd>
+    <dt>支持证据</dt><dd>GitHub 提供模型、train/gen 入口、配置与 split。Zenodo 提供两个 186.1 MB 的预训练权重和一个 6.7 GB dataset。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E13">E13</a>、<a class="evidence-link" href="#E26">E26</a>〕</dd>
+    <dt>反证或替代解释</dt><dd>VQS 配置的 50 iterations 无法触发 checkpoint 保存。Laplacian 变换调用已被 issue 复现为 TypeError。生成入口返回 top-1，而论文用的是 top-10。〔<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E19">E19</a>、<a class="evidence-link" href="#E21">E21</a>〕</dd>
+    <dt>证据缺少什么</dt><dd>公开材料里没有一条能把 checkpoint 接回论文数值的路径。Zenodo 的两个 checkpoint 未附训练日志、iteration 或 hash。因此无从说明哪一个产生了表 1–3。仓库也没有对应的 top-10 批量生成、有效性与去重、docking 汇总与统计检验入口。任何一个报告数值都因此无法被端到端重算。〔<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E21">E21</a>、<a class="evidence-link" href="#E26">E26</a>〕</dd>
+    <dt>对中心结论的影响</dt><dd>降低置信——架构能够审计，预训练模型也可以获取。但从原始数据训练并重建表 1–3 的端到端可复现性不成立。报告数值可以引用，不能称已由公开代码复现。</dd>
+    <dt>最小解决实验</dt><dd>修复并锁定 PyG 接口。发布真实的 VQS training config，以及 checkpoint 的 iteration 与 hash。发布完整的生成与评测命令、有效性筛选与对接流程。再公开随机种子和逐目标的原始结果。</dd>
   </dl>
 </section>
 <section id="review-confound" class="review-card">
@@ -753,23 +753,23 @@
   <dl>
     <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B06">B06</a></dd>
     <dt>作者主张</dt><dd>表 1 的横向比较被用来支撑一个架构层面的判断。这个判断是：双视图口袋编码加条件式 decoder，使 CProMG 整体优于最近的 protein-oriented generation 方法。〔<a class="evidence-link" href="#E08">E08</a>〕</dd>
-    <dt>支持证据</dt><dd>在同一 100 个 test pocket、同一 top-10 集合均值协议下，CProMG-VQS 的四项指标均为表内最佳。它们是 VS −7.644、QED 0.741、HAR 55.5% 与 Diversity 0.757。SA 2.884 也优于 Reference、LiGANN、3D-SBDD、Pocket2Mol 与 DUD-E decoys。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E29">E29</a>〕</dd>
-    <dt>反证或替代解释</dt><dd>LiGANN、3D-SBDD、Pocket2Mol、Transformer、AlphaDrug 与 decoys 都没有等价的多属性条件接口。表 1 里没有任何一个能被要求“输出 VS ≤ −7.5、QED ≥ 0.6 且 SA ≤ 4.0”。而 CProMG-VQS 恰好就在这三个量上被条件化。VS、HAR、QED、SA 四列又由同一批计算 oracle 得到。因此表内差距可以来自“模型被告知了目标值”，而不必来自更好的 generator。论文自己的数据显示，这一份额并不小。去掉条件的 CProMG-w/oC 只有 VS −7.384、QED 0.488、SA 3.500。消融中 HAR 也从 CProMG-V 的 56.8% 落到 w/o C 的 48.8%。这说明主表里 QED 与 HAR 的相当一部分领先来自 property prefix，而非 encoder。但这些无条件数字只出现在 Table 2 与 Table 3。它们从未与 baselines 放在同一张表、同一协议下对齐。所以主表实际比较的是两样不对等的东西：“架构 + controllability”的整套 pipeline，与只有架构的 baselines。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E28">E28</a>〕</dd>
-    <dt>证据缺少什么</dt><dd>缺的正是这一个 matched-conditioning control。作者没有把 CProMG-w/oC 或 CProMG-V 按表 1 协议并入主表。也没有给任何 baseline 接上同样的条件接口。因此表 1 中没有任何一行，是在同样知道目标值的条件下产生的。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E10">E10</a>〕</dd>
-    <dt>对中心结论的影响</dt><dd>收窄范围——可以说“整套 conditioned pipeline 在作者的计算协议下比这些未加条件的方法更符合选定指标”。不能说“双视图口袋编码本身是更好的 generator”。后一子主张被削弱，应降为尚未分离的待检验假设。这个问题与议题一相互独立。即使换用与训练标签无关的 scoring function，只要 baselines 仍不能接收目标值，比较口径就仍然不对等。它与“SA 并非表内最低”这一事实叠加后，主表段落“over all metrics”的整体说服力进一步下降。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E29">E29</a>〕</dd>
-    <dt>最小解决实验</dt><dd>用与表 1 完全相同的 100 个 pocket、top-10 生成与 docking 协议，重跑 CProMG-w/oC 与 CProMG-V。再把它们并入主表。同时给 Transformer 与 AlphaDrug 接上同样的三值 property prefix，重训重测。或者对 3D-SBDD/Pocket2Mol 的输出，施加同等生成预算下的 property filtering。有两种结果会指向同一个结论。一是 CProMG-w/oC 相对 baselines 的 VS/QED/HAR 优势基本消失。二是加了条件的 baseline 追平 CProMG-VQS。出现其中任何一种，主表差距就应主要归因于 controllability 而非架构。</dd>
+    <dt>支持证据</dt><dd>在同一 100 个测试口袋、同一 top-10 集合均值协议下，CProMG-VQS 的四项指标均为表内最佳。它们是 VS −7.644、QED 0.741、HAR 55.5% 与 Diversity 0.757。SA 2.884 也优于 Reference、LiGANN、3D-SBDD、Pocket2Mol 与 DUD-E decoys。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E29">E29</a>〕</dd>
+    <dt>反证或替代解释</dt><dd>LiGANN、3D-SBDD、Pocket2Mol、Transformer、AlphaDrug 与 decoys 都没有等价的多属性条件接口。表 1 里没有任何一个能被要求“输出 VS ≤ −7.5、QED ≥ 0.6 且 SA ≤ 4.0”。而 CProMG-VQS 恰好就在这三个量上被条件化。VS、HAR、QED、SA 四列又由同一批计算 oracle 得到。因此表内差距可以来自“模型被告知了目标值”，而不必来自更好的 generator。论文自己的数据显示，这一份额并不小。去掉条件的 CProMG-w/oC 只有 VS −7.384、QED 0.488、SA 3.500。消融中 HAR 也从 CProMG-V 的 56.8% 落到 w/o C 的 48.8%。这说明主表里 QED 与 HAR 的相当一部分领先来自性质前缀，而非 encoder。但这些无条件数字只出现在 Table 2 与 Table 3。它们从未与 baselines 放在同一张表、同一协议下对齐。所以主表实际比较的是两样不对等的东西：“架构 + controll能力”的整套 pipeline，与只有架构的 baselines。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E28">E28</a>〕</dd>
+    <dt>证据缺少什么</dt><dd>缺的正是这一个等条件对照。作者没有把 CProMG-w/oC 或 CProMG-V 按表 1 协议并入主表。也没有给任何 baseline 接上同样的条件接口。因此表 1 中没有任何一行，是在同样知道目标值的条件下产生的。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E10">E10</a>〕</dd>
+    <dt>对中心结论的影响</dt><dd>收窄范围——可以说“整套加条件的整套流程在作者的计算协议下比这些未加条件的方法更符合选定指标”。不能说“双视图口袋编码本身是更好的 generator”。后一子主张被削弱，应降为尚未分离的待检验假设。这个问题与议题一相互独立。即使换用与训练标签无关的打分函数，只要 baselines 仍不能接收目标值，比较口径就仍然不对等。它与“SA 并非表内最低”这一事实叠加后，主表段落“over all metrics”的整体说服力进一步下降。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E29">E29</a>〕</dd>
+    <dt>最小解决实验</dt><dd>用与表 1 完全相同的 100 个 pocket、top-10 生成与 docking 协议，重跑 CProMG-w/oC 与 CProMG-V。再把它们并入主表。同时给 Transformer 与 AlphaDrug 接上同样的三值性质前缀，重训重测。或者对 3D-SBDD/Pocket2Mol 的输出，施加同等生成预算下的性质筛选。有两种结果会指向同一个结论。一是 CProMG-w/oC 相对 baselines 的 VS/QED/HAR 优势基本消失。二是加了条件的 baseline 追平 CProMG-VQS。出现其中任何一种，主表差距就应主要归因于 controll能力而非架构。</dd>
   </dl>
 </section>
 <section id="review-coverage" class="review-card">
 <h4>审查议题八：已演示的控制能否支撑四个 setting 之外的可控性主张</h4>
   <dl>
     <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B11">B11</a></dd>
-    <dt>作者主张</dt><dd>条件前缀让 CProMG 按用户指定的 binding 与 drug-like 性质可控生成。这就是论文所说的 controllable generation with desired properties。〔<a class="evidence-link" href="#E01">E01</a>、<a class="evidence-link" href="#E06">E06</a>、<a class="evidence-link" href="#E09">E09</a>〕</dd>
+    <dt>作者主张</dt><dd>条件前缀让 CProMG 按用户指定的 binding 与 drug-like 性质可控生成。这就是论文所说的按目标性质可控生成。〔<a class="evidence-link" href="#E01">E01</a>、<a class="evidence-link" href="#E06">E06</a>、<a class="evidence-link" href="#E09">E09</a>〕</dd>
     <dt>支持证据</dt><dd>逐步加条件确实移动了分布。VQS 输出约 99.18% 满足 QED ≥ 0.6，99.19% 满足 SA ≤ 4。四个 VQSLT setting 的 logP/TPSA 分布峰值也靠近指定值。〔<a class="evidence-link" href="#E09">E09</a>〕</dd>
     <dt>反证或替代解释</dt><dd>实际被检验的只有 logP∈{2,4}、TPSA∈{40,80} 四个点，加上三个二值阈值。它们全部落在训练分布的密集区。这与另一种解释一致：条件 token 只是把输出切换到训练集中已有的相应子群体。那就不必意味着模型学到了可外推的连续映射。集合层面的通过率与分布峰值也允许相当一部分口袋根本没被控制住，只要另一部分足以补偿。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E15">E15</a>〕</dd>
-    <dt>证据缺少什么</dt><dd>三类读数一个都没有。第一类是训练范围之外未见条件的响应，例如 logP 6 或 TPSA 140。第二类是连续值上 target 与 achieved 的偏差曲线。第三类是 per-target control success rate。论文只给出集合层面的通过率与分布图。单个口袋是否被控制住，因此无从查证。〔<a class="evidence-link" href="#E09">E09</a>〕</dd>
+    <dt>证据缺少什么</dt><dd>三类读数一个都没有。第一类是训练范围之外未见条件的响应，例如 logP 6 或 TPSA 140。第二类是连续值上 target 与达到的偏差曲线。第三类是逐靶点控制成功率。论文只给出集合层面的通过率与分布图。单个口袋是否被控制住，因此无从查证。〔<a class="evidence-link" href="#E09">E09</a>〕</dd>
     <dt>对中心结论的影响</dt><dd>收窄范围——可控性在被测的四个 setting 与三个阈值上成立。它不能提升为“任意指定值都能达到”的连续可控性。也不能声称它对每个靶点都生效。这一限定与议题一相互独立。即使换掉 oracle，被检验的条件区间仍然只有这些点。</dd>
-    <dt>最小解决实验</dt><dd>在训练分布内与分布外各取一组等间距目标值，扫描 logP/TPSA。报告 target-vs-achieved 偏差曲线、逐 target 的达成率与有效 SMILES 比例。并把分布外区间单独统计。</dd>
+    <dt>最小解决实验</dt><dd>在训练分布内与分布外各取一组等间距目标值，扫描 logP/TPSA。报告 target-vs-达到偏差曲线、逐 target 的达成率与有效 SMILES 比例。并把分布外区间单独统计。</dd>
   </dl>
 </section>
 <section id="graded-verdict">
@@ -777,15 +777,15 @@
 <div class="takeaway-grid">
 <article class="takeaway-card verdict-supported">
             <h3>可以相信</h3>
-            <p>被测的范围是训练分布之内的四个 logP/TPSA setting 与三个二值阈值。在这个范围里，条件前缀可以明显移动 CProMG 输出的分布，涉及 AutoDock Vina、QED、SA、logP 与 TPSA。atom/residue views 与 LPE 对作者同一评价体系下的表现有增量贡献。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E10">E10</a>〕</p>
+            <p>被测的范围是训练分布之内的四个 logP/TPSA setting 与三个二值阈值。在这个范围里，条件前缀可以明显移动 CProMG 输出的分布，涉及 AutoDock Vina、QED、SA、logP 与 TPSA。原子与残基视图与 LPE 对作者同一评价体系下的表现有增量贡献。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E10">E10</a>〕</p>
           </article>
 <article class="takeaway-card verdict-qualified">
             <h3>可以暂时相信</h3>
-            <p>在作者报告的 CrossDocked split 和计算协议中，CProMG-VQS 优于所列 baselines。具体是在 VS、QED、HAR 与 diversity 四项上。它还能提出与 reference 只有低 Tanimoto similarity 的候选。但所列 baselines 都没有等价的多属性条件接口。而 VS、QED 与 HAR 正是 CProMG-VQS 被条件化的量。无条件的 CProMG-w/oC 只有 QED 0.488、SA 3.500 与 48.8% HAR。因此这一优势属于“架构 + controllability”的整套 pipeline，不能单独归因于双视图架构。这一结论限定于发布论文的 in-silico benchmark。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E11">E11</a>〕</p>
+            <p>在作者报告的 CrossDocked 划分和计算协议中，CProMG-VQS 优于所列 baselines。具体是在 VS、QED、HAR 与 diversity 四项上。它还能提出与 reference 只有低 Tanimoto 相似度的候选。但所列 baselines 都没有等价的多属性条件接口。而 VS、QED 与 HAR 正是 CProMG-VQS 被条件化的量。无条件的 CProMG-w/oC 只有 QED 0.488、SA 3.500 与 48.8% HAR。因此这一优势属于“架构 + controll能力”的整套 pipeline，不能单独归因于双视图架构。这一结论限定于发布论文的计算基准。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E11">E11</a>〕</p>
           </article>
 <article class="takeaway-card verdict-rejected">
             <h3>被现有证据否定</h3>
-            <p>当前不能推出。生成分子真实高亲和、实验可合成、具有药效或安全性。也不能推出 attention 揭示了真实的物理接触。同样不能推出，结果已经证明跨 scaffold/pocket family 的 prospective generalization。〔<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E23">E23</a>、<a class="evidence-link" href="#E24">E24</a>、<a class="evidence-link" href="#E25">E25</a>〕</p>
+            <p>当前不能推出。生成分子真实高亲和、实验可合成、具有药效或安全性。也不能推出 attention 揭示了真实的物理接触。同样不能推出，结果已经证明跨骨架与口袋家族的前瞻性泛化。〔<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E23">E23</a>、<a class="evidence-link" href="#E24">E24</a>、<a class="evidence-link" href="#E25">E25</a>〕</p>
           </article>
 <article class="takeaway-card verdict-rejected">
             <h3>被现有证据否定</h3>
@@ -796,7 +796,7 @@
 <section id="no-effect-boundaries">
 <h3>无实质影响的证据边界</h3>
 <ul>
-<li><a class="boundary-link" href="#B03">B03</a>：论文正文与发布代码在 KNN 写法与 atom type 列表上记法不一致。这只影响方法描述的准确转述。本报告已统一按发布代码重建数据流。它不改变任何主张的成立范围或分级。</li>
+<li><a class="boundary-link" href="#B03">B03</a>：论文正文与发布代码在 KNN 写法与原子类型列表上记法不一致。这只影响方法描述的准确转述。本报告已统一按发布代码重建数据流。它不改变任何主张的成立范围或分级。</li>
 </ul>
 </section>
 </section>
@@ -807,14 +807,14 @@
 <p class="chapter-intro">把可迁移的方法价值、证据可信度和最值得做的下一步压缩成最终判断。</p>
 <h3>8.1 论文真正贡献了什么</h3>
 <p>CProMG 最值得保留的思想，是把<strong>靶点条件</strong>与<strong>性质条件</strong>分开表达。口袋双图提供“面向谁”。property token 提供“希望输出满足什么”。自回归 decoder 再把两者联合到 SMILES。atom → residue 的中层融合，也给出一种清晰的多尺度蛋白表示方案。〔<a class="evidence-link" href="#E02">E02</a>、<a class="evidence-link" href="#E05">E05</a>、<a class="evidence-link" href="#E06">E06</a>〕</p>
-<p>它还通过 progressive control 清楚展示了多目标生成的真实形态。改善 binding proxy 可能损害 QED/SA。指定 logP/TPSA 也会改变 VS。这个 trade-off 比“所有指标一起变好”的口号更有研究价值。它提示后续工作应显式建模 Pareto front，而不是把多目标压成一个未经校准的好坏标签。〔<a class="evidence-link" href="#E09">E09</a>〕</p>
+<p>它还通过渐进控制清楚展示了多目标生成的真实形态。改善结合代理指标可能损害 QED/SA。指定 logP/TPSA 也会改变 VS。这个 trade-off 比“所有指标一起变好”的口号更有研究价值。它提示后续工作应显式建模 Pareto 前沿，而不是把多目标压成一个未经校准的好坏标签。〔<a class="evidence-link" href="#E09">E09</a>〕</p>
 <h3>8.2 最终可以相信到哪里</h3>
-<p>CProMG 可以理解为一个<strong>known-pocket-conditioned、multi-property-conditioned SMILES generator</strong>。换成中文就是：以已知口袋为条件、以多个性质为条件的 SMILES 生成器。论文表明，它能在作者的 in-silico benchmark 中生成更符合 AutoDock Vina 与 RDKit/Ertl proxy 的候选。但这些候选仍处于虚拟筛选的起点，而不是已经验证的药物。公开仓库足以理解主要的 forward path。它却不足以无歧义地重建训练过程和论文的全部表格。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E19">E19</a>、<a class="evidence-link" href="#E21">E21</a>、<a class="evidence-link" href="#E28">E28</a>〕</p>
+<p>CProMG 可以理解为一个<strong>known-pocket-conditioned、多性质条件的 SMILES 生成器</strong>。换成中文就是：以已知口袋为条件、以多个性质为条件的 SMILES 生成器。论文表明，它能在作者的计算基准中生成更符合 AutoDock Vina 与 RDKit/Ertl proxy 的候选。但这些候选仍处于虚拟筛选的起点，而不是已经验证的药物。公开仓库足以理解主要的前向路径。它却不足以无歧义地重建训练过程和论文的全部表格。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E19">E19</a>、<a class="evidence-link" href="#E21">E21</a>、<a class="evidence-link" href="#E28">E28</a>〕</p>
 <h3>8.3 如果继续这项研究，下一步最该做什么</h3>
 <ol>
-<li><strong>先建立独立评价：</strong> 用与训练标签不同的 docking/scoring protocol 复核。随后对预注册候选做真实的 binding assay。这是把“优化 oracle”推进到“发现 binder”的最短路径。</li>
-<li><strong>再做双重泛化切分：</strong> 同时隔离 protein family/pocket structure 与 ligand scaffold。再在 apo 结构或预测口袋上测试。这样才能避免只证明对 CrossDocked 已知口袋分布有效。</li>
-<li><strong>最后补齐可复现链：</strong> 发布可运行的 LapPE 预处理、真实的 VQS iteration 与 checkpoint hash。发布 top-10 generation 和完整的 docking/evaluation pipeline。再报告多随机种子与逐 target 的分布。</li>
+<li><strong>先建立独立评价：</strong> 用与训练标签不同的对接与打分流程复核。随后对预注册候选做真实的结合实验。这是把“优化 oracle”推进到“发现结合物”的最短路径。</li>
+<li><strong>再做双重泛化切分：</strong> 同时隔离蛋白家族与口袋结构与配体骨架。再在 apo 结构或预测口袋上测试。这样才能避免只证明对 CrossDocked 已知口袋分布有效。</li>
+<li><strong>最后补齐可复现链：</strong> 发布可运行的 LapPE 预处理、真实的 VQS iteration 与权重哈希。发布 top-10 generation 和完整的对接与评测流程。再报告多随机种子与逐 target 的分布。</li>
 </ol>
 <p>因此，这篇论文适合作为一个方法案例：如何把多尺度蛋白条件与多性质前缀接入序列生成。若把它当作药物发现的结果，证据层级就被抬得过高。真正严谨的阅读不是否定计算生成。它是把模型输出、计算 proxy、实验事实和药物结论，重新放回各自的位置。</p>
 </section>
@@ -825,7 +825,7 @@
         <div class="details-body"><p><strong>论文：</strong> Li et al., <em>Bioinformatics</em> 39(Suppl 1), i326–i336 (2023), DOI 10.1093/bioinformatics/btad222；PMC version accessed 2026-08-05。</p>
 <p><strong>代码：</strong> <code>lijianing0902/CProMG</code>, commit <code>1c9fc00da88af9a279eb15b19fd031617d92bba7</code>，accessed 2026-08-05。仅稀疏读取 conclusion-relevant source/config/split；未下载 weights 或 7.1 GB Zenodo bundle。</p>
 <p><strong>完成状态：</strong> complete。模式与完成状态记录在页首徽章，此处不重复。</p>
-<p><strong>未解决问题：</strong> 论文实际训练 checkpoint 的 iteration/hash、MMseqs2 cluster provenance、约 18K test reference inventory、top-10 generation 与表 1–3 的完整 evaluation/statistics code 均未公开。它们限制端到端复现和泛化判断，但不妨碍重建论文主要方法与报告结果。最小解决材料是作者发布可运行的 environment lock、split-generation log、训练配置/日志及完整评价入口。</p></div>
+<p><strong>未解决问题：</strong> 论文实际训练 checkpoint 的 iteration/hash、MMseqs2 聚类来源、约 18K test reference 清单、top-10 generation 与表 1–3 的完整 evaluation/statistics code 均未公开。它们限制端到端复现和泛化判断，但不妨碍重建论文主要方法与报告结果。最小解决材料是作者发布可运行的 environment lock、split-generation log、训练配置/日志及完整评价入口。</p></div>
       </details>
       <details class="ledger" id="evidence-ledger" open>
         <summary>完整证据账本</summary>
@@ -833,33 +833,33 @@
 <thead><tr><th>ID</th><th>类型</th><th>来源</th><th>版本</th><th>定位</th><th>支持陈述</th><th>状态</th></tr></thead>
 <tbody>
 <tr class="ledger-row" id="E01"><td><strong>E01</strong></td><td>[论文]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">CProMG article</a></td><td>PMC10311289 / 2023</td><td>Abstract; Introduction</td><td>任务动机、两类既有方法、三项贡献与作者总体主张</td><td>已访问</td></tr>
-<tr class="ledger-row" id="E02"><td><strong>E02</strong></td><td>[论文]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">CProMG article</a></td><td>PMC10311289 / 2023</td><td>§2.1; Fig. 1</td><td>prepared pocket、property-conditioned generation 与四模块总体结构</td><td>已访问</td></tr>
+<tr class="ledger-row" id="E02"><td><strong>E02</strong></td><td>[论文]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">CProMG article</a></td><td>PMC10311289 / 2023</td><td>§2.1; Fig. 1</td><td>预处理过的 pocket、property-conditioned generation 与四模块总体结构</td><td>已访问</td></tr>
 <tr class="ledger-row" id="E03"><td><strong>E03</strong></td><td>[论文]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">CProMG article</a></td><td>PMC10311289 / 2023</td><td>§3.1</td><td>CrossDocked 派生数据、30% identity、99K/1K/100 划分与训练参数</td><td>已访问</td></tr>
-<tr class="ledger-row" id="E04"><td><strong>E04</strong></td><td>[论文]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">CProMG article</a></td><td>PMC10311289 / 2023</td><td>§2.2</td><td>atom/residue graph、RBF edge、Laplacian PE 与正文 KNN/元素描述</td><td>已访问</td></tr>
+<tr class="ledger-row" id="E04"><td><strong>E04</strong></td><td>[论文]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">CProMG article</a></td><td>PMC10311289 / 2023</td><td>§2.2</td><td>原子与残基 graph、RBF edge、Laplacian PE 与正文 KNN/元素描述</td><td>已访问</td></tr>
 <tr class="ledger-row" id="E05"><td><strong>E05</strong></td><td>[论文]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">CProMG article</a></td><td>PMC10311289 / 2023</td><td>§2.3</td><td>六层 dual-view encoder 与第 3/6 层 atom→residue fusion</td><td>已访问</td></tr>
 <tr class="ledger-row" id="E06"><td><strong>E06</strong></td><td>[论文]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">CProMG article</a></td><td>PMC10311289 / 2023</td><td>§2.4–2.5</td><td>property token、SMILES tokenization、decoder 与 NLL</td><td>已访问</td></tr>
 <tr class="ledger-row" id="E07"><td><strong>E07</strong></td><td>[论文]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">CProMG article</a></td><td>PMC10311289 / 2023</td><td>§2.6</td><td>VS、HAR、QED、SA、Diversity、logP、TPSA 定义</td><td>已访问</td></tr>
 <tr class="ledger-row" id="E08"><td><strong>E08</strong></td><td>[论文]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">CProMG article</a></td><td>PMC10311289 / 2023</td><td>§3.2 Table 1</td><td>baseline 设置与 CProMG 主结果</td><td>已访问</td></tr>
 <tr class="ledger-row" id="E09"><td><strong>E09</strong></td><td>[论文]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">CProMG article</a></td><td>PMC10311289 / 2023</td><td>§3.3 Table 2; Fig. 2</td><td>渐进 property-control 设计、结果与 trade-off</td><td>已访问</td></tr>
 <tr class="ledger-row" id="E10"><td><strong>E10</strong></td><td>[论文]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">CProMG article</a></td><td>PMC10311289 / 2023</td><td>§3.4 Table 3</td><td>w/o AA、Atom、LPE、C 消融</td><td>已访问</td></tr>
-<tr class="ledger-row" id="E11"><td><strong>E11</strong></td><td>[论文]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">CProMG article</a></td><td>PMC10311289 / 2023</td><td>§3.5 Fig. 3</td><td>5I0B case study、top-5 proxies、contacts 与 similarity</td><td>已访问</td></tr>
+<tr class="ledger-row" id="E11"><td><strong>E11</strong></td><td>[论文]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">CProMG article</a></td><td>PMC10311289 / 2023</td><td>§3.5 Fig. 3</td><td>5I0B 案例研究、top-5 代理指标、contacts 与 similarity</td><td>已访问</td></tr>
 <tr class="ledger-row" id="E12"><td><strong>E12</strong></td><td>[代码]</td><td><a href="https://github.com/lijianing0902/CProMG/tree/1c9fc00da88af9a279eb15b19fd031617d92bba7">Official GitHub README</a></td><td>commit 1c9fc00</td><td>README.md</td><td>环境、训练/生成命令、Zenodo 指向与输入 pocket 示例</td><td>已访问</td></tr>
 <tr class="ledger-row" id="E13"><td><strong>E13</strong></td><td>[代码]</td><td><a href="https://github.com/lijianing0902/CProMG/blob/1c9fc00da88af9a279eb15b19fd031617d92bba7/data/split_by_name1000.pt">Released split</a></td><td>commit 1c9fc00</td><td>data/split_by_name1000.pt; test_list.tsv</td><td>安全读取到 train=99,000、valid=1,000、test=100；test list 100 pairs</td><td>已访问</td></tr>
 <tr class="ledger-row" id="E14"><td><strong>E14</strong></td><td>[代码]</td><td><a href="https://github.com/lijianing0902/CProMG/tree/1c9fc00da88af9a279eb15b19fd031617d92bba7/configs">Official configs</a></td><td>commit 1c9fc00</td><td>configs/CProMG-VQS.yml; CPrMG-VQSLT.yml</td><td>hidden sizes、layers、heads、KNN、seed、optimizer、properties 与 generation conditions</td><td>已访问</td></tr>
-<tr class="ledger-row" id="E15"><td><strong>E15</strong></td><td>[代码]</td><td><a href="https://github.com/lijianing0902/CProMG/blob/1c9fc00da88af9a279eb15b19fd031617d92bba7/train.py">Training/data path</a></td><td>commit 1c9fc00</td><td>train.py; utils/datasets/pl.py; utils/protein_ligand.py</td><td>property thresholds、RDKit descriptors、noise、CE loss、validation 与 dataset processing</td><td>已访问</td></tr>
-<tr class="ledger-row" id="E16"><td><strong>E16</strong></td><td>[代码]</td><td><a href="https://github.com/lijianing0902/CProMG/blob/1c9fc00da88af9a279eb15b19fd031617d92bba7/models/TRM.py">Model forward path</a></td><td>commit 1c9fc00</td><td>models/TRM.py; encoder.py; decoder.py</td><td>双图 encoder、cross-fusion、protein memory、property token 与 logits shapes</td><td>已访问</td></tr>
-<tr class="ledger-row" id="E17"><td><strong>E17</strong></td><td>[代码]</td><td><a href="https://github.com/lijianing0902/CProMG/blob/1c9fc00da88af9a279eb15b19fd031617d92bba7/gen.py">Generation path</a></td><td>commit 1c9fc00</td><td>gen.py; models/search.py</td><td>beam=20、topk=1、length penalty 0.7 与 autoregressive decoding</td><td>已访问</td></tr>
+<tr class="ledger-row" id="E15"><td><strong>E15</strong></td><td>[代码]</td><td><a href="https://github.com/lijianing0902/CProMG/blob/1c9fc00da88af9a279eb15b19fd031617d92bba7/train.py">Training/data path</a></td><td>commit 1c9fc00</td><td>train.py; utils/datasets/pl.py; utils/protein_ligand.py</td><td>property thresholds、RDKit 描述符、noise、CE loss、validation 与 dataset processing</td><td>已访问</td></tr>
+<tr class="ledger-row" id="E16"><td><strong>E16</strong></td><td>[代码]</td><td><a href="https://github.com/lijianing0902/CProMG/blob/1c9fc00da88af9a279eb15b19fd031617d92bba7/models/TRM.py">Model 前向路径</a></td><td>commit 1c9fc00</td><td>models/TRM.py; encoder.py; decoder.py</td><td>双图 encoder、cross-fusion、蛋白记忆、property token 与 logits shapes</td><td>已访问</td></tr>
+<tr class="ledger-row" id="E17"><td><strong>E17</strong></td><td>[代码]</td><td><a href="https://github.com/lijianing0902/CProMG/blob/1c9fc00da88af9a279eb15b19fd031617d92bba7/gen.py">Generation path</a></td><td>commit 1c9fc00</td><td>gen.py; models/search.py</td><td>beam=20、topk=1、长度惩罚 0.7 与 autoregressive decoding</td><td>已访问</td></tr>
 <tr class="ledger-row" id="E18"><td><strong>E18</strong></td><td>[冲突]</td><td><a href="https://github.com/lijianing0902/CProMG/blob/1c9fc00da88af9a279eb15b19fd031617d92bba7/configs/CProMG-VQS.yml">Released VQS training config</a></td><td>commit 1c9fc00</td><td>CProMG-VQS.yml:139; train.py:290–298</td><td>max_iters=50 与 checkpoint 仅在 &gt;250K 保存冲突，公开命令不能产出新 checkpoint</td><td>已核对</td></tr>
-<tr class="ledger-row" id="E19"><td><strong>E19</strong></td><td>[冲突]</td><td><a href="https://github.com/lijianing0902/CProMG/issues/2">Official code and issue #2</a></td><td>commit 1c9fc00 / issue open</td><td>pl.py:105,112; gen.py:105,112; GitHub issue #2</td><td>AddLaplacianEigenvectorPE 参数数量不符合 PyG API，公开 issue 复现 TypeError</td><td>已访问</td></tr>
+<tr class="ledger-row" id="E19"><td><strong>E19</strong></td><td>[冲突]</td><td><a href="https://github.com/lijianing0902/CProMG/issues/2">Official code and issue #2</a></td><td>commit 1c9fc00 / issue open</td><td>pl.py:105,112; gen.py:105,112; GitHub issue #2</td><td>AddLaplacianEigenvectorPE 参数数量不符合 PyG 接口，公开 issue 复现 TypeError</td><td>已访问</td></tr>
 <tr class="ledger-row" id="E20"><td><strong>E20</strong></td><td>[冲突]</td><td><a href="https://github.com/lijianing0902/CProMG/blob/1c9fc00da88af9a279eb15b19fd031617d92bba7/models/encoder.py">Paper vs released preprocessing</a></td><td>2023 / commit 1c9fc00</td><td>Paper §2.2, §3.1; transforms.py; encoder.py; gen.py</td><td>KNN/atom element 描述存在版本不一致；generation atom Lap graph 另使用 k=8</td><td>已核对</td></tr>
-<tr class="ledger-row" id="E21"><td><strong>E21</strong></td><td>[缺失]</td><td><a href="https://github.com/lijianing0902/CProMG/tree/1c9fc00da88af9a279eb15b19fd031617d92bba7">Official repository</a></td><td>commit 1c9fc00</td><td>repository tree; gen.py</td><td>未发布论文 top-10 批量生成、validity/dedup、表格 docking 汇总与统计检验入口</td><td>全树已检查</td></tr>
-<tr class="ledger-row" id="E22"><td><strong>E22</strong></td><td>[外部核验]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3041641/">Trott &amp; Olson, AutoDock Vina</a></td><td>J Comput Chem 2010</td><td>doi:10.1002/jcc.21334</td><td>Vina 输出来自经验/knowledge-based scoring function 的 predicted free energy，不是实验 affinity</td><td>已访问</td></tr>
-<tr class="ledger-row" id="E23"><td><strong>E23</strong></td><td>[外部核验]</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/22270643/">Bickerton et al., QED</a></td><td>Nat Chem 2012</td><td>doi:10.1038/nchem.1243</td><td>QED 是基于分子属性分布的 desirability measure，可用于相对排序</td><td>已访问</td></tr>
-<tr class="ledger-row" id="E24"><td><strong>E24</strong></td><td>[外部核验]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3225829/">Ertl &amp; Schuffenhauer, SAscore</a></td><td>J Cheminform 2009</td><td>doi:10.1186/1758-2946-1-8</td><td>SA 是 fragment contribution + complexity penalty proxy，不能替代关键情境下的完整合成路径判断</td><td>已访问</td></tr>
-<tr class="ledger-row" id="E25"><td><strong>E25</strong></td><td>[外部核验]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8902699/">Francoeur et al., CrossDocked2020</a></td><td>JCIM 2020</td><td>doi:10.1021/acs.jcim.0c00411</td><td>dataset 组成、cross-docked label 假设/噪声与 target split 可能保留 ligand similarity</td><td>已访问</td></tr>
+<tr class="ledger-row" id="E21"><td><strong>E21</strong></td><td>[缺失]</td><td><a href="https://github.com/lijianing0902/CProMG/tree/1c9fc00da88af9a279eb15b19fd031617d92bba7">Official repository</a></td><td>commit 1c9fc00</td><td>repository tree; gen.py</td><td>未发布论文 top-10 批量生成、有效性与去重、表格 docking 汇总与统计检验入口</td><td>全树已检查</td></tr>
+<tr class="ledger-row" id="E22"><td><strong>E22</strong></td><td>[外部核验]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3041641/">Trott &amp; Olson, AutoDock Vina</a></td><td>J Comput Chem 2010</td><td>doi:10.1002/jcc.21334</td><td>Vina 输出来自经验/knowledge-based 打分函数的预测自由能，不是实验 affinity</td><td>已访问</td></tr>
+<tr class="ledger-row" id="E23"><td><strong>E23</strong></td><td>[外部核验]</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/22270643/">Bickerton et al., QED</a></td><td>Nat Chem 2012</td><td>doi:10.1038/nchem.1243</td><td>QED 是基于分子属性分布的 desir能力 measure，可用于相对排序</td><td>已访问</td></tr>
+<tr class="ledger-row" id="E24"><td><strong>E24</strong></td><td>[外部核验]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3225829/">Ertl &amp; Schuffenhauer, SAscore</a></td><td>J Cheminform 2009</td><td>doi:10.1186/1758-2946-1-8</td><td>SA 是 fragment contribution + 复杂度惩罚 proxy，不能替代关键情境下的完整合成路径判断</td><td>已访问</td></tr>
+<tr class="ledger-row" id="E25"><td><strong>E25</strong></td><td>[外部核验]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8902699/">Francoeur et al., CrossDocked2020</a></td><td>JCIM 2020</td><td>doi:10.1021/acs.jcim.0c00411</td><td>dataset 组成、cross-docked label 假设/噪声与 target split 可能保留配体相似度</td><td>已访问</td></tr>
 <tr class="ledger-row" id="E26"><td><strong>E26</strong></td><td>[代码]</td><td><a href="https://zenodo.org/records/7737709">CProMG Zenodo record</a></td><td>v1, 2023-03-15</td><td>doi:10.5281/zenodo.7737709</td><td>两个 186.1 MB checkpoints 与 6.7 GB dataset，共 7.1 GB</td><td>元数据已访问，未下载大文件</td></tr>
 <tr class="ledger-row" id="E27"><td><strong>E27</strong></td><td>[外部核验]</td><td><a href="https://www.rcsb.org/structure/5I0B">RCSB PDB 5I0B</a></td><td>entry v1.2</td><td>doi:10.2210/pdb5I0B/pdb</td><td>case target 是 human PAK4–KY-04045 3.09 Å crystal structure</td><td>已访问</td></tr>
-<tr class="ledger-row" id="E28"><td><strong>E28</strong></td><td>[推断]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">Paper + train/evaluation evidence</a></td><td>2023 / commit 1c9fc00</td><td>property threshold path and Tables 1–3</td><td>binding condition 与主要 binding evaluation 复用 Vina oracle，存在 oracle exploitation 替代解释</td><td>由 E07/E09/E15/E22 推断</td></tr>
+<tr class="ledger-row" id="E28"><td><strong>E28</strong></td><td>[推断]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">Paper + train/evaluation evidence</a></td><td>2023 / commit 1c9fc00</td><td>property threshold path and Tables 1–3</td><td>结合条件与主要 binding evaluation 复用 Vina oracle，存在 oracle exploitation 替代解释</td><td>由 E07/E09/E15/E22 推断</td></tr>
 <tr class="ledger-row" id="E29"><td><strong>E29</strong></td><td>[冲突]</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10311289/">CProMG Table 1 vs prose</a></td><td>PMC10311289 / 2023</td><td>§3.2 Table 1 and following paragraph</td><td>CProMG SA=2.884 并非最低；“all metrics”及 prose 的 QED/SA 方向与表格不符</td><td>已核对</td></tr>
 <tr class="ledger-row" id="E30"><td><strong>E30</strong></td><td>[推断]</td><td><a href="https://github.com/lijianing0902/CProMG/blob/1c9fc00da88af9a279eb15b19fd031617d92bba7/gen.py">Dataset names + generation interface</a></td><td>commit 1c9fc00</td><td>pocket10 files; gen.py --input</td><td>模型消费预先截取 pocket，不执行全蛋白 binding-site discovery；真实适用范围是 known-pocket-conditioned</td><td>由 E02/E12/E13 推断</td></tr>
 </tbody>

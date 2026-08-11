@@ -147,9 +147,13 @@ authors.
 Reusing a term you have glossed is not a problem — it is the point of glossing.
 Introducing many terms once each is the problem, because every one of them is
 vocabulary the reader has to carry and never sees again. The validator counts
-distinct English terms per 1000 Chinese characters and warns above 28, naming
-the ones that appear once as ordinary words. `ProteinMPNN` and `QED` have to
-stay in Latin script; `achieved`, `available` and `architecture` do not.
+distinct English terms per 1000 Chinese characters, naming the ones that appear
+once as ordinary words: it warns above **28** and fails above **40**.
+
+Domain proper nouns and acronyms stay in Latin script — `ProteinMPNN`, `QED`,
+`AutoDock Vina`, `SMILES`. Ordinary English does not: `achieved` is 达到,
+`available` is 可获取, `architecture` is 架构. Reusing a term costs the reader
+nothing; introducing one costs them something every time.
 
 ## Modes
 

@@ -526,17 +526,21 @@ class SkillContractTests(unittest.TestCase):
         assert_frameflow_inspired_layout(self, text)
         for title in EXPECTED_SECTION_TITLES:
             self.assertIn(title, text)
-        for fact in (
+        # Identifiers are pinned verbatim: they are how a reader re-finds the source.
+        for identifier in (
             "CrossDocked2020",
-            "prepared 3D binding pocket",
             "1c9fc00",
             "AutoDock Vina",
             "QED",
-            "SA score",
+            "SA",
             "AddLaplacianEigenvectorPE",
             "50 iterations",
         ):
-            self.assertIn(fact, text)
+            self.assertIn(identifier, text)
+        # Facts are pinned by content, not by the wording that happens to carry them.
+        # Saying `prepared 3D binding pocket` in Chinese is an improvement, and a test
+        # that fails on it is testing the phrasing rather than the reading.
+        self.assertRegex(text, r"(预先准备好的|预处理过的|已准备好的)三维结合口袋")
         self.assertGreaterEqual(parser.classes.count("experiment-card"), 5)
         self.assertGreaterEqual(parser.classes.count("review-card"), 6)
         self.assertTrue(parser.main_report_evidence_links)
@@ -773,6 +777,22 @@ class ReportValidatorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("run-on sentence", result.stderr)
 
+    def test_term_dumping_fails_the_build_rather_than_only_warning(self):
+        """The old Latin-share warning fired for two rounds and the report shipped."""
+        sys.path.insert(0, str(VALIDATOR.parent))
+        import validate_report
+
+        flood = " ".join(f"term{n}" for n in range(400))
+        broken = self.corrupt(
+            CPROMG_HTML, ("</main>", f"<p>下面是一段说明。{flood}。</p></main>")
+        )
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1, "term dumping must fail, not warn")
+        self.assertIn("distinct English terms", result.stderr)
+        self.assertGreater(
+            validate_report.TERM_DENSITY_FAIL, validate_report.TERM_DENSITY_WARN
+        )
+
     def test_term_density_counts_variety_not_repetition(self):
         """Repeating one glossed term is healthy; the metric must not punish it."""
         sys.path.insert(0, str(VALIDATOR.parent))
@@ -822,13 +842,14 @@ class ReportValidatorTests(unittest.TestCase):
         """One number, in one place, next to the gate that enforces it."""
         contract = (SKILL_DIR / "references" / "output-contract.md").read_text(encoding="utf-8")
         source = VALIDATOR.read_text(encoding="utf-8")
-        for limit in ("SENTENCE_HARD_CAP", "SENTENCE_P90_CAP", "TERM_DENSITY_WARN"):
+        for limit in ("SENTENCE_HARD_CAP", "SENTENCE_P90_CAP", "TERM_DENSITY_FAIL"):
             self.assertIn(limit, source)
         for constant in (
             "SENTENCE_HARD_CAP",
             "SENTENCE_P90_CAP",
             "SENTENCE_MEDIAN_TARGET",
             "TERM_DENSITY_WARN",
+            "TERM_DENSITY_FAIL",
         ):
             value = re.search(rf"{constant} = (\d+)", source).group(1)
             self.assertIn(value, contract, f"{constant} is enforced but never stated")

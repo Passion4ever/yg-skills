@@ -101,7 +101,12 @@ SENTENCE_MEDIAN_TARGET = 45
 # what makes a report unreadable, and only the second is a writing problem.
 # Calibrated on the shipped readings: 12 and 17 for the two that read cleanly,
 # 44 for the one still carrying ability/achieved/available in English.
+# Two tiers, because a warning is not a gate. The old Latin-share warning fired on
+# a shipped reading for two rounds and the reading shipped anyway; whatever only
+# warns is whatever drifts. Warn above 28 — look at it — and fail above 40, which
+# no reading that reads cleanly has ever approached (10.8, 16.3, 18.4 observed).
 TERM_DENSITY_WARN = 28
+TERM_DENSITY_FAIL = 40
 # card values live in <dd>; leaving it out would exempt every card from the
 # sentence-length limits, which is where the densest writing actually is
 PROSE_TAGS = {"p", "li", "dd"}
@@ -716,12 +721,13 @@ def validate(
                 term for term, uses in terms.items()
                 if uses == 1 and term.isalpha() and len(term) > 3
             )
-            warnings.append(
+            report = (
                 f"{len(terms)} distinct English terms in {prose_cjk} Chinese characters"
-                f" ({density:.0f} per 1000, warn above {TERM_DENSITY_WARN});"
+                f" ({density:.0f} per 1000, limit {TERM_DENSITY_FAIL});"
                 f" {len(ordinary)} appear once as ordinary words —"
                 f" say those in Chinese, e.g. {', '.join(ordinary[:8])}"
             )
+            (errors if density > TERM_DENSITY_FAIL else warnings).append(report)
 
     # 13. the ledger is a table with a fixed shape and a closed label set
     for row_id, cells in index.ledger_rows:
