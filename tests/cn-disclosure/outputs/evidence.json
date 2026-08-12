@@ -1,0 +1,170 @@
+{
+  "source_map": [
+    {
+      "id": "P001",
+      "locator": "论文稿 §3.1 第 42 行",
+      "note": "窗长与重叠率的定义"
+    },
+    {
+      "id": "P002",
+      "locator": "论文稿 §4.2 表 2",
+      "note": "三种方法的漏报率与误报率"
+    },
+    {
+      "id": "C001",
+      "locator": "src/detector.py:88",
+      "note": "阈值分支:固定值与分位数自适应两条路径"
+    },
+    {
+      "id": "C002",
+      "locator": "configs/default.yaml:12-19",
+      "note": "窗长 128、重叠 0.5、T=0.35、AdamW 超参"
+    },
+    {
+      "id": "C003",
+      "locator": "runs/eval_20260801.json",
+      "note": "三档窗长的实测结果文件"
+    },
+    {
+      "id": "F001",
+      "locator": "figures/specs/fig1.json",
+      "note": "流程图 spec"
+    }
+  ],
+  "evidence_ledger": [
+    {
+      "id": "E001",
+      "feature": "按窗长 L 对原始序列做滑动切分，L 取 64 至 256",
+      "source_ids": [
+        "C002",
+        "C003"
+      ],
+      "support_status": "explicit",
+      "effect": "窗口内噪声被平均，信噪比随窗长提升"
+    },
+    {
+      "id": "E002",
+      "feature": "以重构误差二范数作为窗口异常分值",
+      "source_ids": [
+        "P001",
+        "C001"
+      ],
+      "support_status": "explicit",
+      "effect": "与阈值判定共用量纲"
+    },
+    {
+      "id": "E003",
+      "feature": "以阈值 T 标记异常窗口并输出带时间戳的区间",
+      "source_ids": [
+        "C001",
+        "C002"
+      ],
+      "support_status": "explicit",
+      "effect": "输出可直接对接下游工单系统"
+    },
+    {
+      "id": "E004",
+      "feature": "窗口重叠率 50%",
+      "source_ids": [
+        "C002"
+      ],
+      "support_status": "inherent",
+      "effect": "围绕已记载取值的常规实施裕度"
+    },
+    {
+      "id": "E005",
+      "feature": "以温度补偿替代滑动窗口",
+      "source_ids": [],
+      "support_status": "needs-confirmation",
+      "note": "论文全文检索无记载；configs/ 与 runs/ 均未见相关开关；已就此立待确认项问发明人"
+    }
+  ],
+  "claim_feature_map": [
+    {
+      "claim_number": 1,
+      "feature": "按窗长 L 滑动切分，L 取 64 至 256",
+      "evidence_ids": [
+        "E001"
+      ]
+    },
+    {
+      "claim_number": 1,
+      "feature": "计算残差能量得到异常分值",
+      "evidence_ids": [
+        "E002"
+      ]
+    },
+    {
+      "claim_number": 1,
+      "feature": "高于阈值 T 的窗口标记为异常并输出区间",
+      "evidence_ids": [
+        "E003"
+      ]
+    },
+    {
+      "claim_number": 2,
+      "feature": "残差能量由重构误差的二范数给出",
+      "evidence_ids": [
+        "E002"
+      ]
+    },
+    {
+      "claim_number": 3,
+      "feature": "计算机可读存储介质",
+      "evidence_ids": [
+        "E003"
+      ]
+    },
+    {
+      "claim_number": 4,
+      "feature": "电子设备",
+      "evidence_ids": [
+        "E003"
+      ]
+    }
+  ],
+  "inventor_questions": [
+    "E005：温度补偿是否曾作为备选路线实测过？若有，结果文件在哪里？"
+  ],
+  "metadata": {
+    "inventory": {
+      "src/": "读了",
+      "configs/": "读了",
+      "runs/": "读了",
+      "docs/": "与本发明无关"
+    },
+    "prior_filings": {
+      "searched": "发明人姓名（张三/Zhang San、李四/Li Si）+ 申请人机构全称 + 主题词「传感器 异常检测 滑动窗口」，检索库：CNIPA 专利检索及分析、Google Patents，时间窗至 2026-08",
+      "found": []
+    },
+    "source_coverage": {
+      "§1 引言": "读了",
+      "§2 相关工作": "与本发明无关",
+      "§3 方法": "读了",
+      "§4 实验": "读了",
+      "§5 结论": "读了"
+    },
+    "discrepancies": [
+      {
+        "item": "窗长",
+        "values": {
+          "论文 §3.1": "128",
+          "configs/default.yaml:12": "128"
+        },
+        "taken": "128",
+        "question": "两处一致，仅登记以备核；如后续改动请知会"
+      }
+    ],
+    "anomalies": [],
+    "assurance": {
+      "external_review": {
+        "done": true,
+        "model": "gpt-5.6-sol"
+      },
+      "patent_search": {
+        "done": false,
+        "reason": "本次运行无网络，背景技术的专利文献留白待补"
+      }
+    }
+  }
+}

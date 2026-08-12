@@ -1,0 +1,60 @@
+{
+  "choices": [
+    {
+      "id": "A000",
+      "choice": "窗长区间 64 至 256 个采样点",
+      "locus": "权利要求 1 步骤 1）",
+      "disposition": "alternative",
+      "status": "tested",
+      "alternatives": [
+        "64",
+        "128",
+        "256"
+      ],
+      "basis": "runs/eval_20260801.json 对 64/128/256 三档均有实测读数，区间本身有依据而非区间内单点"
+    },
+    {
+      "id": "A001",
+      "choice": "窗长 128",
+      "locus": "权利要求 1 步骤 1）",
+      "disposition": "alternative",
+      "status": "tested",
+      "alternatives": [
+        "64",
+        "256"
+      ],
+      "basis": "runs/eval_20260801.json 三档窗长均已实测并给出可用结果"
+    },
+    {
+      "id": "A002",
+      "choice": "阈值 T=0.35",
+      "locus": "权利要求 1 步骤 3）",
+      "disposition": "alternative",
+      "status": "tested",
+      "alternatives": [
+        "按验证集分位数自适应确定"
+      ],
+      "basis": "src/detector.py:88 已实现该分支并在实验中启用过"
+    },
+    {
+      "id": "A003",
+      "choice": "残差能量取二范数",
+      "locus": "权利要求 2",
+      "disposition": "essential",
+      "status": "routine",
+      "reason": "该量纲选择是步骤 2）与步骤 3）阈值口径一致的前提，替换会使阈值失去意义"
+    },
+    {
+      "id": "A004",
+      "choice": "窗口重叠 50%",
+      "locus": "具体实施方式 实施例一",
+      "disposition": "alternative",
+      "status": "tested",
+      "alternatives": [
+        "0%",
+        "25%"
+      ],
+      "basis": "configs/default.yaml:13 该项为可配置参数，取值区间见注释"
+    }
+  ]
+}
