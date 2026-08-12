@@ -4,3 +4,5 @@
 __pycache__/
 *.py[cod]
 .DS_Store
+# 计划与设计稿属于开发过程，不随 skill 分发；理由写在 commit message 里
+docs/superpowers/
