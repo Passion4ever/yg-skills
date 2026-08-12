@@ -100,7 +100,8 @@ The boundary states facts only. Severity, alternatives, claim downgrades, and
 verdicts belong in Section 7. Raising a boundary is a promise; Section 7 keeps it.
 
 Every boundary declares what kind of thing it is, in `data-kind`: `conflict` when
-two sources disagree, `missing` when nothing reports it, `external` when a
+two statements disagree — including two places in the same paper, such as text
+against a figure, a table, or the supplement, not only paper against code — `missing` when nothing reports it, `external` when a
 first-party source outside the paper established it, `inference` when it was
 reconstructed from cited evidence, `fact` when the paper itself states it and the
 statement still narrows what its conclusion supports. The first four must cite a

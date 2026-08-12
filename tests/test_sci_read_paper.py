@@ -1035,6 +1035,38 @@ class ReportValidatorTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn(f"cites no {label}", result.stderr)
 
+    def test_fact_cannot_cover_a_boundary_that_says_nothing_reports_it(self):
+        """The escape hatch got used: an independent reading declared 9 of 14
+        boundaries `fact`, including ones whose own text says the sources report
+        nothing. This does not guess the kind — it catches the writer's two
+        statements disagreeing."""
+        absence = re.compile(r"没有(报告|说明|给出)|未(报告|提及|说明)")
+        found = None
+        for report in sorted((ROOT / "tests" / "sci-read-paper" / "outputs").rglob("*.html")):
+            text = report.read_text(encoding="utf-8")
+            for tag in re.finditer(
+                r'<(aside|dd)[^>]*data-kind="missing"[^>]*>(.*?)</\1>', text, re.DOTALL
+            ):
+                if absence.search(re.sub(r"<[^>]+>", "", tag.group(2))):
+                    found = (report, tag.group(0))
+                    break
+            if found:
+                break
+        self.assertIsNotNone(found, "no missing boundary whose text states an absence")
+        report, markup = found
+        broken = self.corrupt(report, (markup, markup.replace('"missing"', '"fact"', 1)))
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("says the sources report nothing", result.stderr)
+
+    def test_conflict_covers_disagreement_inside_one_paper(self):
+        """Read as paper-versus-code only, a text-versus-figure contradiction gets
+        filed as a plain fact and the ledger never records it."""
+        for source in (FRAGMENTS.read_text(encoding="utf-8"), self.__class__.__dict__ and (
+            SKILL_DIR / "references" / "output-contract.md"
+        ).read_text(encoding="utf-8")):
+            self.assertRegex(source, r"(同一份论文内部|same paper)")
+
     def test_boundary_kinds_are_published_where_the_writer_looks(self):
         source = VALIDATOR.read_text(encoding="utf-8")
         block = re.search(r"BOUNDARY_KINDS = \{(.*?)\n\}", source, re.DOTALL)

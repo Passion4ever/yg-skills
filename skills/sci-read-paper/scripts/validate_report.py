@@ -132,6 +132,12 @@ SENTENCE_SPLIT = re.compile(r"[。！？]")
 CITATION = re.compile(r"〔[^〕]*〕")
 LATIN_TERM = re.compile(r"[A-Za-z][A-Za-z0-9\-']*")
 BARE_BOUNDARY_ID = re.compile(r"\bB\d{2,}\b")
+# Not used to guess a boundary's kind — that is the writer's call — but to catch
+# the writer's own two statements disagreeing: prose saying nothing reports this,
+# under a declaration saying the paper does.
+ABSENCE_PHRASE = re.compile(
+    r"没有(报告|说明|给出|提到|提及|公布)|未(报告|提及|说明|给出|公布)|只字未提|都没有"
+)
 
 
 class Element:
@@ -168,6 +174,7 @@ class ReportIndex(HTMLParser):
         self.boundary_ids: list[tuple[str, int | None]] = []
         self.boundary_kinds: dict[str, str] = {}
         self.boundary_citations: dict[str, list[str]] = {}
+        self.boundary_text: dict[str, list[str]] = {}
         self.unlabelled_boundaries: list[tuple[int, int | None]] = []
         self.review_card_fields: list[tuple[str, list[str]]] = []
         self.experiment_card_fields: list[tuple[str, list[str]]] = []
@@ -388,6 +395,9 @@ class ReportIndex(HTMLParser):
         for element in self._stack:
             if element.id in AUDIT_PANELS:
                 self.panel_text.setdefault(element.id, []).append(data)
+        enclosing = self._enclosing_boundary()
+        if enclosing:
+            self.boundary_text.setdefault(enclosing, []).append(data)
 
         # A 证据边界 needs a B-id unless its whole value is 无. The verdict can only
         # be reached once the containing element closes, so start buffering here.
@@ -608,6 +618,12 @@ def validate(
             continue
         required = BOUNDARY_KINDS[kind]
         if required is None:
+            body = "".join(index.boundary_text.get(boundary, []))
+            if ABSENCE_PHRASE.search(body):
+                errors.append(
+                    f'{boundary} declares data-kind="fact" but its own text says the'
+                    " sources report nothing — declare missing, or drop the claim"
+                )
             continue
         cited = index.boundary_citations.get(boundary, [])
         if not any(ledger_label.get(e) == required for e in cited):
