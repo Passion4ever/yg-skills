@@ -552,7 +552,7 @@
         <h3>3.5 位置信息与堆叠的稳定性</h3>
         <p>位置信息用一组不同频率的正弦、余弦函数补回来，直接加到词向量上。作者选正弦而不是可学习的位置向量，理由是它可能外推到比训练时更长的句子。〔<a class="evidence-link" href="#E05">E05</a>〕</p>
         <p>最后是堆叠。六层子层叠起来，梯度要能传到底。作者在每个子层外面套一个残差连接，再做一次层归一化，论文写成 LayerNorm(x + Sublayer(x))，即先相加、后归一化。〔<a class="evidence-link" href="#E03">E03</a>〕</p>
-        <aside class="evidence-boundary" id="B01">
+        <aside class="evidence-boundary" id="B01" data-kind="conflict">
           <strong>证据边界：</strong>论文写的是先相加、后归一化。官方代码 <code>tensor2tensor</code> 的默认配置 <code>transformer_base</code> 执行的却是先归一化、再进子层：<code>layer_preprocess_sequence="n"</code> 配 <code>layer_postprocess_sequence="da"</code>。代码里另有一行注释指明 <code>("", "dan")</code> 才是"已发表的那个版本"。两种写法在这份代码里都存在，默认走的是后者。这是理解本节必须知道的事实，其影响在第 7 节评估。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E20">E20</a>、<a class="evidence-link" href="#E21">E21</a>〕
         </aside>
 
@@ -576,7 +576,7 @@
         <h3>4.4 优化器与学习率</h3>
         <p>优化器是 Adam，β₁=0.9、β₂=0.98、ε=1e-9。学习率不是常数，先在前 4000 步线性升上去，之后按步数的负平方根衰减。这个先升后降的做法叫 warmup。〔<a class="evidence-link" href="#E08">E08</a>〕</p>
         <p>warmup 不是可有可无的装饰。它与 3.5 节那个"先相加、后归一化"的顺序直接相关：这种顺序在初始化时靠近输出层的梯度很大，不先压住学习率就容易发散。〔<a class="evidence-link" href="#E24">E24</a>〕</p>
-        <aside class="evidence-boundary" id="B02">
+        <aside class="evidence-boundary" id="B02" data-kind="conflict">
           <strong>证据边界：</strong>论文报告的三个训练超参在公开代码的默认配置里都不是这个值。warmup 从 4000 变成 8000，Adam 的 β₂ 从 0.98 变成 0.997，学习率也换了一套参数化写法。论文那组值保留在 <code>transformer_base_v1</code> 里，但默认调用的 <code>transformer_base</code> 继承的是 v2 与 v3 的覆写。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E17">E17</a>、<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E19">E19</a>〕
         </aside>
 
@@ -586,9 +586,9 @@
 
         <h3>4.6 从检查点到译文</h3>
         <p>报告的分数不是单个检查点的结果。基础模型取最后 5 个检查点的平均，大模型取最后 20 个。解码用束搜索，束宽 4，长度惩罚 0.6。〔<a class="evidence-link" href="#E10">E10</a>〕</p>
-        <aside class="evidence-boundary" id="B03">
+        <aside class="evidence-boundary" id="B03" data-kind="missing">
           <strong>证据边界：</strong>公开材料没有指明表 2 的数字由哪一组超参、哪个代码版本产出。论文只给出仓库地址，仓库里同时存在与论文一致的 <code>transformer_base_v1</code> 和与论文不一致的默认 <code>transformer_base</code>，且没有文档说明哪一个对应表 2。〔<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E16">E16</a>、<a class="evidence-link" href="#E17">E17</a>、<a class="evidence-link" href="#E26">E26</a>〕
-        </aside>
+        〔<a class="evidence-link" href="#E27">E27</a>〕</aside>
 
       </section>
 
@@ -617,7 +617,7 @@
 
         <h3>5.6 输出</h3>
         <p>解码器最后一层的 n×512 过一个线性层升到词表大小，再过 softmax。这个线性层与词向量表共享权重。训练时用带标签平滑的交叉熵，推理时用束搜索逐词展开。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E10">E10</a>〕</p>
-        <aside class="evidence-boundary" id="B04">
+        <aside class="evidence-boundary" id="B04" data-kind="conflict">
           <strong>证据边界：</strong>论文只列出两处 dropout：子层输出、词向量与位置向量之和。公开代码的默认配置另有两处：注意力分数上的 <code>attention_dropout=0.1</code>，以及前馈中间层上的 <code>relu_dropout=0.1</code>。这两处在 <code>transformer_base_v1</code> 里都是 0.0，是 v2 把它们打开的。论文全文没有提到这两项。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E17">E17</a>、<a class="evidence-link" href="#E18">E18</a>〕
         </aside>
 
@@ -640,10 +640,10 @@
             <dt>数据与指标</dt><dd>英译德 newstest2014、英译法 newstest2014，指标为 BLEU，越高越好。另有一列估算的训练浮点运算量。〔<a class="evidence-link" href="#E10">E10</a>〕</dd>
             <dt>实际观察到什么</dt><dd>基础模型英译德 27.3、英译法 38.1。大模型 28.4 与 41.8，两项均为表内最高。大模型的估算成本为 2.3×10¹⁹，GNMT+RL 集成为 1.8×10²⁰。〔<a class="evidence-link" href="#E10">E10</a>〕</dd>
             <dt>作者据此主张什么</dt><dd>在两个任务上取得新的最好成绩，英译德一项超过此前所有集成；训练成本只是同类最好模型的一小部分。〔<a class="evidence-link" href="#E02">E02</a>、<a class="evidence-link" href="#E15">E15</a>〕</dd>
-            <dt>证据边界</dt><dd class="evidence-boundary" id="B05">论文没有说明 BLEU 的计算口径。它只声明困惑度按子词计算，对 BLEU 的分词与规范化方式只字未提。表内其他行来自各自原论文，口径同样未知。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E22">E22</a>〕</dd>
+            <dt>证据边界</dt><dd class="evidence-boundary" id="B05" data-kind="missing">论文没有说明 BLEU 的计算口径。它只声明困惑度按子词计算，对 BLEU 的分词与规范化方式只字未提。表内其他行来自各自原论文，口径同样未知。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E22">E22</a>〕</dd>
           </dl>
         </section>
-        <aside class="evidence-boundary" id="B06">
+        <aside class="evidence-boundary" id="B06" data-kind="fact">
           <strong>证据边界：</strong>表 2 那一列「训练成本」不是实测的浮点运算量。论文说明它由训练时间、GPU 数量、以及对每张 GPU 单精度持续算力的一个估计相乘得到。这三项里只有前两项属于本文自己，第三项是估计值，而基线各行的时间与硬件来自不同论文。〔<a class="evidence-link" href="#E11">E11</a>〕</aside>
 
         <section id="exp-heads" class="experiment-card">
@@ -656,7 +656,7 @@
             <dt>数据与指标</dt><dd>newstest2013 开发集，报告困惑度与 BLEU。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
             <dt>实际观察到什么</dt><dd>单头 24.9 BLEU，比 8 头的 25.8 低 0.9。4 头 25.5，16 头 25.8，32 头回落到 25.4。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
             <dt>作者据此主张什么</dt><dd>多头优于单头，但头数过多反而变差。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
-            <dt>证据边界</dt><dd class="evidence-boundary" id="B07">表 3 每一行都是单次训练的结果。论文没有报告随机种子、没有重复实验、也没有给出任何波动范围。8 头与 16 头之间的 25.8 对 25.8、4 头与 32 头之间的 25.5 对 25.4，都落在无法与噪声区分的范围里。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E25">E25</a>〕</dd>
+            <dt>证据边界</dt><dd class="evidence-boundary" id="B07" data-kind="missing">表 3 每一行都是单次训练的结果。论文没有报告随机种子、没有重复实验、也没有给出任何波动范围。8 头与 16 头之间的 25.8 对 25.8、4 头与 32 头之间的 25.5 对 25.4，都落在无法与噪声区分的范围里。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E25">E25</a>〕</dd>
           </dl>
         </section>
 
@@ -841,7 +841,7 @@
             <tr><td>批大小口径</td><td>约 25000 源端 + 25000 目标端子词</td><td><code>batch_size=4096</code>（按 token 计，单卡）</td><td>〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E17">E17</a>〕</td></tr>
             <tr><td>层数 / d_model / d_ff / 头数（基础）</td><td>6 / 512 / 2048 / 8</td><td>6 / 512 / 2048 / 8</td><td>〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E17">E17</a>〕</td></tr>
             <tr><td>层数 / d_model / d_ff / 头数（大）</td><td>6 / 1024 / 4096 / 16</td><td>6 / 1024 / 4096 / 16</td><td>〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E18">E18</a>〕</td></tr>
-          </tbody></table>
+          <tr class="ledger-row" id="E27"><td><strong>E27</strong></td><td>[缺失]</td><td>Vaswani 等与 tensorflow/tensor2tensor</td><td>arXiv:1706.03762v7 / commit bafdc1b67730</td><td>论文与仓库检索</td><td>无任何材料指明表 2 由哪一组 hparams 与哪个 commit 产出</td><td>已检索</td></tr></tbody></table>
           <p>语料与切分：英译德 WMT 2014 约 450 万句对、BPE、共享词表约 37000；英译法 3600 万句、word-piece 词表 32000。两个任务切分口径不同。〔<a class="evidence-link" href="#E06">E06</a>〕</p>
           <p>硬件与时长：8 张 P100。基础 0.4 秒/步 × 10 万步 ≈ 12 小时；大模型 1.0 秒/步 × 30 万步 ≈ 3.5 天。〔<a class="evidence-link" href="#E07">E07</a>〕</p>
           <p>检查点与解码：基础取最后 5 个检查点平均，大模型取最后 20 个；束宽 4，长度惩罚 0.6。〔<a class="evidence-link" href="#E10">E10</a>〕</p>

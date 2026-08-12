@@ -27,7 +27,7 @@
     <dt>数据与指标</dt><dd>数据集与规模；指标名称、方向与计算口径。</dd>
     <dt>实际观察到什么</dt><dd>只写读数，不写解释。</dd>
     <dt>作者据此主张什么</dt><dd>作者从读数推出的话，按作者的原意写。</dd>
-    <dt>证据边界</dt><dd class="evidence-boundary" id="B01">这项实验没有报告的、理解结论必须知道的事实。严重性留给第 7 节。〔<a class="evidence-link" href="#E02">E02</a>〕</dd>
+    <dt>证据边界</dt><dd class="evidence-boundary" id="B01" data-kind="missing">这项实验没有报告的、理解结论必须知道的事实。严重性留给第 7 节。〔<a class="evidence-link" href="#E02">E02</a>〕</dd>
   </dl>
 </section>
 
@@ -56,8 +56,15 @@
 <!-- ============================================================================
   3. 独立证据边界 — 第 1–6 节任意位置。中性陈述事实，不评级、不给替代解释。
      每个边界一件事，一个 Bnn，第 7 节必须兑现。
+     data-kind 词表（必须声明，且台账要有对应标签的行兑现）：
+       conflict  两处说法打架        → 必须引一行 [冲突]
+       missing   现有材料没有报告    → 必须引一行 [缺失]
+       external  外部一手材料查出来的 → 必须引一行 [外部核验]
+       inference 从已有证据推出来的  → 必须引一行 [推断]
+       fact      论文自己就写了、但会改变结论支持范围的事实 → 无额外要求
+     台账只记「证据在哪」是不够的：它还要记「这条证据是什么身份」。
 ============================================================================ -->
-<aside class="evidence-boundary" id="B01">
+<aside class="evidence-boundary" id="B01" data-kind="conflict">
   <strong>证据边界：</strong>论文报告……，公开代码实际执行……。这是理解本节必须知道的事实；对结论的影响在第 7 节集中评估。〔<a class="evidence-link" href="#E01">E01</a>〕
 </aside>
 
@@ -146,8 +153,10 @@
 <!-- ============================================================================
   10. 审计面板 — 仅 audit 模式，四块，紧接第 8 节之后。
       id 固定为 data-training / model-dataflow / experiment-matrix / critical-review。
+      四块必须齐全、必须折叠（不带 open）；standard 模式下一块都不能出现。
+      面板里不下判断：判定用语只能出现在第 7 章。
 ============================================================================ -->
-<details class="provenance" id="data-training" open>
+<details class="provenance" id="data-training">
   <summary>数据与训练完整清单</summary>
   <div class="details-body table-scroll">穷尽配置与次要的论文-代码差异，引用已有 E 编号，不重复正文散文。</div>
 </details>

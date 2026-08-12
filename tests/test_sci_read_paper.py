@@ -772,7 +772,7 @@ class ReportValidatorTests(unittest.TestCase):
     def test_validator_allows_a_boundary_field_that_raises_nothing(self):
         """证据边界：无 is a valid statement and needs no B-id."""
         pattern = re.compile(
-            r'<dt>证据边界</dt><dd class="evidence-boundary" id="(B\d{2})">.*?</dd>',
+            r'<dt>证据边界</dt><dd class="evidence-boundary" id="(B\d{2})"[^>]*>.*?</dd>',
             re.DOTALL,
         )
         for report in sorted((ROOT / "tests" / "sci-read-paper" / "outputs").rglob("*.html")):
@@ -1012,6 +1012,41 @@ class ReportValidatorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("must be exactly one evidence ID", result.stderr)
 
+    def test_every_boundary_declares_its_kind(self):
+        """The kind is a closed set, so the writer picks from it rather than
+        leaving the ledger to imply a status it never records."""
+        broken = self.corrupt(CPROMG_HTML, (' data-kind="conflict"', "", ))
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("must declare data-kind", result.stderr)
+
+        invented = self.corrupt(CPROMG_HTML, ('data-kind="conflict"', 'data-kind="hunch"'))
+        result = self.run_validator(invented)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("must declare data-kind", result.stderr)
+
+    def test_a_declared_kind_must_be_backed_by_the_ledger(self):
+        """A reading that found four contradictions logged one 冲突 row, because
+        nothing tied the boundary's status to the ledger."""
+        for kind, label in (("conflict", "[冲突]"), ("external", "[外部核验]")):
+            with self.subTest(kind=kind):
+                broken = self.corrupt(CPROMG_HTML, ('data-kind="fact"', f'data-kind="{kind}"'))
+                result = self.run_validator(broken)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(f"cites no {label}", result.stderr)
+
+    def test_boundary_kinds_are_published_where_the_writer_looks(self):
+        source = VALIDATOR.read_text(encoding="utf-8")
+        block = re.search(r"BOUNDARY_KINDS = \{(.*?)\n\}", source, re.DOTALL)
+        self.assertIsNotNone(block)
+        fragments = FRAGMENTS.read_text(encoding="utf-8")
+        contract = self.contract() if hasattr(self, "contract") else (
+            SKILL_DIR / "references" / "output-contract.md"
+        ).read_text(encoding="utf-8")
+        for kind in re.findall(r'"([a-z]+)":', block.group(1)):
+            self.assertIn(kind, fragments, f"kind {kind!r} is not in fragments.html")
+            self.assertIn(kind, contract, f"kind {kind!r} is not in the contract")
+
     def test_boundaries_are_numbered_in_reading_order(self):
         """Meeting B07 before B01 tells the reader they missed six, not that the
         report was assembled out of order."""
@@ -1237,15 +1272,22 @@ class ClosedVocabularyTests(unittest.TestCase):
         )
 
     def test_a_boundary_must_carry_the_class_that_makes_it_visible(self):
+        source = CPROMG_HTML.read_text(encoding="utf-8")
+        # matched, not quoted: attributes get added to this element over time
+        tag = re.search(r'<aside class="evidence-boundary" id="(B\d+)"[^>]*>', source)
+        self.assertIsNotNone(tag, "no standalone boundary in the showcase")
         self.assert_rejected(
             'does not carry class="evidence-boundary"',
-            ('<aside class="evidence-boundary" id="B01">', '<aside id="B01">'),
+            (tag.group(0), tag.group(0).replace(' class="evidence-boundary"', "")),
         )
 
     def test_a_card_boundary_needs_its_own_id(self):
+        source = CPROMG_HTML.read_text(encoding="utf-8")
+        tag = re.search(r'<dd class="evidence-boundary" id="(B\d+)"[^>]*>', source)
+        self.assertIsNotNone(tag, "no card boundary in the showcase")
         self.assert_rejected(
             "needs its own Bnn id",
-            ('<dd class="evidence-boundary" id="B06">', '<dd class="evidence-boundary">'),
+            (tag.group(0), tag.group(0).replace(f' id="{tag.group(1)}"', "")),
         )
 
     def test_the_status_badges_are_never_restated(self):

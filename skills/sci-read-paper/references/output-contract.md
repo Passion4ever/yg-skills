@@ -99,6 +99,15 @@ a conflict, state both what the paper reports and what released evidence shows.
 The boundary states facts only. Severity, alternatives, claim downgrades, and
 verdicts belong in Section 7. Raising a boundary is a promise; Section 7 keeps it.
 
+Every boundary declares what kind of thing it is, in `data-kind`: `conflict` when
+two sources disagree, `missing` when nothing reports it, `external` when a
+first-party source outside the paper established it, `inference` when it was
+reconstructed from cited evidence, `fact` when the paper itself states it and the
+statement still narrows what its conclusion supports. The first four must cite a
+ledger row carrying the matching label — `[冲突]`, `[缺失]`, `[外部核验]`,
+`[推断]`. Recording only where the evidence sits leaves the ledger unable to say
+that two rows disagree, and a reading that found four contradictions can log one.
+
 Keep one boundary to one fact. A boundary bundling four unreported items can be
 claimed by a card that addresses one of them, and the validator cannot tell the
 difference; a card discharges a boundary only by naming what that boundary

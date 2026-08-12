@@ -64,6 +64,19 @@ VERDICTS = {
     "可以相信": "verdict-supported",
 }
 LEDGER_LABELS = {"[论文]", "[代码]", "[外部核验]", "[推断]", "[缺失]", "[冲突]"}
+# What kind of thing a boundary is, declared rather than guessed. The label that
+# carries a boundary's epistemic status is the one the writer skips: readings that
+# found four contradictions logged one [冲突] row, because nothing made anyone
+# decide. Declaring the kind forces the decision; the gate only checks the ledger
+# backs the declaration. 'fact' is for something the paper itself reports that
+# still changes what its conclusion supports, and needs no special row.
+BOUNDARY_KINDS = {
+    "conflict": "[冲突]",
+    "missing": "[缺失]",
+    "external": "[外部核验]",
+    "inference": "[推断]",
+    "fact": None,
+}
 LEDGER_COLUMNS = 7
 BUILD_META = "sci-read-paper"
 SECTION_MIN_CJK = 300
@@ -153,6 +166,8 @@ class ReportIndex(HTMLParser):
         self.classes_by_id: dict[str, set[str]] = {}
         self.evidence_links: list[tuple[str, str, int]] = []
         self.boundary_ids: list[tuple[str, int | None]] = []
+        self.boundary_kinds: dict[str, str] = {}
+        self.boundary_citations: dict[str, list[str]] = {}
         self.unlabelled_boundaries: list[tuple[int, int | None]] = []
         self.review_card_fields: list[tuple[str, list[str]]] = []
         self.experiment_card_fields: list[tuple[str, list[str]]] = []
@@ -179,6 +194,7 @@ class ReportIndex(HTMLParser):
         self._capture: list[str] | None = None
         self._capture_kind: str | None = None
         self._capture_href = ""
+        self._capture_boundary: str | None = None
         self._card_stack: list[list[list]] = []
         self._value: list[str] | None = None
         self._cells: list[str] | None = None
@@ -199,7 +215,13 @@ class ReportIndex(HTMLParser):
         return any("paper-hero" in element.classes for element in self._stack)
 
     def _has_boundary_ancestor(self) -> bool:
-        return any(BOUNDARY_ID.match(element.id) for element in self._stack)
+        return self._enclosing_boundary() is not None
+
+    def _enclosing_boundary(self) -> str | None:
+        for element in reversed(self._stack):
+            if BOUNDARY_ID.match(element.id):
+                return element.id
+        return None
 
     def _in_discharge_context(self) -> bool:
         """A boundary counts as discharged only from a review card or the closing list."""
@@ -229,6 +251,8 @@ class ReportIndex(HTMLParser):
         text = "".join(self._capture).strip()
         if self._capture_kind == "evidence":
             self.evidence_links.append((self._capture_href, text, self.getpos()[0]))
+            if self._capture_boundary:
+                self.boundary_citations.setdefault(self._capture_boundary, []).append(text)
         elif self._capture_kind == "chapter":
             self.chapter_labels.append(text)
         elif self._capture_kind == "heading":
@@ -290,6 +314,7 @@ class ReportIndex(HTMLParser):
                 self.section_ids.append(element_id)
             if BOUNDARY_ID.match(element_id):
                 self.boundary_ids.append((element_id, self.section))
+                self.boundary_kinds[element_id] = attributes.get("data-kind", "")
             if tag == "details":
                 self.details_open[element_id] = "open" in attributes
 
@@ -313,6 +338,7 @@ class ReportIndex(HTMLParser):
         self._flush_capture()
         if tag == "a" and "evidence-link" in classes:
             self._capture, self._capture_kind, self._capture_href = [], "evidence", href
+            self._capture_boundary = self._enclosing_boundary()
         elif tag == "p" and "chapter-label" in classes:
             self._capture, self._capture_kind = [], "chapter"
         elif tag == "h2" and self.section is not None:
@@ -570,6 +596,25 @@ def validate(
         errors.append(
             f"evidence boundaries are numbered out of reading order: {raised}"
         )
+
+    ledger_label = {row: cells[1] for row, cells in index.ledger_rows if len(cells) > 1}
+    for boundary, _section in index.boundary_ids:
+        kind = index.boundary_kinds.get(boundary, "")
+        if kind not in BOUNDARY_KINDS:
+            errors.append(
+                f'{boundary} must declare data-kind="{"|".join(BOUNDARY_KINDS)}",'
+                f" found {kind!r}"
+            )
+            continue
+        required = BOUNDARY_KINDS[kind]
+        if required is None:
+            continue
+        cited = index.boundary_citations.get(boundary, [])
+        if not any(ledger_label.get(e) == required for e in cited):
+            errors.append(
+                f'{boundary} declares data-kind="{kind}" but cites no {required}'
+                f" ledger row — the ledger has to carry the status, not just the source"
+            )
 
     discharged = {target for target, in_context in index.boundary_links if in_context}
     linked_anywhere = {target for target, _ in index.boundary_links}
