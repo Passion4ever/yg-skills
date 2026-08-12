@@ -27,7 +27,7 @@ allowed-tools: Bash(*), Read, Write, Edit, Grep, Glob, Skill, Task, mcp__codex__
 - `CONTRACT = references/delivery-contract.md` —— 交付契约:唯一的合格判据
 - `LEDGER_EVIDENCE = evidence.json` —— 权项特征 → 源证据
 - `LEDGER_ALTERNATIVES = alternatives.json` —— 具体选择 → 替代方案 + 依据
-- `REVIEWER_MODEL = gpt-5.6-sol` —— 经 Codex MCP 做外部审查员评审,推理强度 `high`
+- `REVIEWER_MODEL` —— 外部审查员评审用的模型,推理强度 `high`。**这里要的是性质,不是型号:与起草的模型不是同一个**,独立性才是这一步的意义。当前取 `gpt-5.6-sol`,经 Codex MCP 调用;型号过期就换,实际用了哪个记进 `metadata.assurance.external_review.model`
 - `QUESTIONS = evidence.json 的 inventor_questions 数组` —— 该问发明人而当下无人可答的问题
 - `FIGURES = figures/`(spec 放 `figures/specs/`) —— 附图与其源
 - `AUTO_PROCEED = false` —— **遇到该问的就停下来问用户**,保护范围是发明人的决定,不要自行替他拍板。只有当本次运行确实没有人可问时(如无人值守的子代理或批处理),才退而把问题原样写进 `QUESTIONS` 并继续——问题可以悬而未决,不可以消失。这是退路,不是省事的默认:能问就问
@@ -259,7 +259,7 @@ find . -maxdepth 3 -type d -not -path '*/.*' | sort
 
 1. **每一篇都要打开看过。** 检索结果的标题与摘要经常和正文对不上。专利号、申请人、公开日,以及你说它有什么缺陷——四样都要与原文对得上才能写。
 2. **搜不到就留白,不许填。** 写 `[待检索:<技术方向>]` 并记进 `QUESTIONS`,交给代理师补。留白是可见的缺口,编造的专利号是隐性的地雷——审查员一核就穿,而且会连累整篇的可信度。
-3. **无法联网时,整节按第 2 条处理**,并在 `evidence.json` 的 `metadata` 里写明 "本次未做专利检索"。不要用学术文献冒充,也不要凭印象写号码。
+3. **无法联网时,整节按第 2 条处理**,并把 `metadata.assurance.patent_search` 记成 `{"done": false, "reason": "…"}`——校验器查这一条(`ASSURANCE_NO_REASON`)。不要用学术文献冒充,也不要凭印象写号码。
 
 #### 效果对比表
 
@@ -307,7 +307,7 @@ find . -maxdepth 3 -type d -not -path '*/.*' | sort
 它提的每一条,处置结果都要落到纸面:采纳的直接改,不采纳的写进 `QUESTIONS` 或对应台账条目的 `note`,写明为什么不采纳。**不留痕的"看过了"等于没看。**
 
 **产物** 交底书「说明书」五节。
-**门禁** 🚦 首轮实质评审已做,每条意见都有处置记录(改了,或写明为何不改)。
+**门禁** 🚦 首轮实质评审已做,每条意见都有处置记录(改了,或写明为何不改);`metadata.assurance.external_review` 已如实填写——**做了就记模型,没做就记原因**。
 
 ### 阶段 5 —— 可替代实施方式
 

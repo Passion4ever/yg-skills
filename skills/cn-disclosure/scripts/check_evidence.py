@@ -186,6 +186,41 @@ def check(text: str, data: dict) -> list[tuple[str, str, str]]:
             'source_map 里有代码来源（C 前缀）却没有 metadata.anomalies。'
             '阶段 1 的自由深读须单独做一遍并留痕；确无反常时写成空数组。')
 
+    # --- 保障记录:降级可以，降级消失不行 ---
+    # 外部实质评审与专利检索都允许在不可用时跳过，两处也都写了"注明"。但"注明"此前只是
+    # 散文里的一句话:没有规定字段、没有校验、CONTRACT 里也没有列。结果是做过评审的稿子
+    # 和跳过的稿子，交到代理师手里长得一模一样——他无从知道这份稿子的实质问题有没有被
+    # 第二双眼睛看过。CONTRACT §6 已经说了"标着缺口的稿子可以交付，假装没有缺口的不行"，
+    # 这里只是把那句话放到能被核对的位置。
+    # 记录外部评审用的模型，还顺带解决了型号会过期的问题:型号写错时 MCP 调用当场失败、
+    # 字段留空，错法是响的而不是静默的;一年后回看也能知道当时是谁审的。
+    ass = meta.get('assurance')
+    if ass is None:
+        add('ERROR', 'NO_ASSURANCE_RECORD',
+            'metadata.assurance 缺失。外部实质评审与专利检索这两步做没做，必须落到纸面——'
+            '两者都允许跳过，但跳过的事实不能随本次运行一起消失。'
+            '格式：{"external_review": {"done": bool, "model": str, "reason": str}, '
+            '"patent_search": {"done": bool, "database": str, "reason": str}}。')
+    elif isinstance(ass, dict):
+        for key, label in (('external_review', '外部实质评审'), ('patent_search', '专利检索')):
+            item = ass.get(key)
+            if not isinstance(item, dict) or 'done' not in item:
+                add('ERROR', 'ASSURANCE_INCOMPLETE',
+                    f'metadata.assurance.{key} 缺失或没有 done 字段。{label}做没做要明确表态。')
+            elif not item.get('done'):
+                if not str(item.get('reason', '')).strip():
+                    add('ERROR', 'ASSURANCE_NO_REASON',
+                        f'{label}标为未做，却没写 reason。可以不做，不可以不说为什么——'
+                        f'代理师要靠这句话判断这份稿子还缺哪一道把关。')
+                else:
+                    add('WARNING', 'ASSURANCE_SKIPPED',
+                        f'{label}未做（{str(item.get("reason"))[:40]}）。'
+                        f'该事实须随交底书一并呈报，不要只留在运行记录里。')
+            elif key == 'external_review' and not str(item.get('model', '')).strip():
+                add('WARNING', 'ASSURANCE_NO_MODEL',
+                    '外部评审标为已做但没记录用的是哪个模型。型号会过期，'
+                    '记下来才知道一年后这份稿子当时是被谁审的。')
+
     # --- 待确认项:能问就该问，没问就该记 ---
     q = data.get('inventor_questions')
     if q is None:

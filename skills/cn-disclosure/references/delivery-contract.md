@@ -10,6 +10,7 @@
 | `交底书.docx` | 公式为原生 OMML、附图已内嵌 |
 | `evidence.json` | `source_map` / `evidence_ledger` / `claim_feature_map` 三者非空;`metadata` 下 `prior_filings`(在先申请检索)、`inventory`(目录清点)、`source_coverage`(主文档逐节表态)、`discrepancies`(每条带 `question`)、`inventor_questions` 齐备,有源码时另加 `anomalies`(自由深读所见) |
 | `alternatives.json` | 每个具体选择均已处置 |
+| `evidence.json` 的 `metadata.assurance` | 外部实质评审与专利检索**各自做没做**，未做的写明原因；已做的外部评审记下用的模型 |
 | `figures/fig*.png` | 与 `figures/specs/*.json` 一一对应 |
 
 由 `check_complete.py`(文件与硬性键)与 `check_evidence.py`(`metadata.inventory`、`inventor_questions`)共同核对。
@@ -48,3 +49,5 @@ python scripts/check_all.py 交底书.md
 **不要为了让校验器变绿而删内容。** 缺的是事实就回去查;查不到就留白,记进 `QUESTIONS`,把缺口交给代理师。
 
 **标着缺口的稿子可以交付,假装没有缺口的不行。**
+
+这条对两道可跳过的把关同样成立:外部实质评审在 MCP 不可用时可以跳过,专利检索在无法联网时可以跳过——**但跳过的事实要写进 `metadata.assurance` 并随交底书呈报**,否则做过与没做过的稿子交到代理师手里长得一模一样。

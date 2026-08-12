@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -183,6 +184,38 @@ def add_image(doc, path: Path, landscape: bool, alt: str = ''):
         doc_pr.set('descr', alt)
 
 
+def add_assurance_note(doc, src: Path) -> None:
+    """把保障记录印在正文最前面。
+
+    外部实质评审与专利检索都允许跳过,跳过的事实此前只活在运行记录里——做过的稿子和
+    跳过的稿子交到代理师手里长得一模一样,他无从判断这份稿子还缺哪一道把关。取自
+    evidence.json 而不是让人在 Markdown 里另抄一遍:两处各写一份迟早会对不上。
+    """
+    ledger = src.parent / 'evidence.json'
+    if not ledger.is_file():
+        return
+    try:
+        assurance = json.loads(ledger.read_text(encoding='utf8')).get('metadata', {}).get('assurance')
+    except (json.JSONDecodeError, AttributeError):
+        return
+    if not isinstance(assurance, dict):
+        return
+
+    gaps = []
+    for key, label in (('external_review', '外部实质评审'), ('patent_search', '专利检索')):
+        item = assurance.get(key)
+        if isinstance(item, dict) and not item.get('done'):
+            reason = str(item.get('reason', '')).strip() or '未说明原因'
+            gaps.append(f'{label}：未做（{reason}）')
+    if not gaps:
+        return
+
+    para = doc.add_paragraph()
+    _inline(para, '本稿的把关缺口：' + '；'.join(gaps) + '。请代理师在此基础上评估。', BODY_PT)
+    for run in para.runs:
+        run.bold = True
+
+
 def render(src: Path, out: Path, landscape_stems: set[str]) -> None:
     doc = Document()
     st = doc.styles['Normal']
@@ -190,6 +223,8 @@ def render(src: Path, out: Path, landscape_stems: set[str]) -> None:
     st.element.rPr.rFonts.set(qn('w:eastAsia'), BODY_FONT_CJK)
     set_orientation(doc.sections[0], False)
     cur_landscape = False
+
+    add_assurance_note(doc, src)
 
     lines = src.read_text(encoding='utf8').split('\n')
     i = 0
