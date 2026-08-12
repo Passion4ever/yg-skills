@@ -1012,6 +1012,21 @@ class ReportValidatorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("must be exactly one evidence ID", result.stderr)
 
+    def test_boundaries_are_numbered_in_reading_order(self):
+        """Meeting B07 before B01 tells the reader they missed six, not that the
+        report was assembled out of order."""
+        source = CPROMG_HTML.read_text(encoding="utf-8")
+        first = re.search(r'id="(B\d{2})"', source).group(1)
+        broken = self.corrupt(
+            CPROMG_HTML,
+            (f'id="{first}"', 'id="B99"'),
+            (f'href="#{first}"', 'href="#B99"'),
+            (f">{first}</a>", ">B99</a>"),
+        )
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("out of reading order", result.stderr)
+
     def test_validator_rejects_a_dropped_evidence_boundary(self):
         """The defect that shipped in a showcase must now fail the build."""
         source = CPROMG_HTML.read_text(encoding="utf-8")

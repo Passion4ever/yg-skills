@@ -563,6 +563,14 @@ def validate(
                 f'{boundary} does not carry class="evidence-boundary";'
                 " Section 7's link would jump to an unhighlighted element"
             )
+    # numbered in reading order, so a reader meeting B07 before B01 knows the
+    # report was assembled out of order rather than that they missed six
+    raised = [boundary for boundary, _section in index.boundary_ids]
+    if raised != sorted(raised):
+        errors.append(
+            f"evidence boundaries are numbered out of reading order: {raised}"
+        )
+
     discharged = {target for target, in_context in index.boundary_links if in_context}
     linked_anywhere = {target for target, _ in index.boundary_links}
     for boundary, section in index.boundary_ids:
