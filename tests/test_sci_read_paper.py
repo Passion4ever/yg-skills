@@ -1,3 +1,4 @@
+import ast
 import json
 import re
 import subprocess
@@ -182,6 +183,38 @@ class SkillContractTests(unittest.TestCase):
         self.assertLessEqual(len(description), 500)
         for keyword in ("AI/ML", "paper", "protein", "small-molecule"):
             self.assertIn(keyword, description)
+
+    def test_readme_numbers_match_the_code(self):
+        """A README that states counts will drift from them; these are the ones a
+        reader would act on."""
+        readme = (SKILL_DIR / "README.md").read_text(encoding="utf-8")
+        validator = VALIDATOR.read_text(encoding="utf-8")
+        template = HTML_TEMPLATE.read_text(encoding="utf-8")
+
+        checks = len(re.findall(r"^    # \d+[a-z]?\. ", validator, re.MULTILINE))
+        self.assertIn(f"{checks} 组检查", readme)
+        placeholders = len(set(re.findall(r"\{\{[A-Z0-9_]+\}\}", template)))
+        self.assertIn(f"{placeholders} 个占位符", readme)
+        for constant in ("SENTENCE_HARD_CAP", "SENTENCE_MAX_CLAUSES", "TERM_DENSITY_FAIL"):
+            value = re.search(rf"{constant} = (\d+)", validator).group(1)
+            self.assertIn(value, readme, f"{constant} changed but the README still says otherwise")
+
+    def test_readme_claims_no_dependencies_and_has_none(self):
+        """The claim is worth making only while it stays true."""
+        readme = (SKILL_DIR / "README.md").read_text(encoding="utf-8")
+        self.assertIn("纯标准库", readme)
+        stdlib = set(sys.stdlib_module_names)
+        for script in (SKILL_DIR / "scripts").glob("*.py"):
+            tree = ast.parse(script.read_text(encoding="utf-8"))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    names = {alias.name.split(".")[0] for alias in node.names}
+                elif isinstance(node, ast.ImportFrom) and node.module:
+                    names = {node.module.split(".")[0]}
+                else:
+                    continue
+                outside = names - stdlib - {"__future__"}
+                self.assertEqual(outside, set(), f"{script.name} imports {outside}")
 
     def test_skill_body_is_compact(self):
         _frontmatter, body = read_frontmatter(SKILL_MD)
