@@ -816,6 +816,28 @@ class ReportValidatorTests(unittest.TestCase):
                 result = self.run_validator(variant)
                 self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_a_list_written_as_prose_fails_on_clause_count(self):
+        """Every over-long sentence observed so far was a list — hyperparameters,
+        a symbol legend, three conflicting numbers — written as prose. Character
+        count only catches those once they are already unreadable."""
+        crowded = "输入是128维向量，隐藏维128，两层双向，dropout0.2，批大小400，学习率0.01。"
+        broken = self.corrupt(
+            CPROMG_HTML,
+            ('<main id="main-content">', f'<main id="main-content"><p>{crowded}</p>'),
+        )
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("clauses in one sentence", result.stderr)
+
+    def test_the_same_list_inside_a_table_is_exempt(self):
+        """A table is how a reader scans a list, so it carries no sentence limits."""
+        cells = "".join(f"<td>项目{n}，取值{n}，说明{n}，备注{n}，其它{n}，补充{n}</td>" for n in range(3))
+        clean = self.corrupt(
+            CPROMG_HTML,
+            ('<main id="main-content">', f'<main id="main-content"><table><tr>{cells}</tr></table>'),
+        )
+        self.assertEqual(self.run_validator(clean).returncode, 0)
+
     def test_validator_rejects_a_run_on_sentence(self):
         run_on = "这是一个被故意写得非常冗长的句子" * 9  # 135 CJK characters
         broken = self.corrupt(

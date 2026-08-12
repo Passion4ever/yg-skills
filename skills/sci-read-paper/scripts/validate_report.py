@@ -112,6 +112,13 @@ READING_LENGTH_PER_BOUNDARY = 350
 SENTENCE_HARD_CAP = 120
 SENTENCE_P90_CAP = 80
 SENTENCE_MEDIAN_TARGET = 45
+# Clauses, not characters. The over-long sentences in every reading turned out to
+# be the same thing — a configuration list, a symbol legend, a set of conflicting
+# numbers — written as prose instead of as a table. Character count only catches
+# that once it is already unreadable; clause count catches the shape. Four
+# readings written under the contract never exceed three; the two that ran long
+# reached five and seven.
+SENTENCE_MAX_CLAUSES = 4
 # Distinct English terms per 1000 CJK characters — not the share of Latin
 # characters, which conflates two opposite things. Reusing one glossed term a
 # hundred times is the healthy pattern; introducing a hundred terms once each is
@@ -798,6 +805,15 @@ def validate(
             errors.append(
                 f"and {len(runons) - 5} more sentences over {SENTENCE_HARD_CAP} characters"
             )
+        crowded = [s for s in sentences if s.count("，") > SENTENCE_MAX_CLAUSES]
+        for sentence in crowded[:3]:
+            errors.append(
+                f"{sentence.count('，') + 1} clauses in one sentence:"
+                f" {sentence[:34]}… — a configuration or symbol list belongs in a"
+                " table, which the sentence limits exempt"
+            )
+        if len(crowded) > 3:
+            errors.append(f"and {len(crowded) - 3} more sentences over {SENTENCE_MAX_CLAUSES} clauses")
         if p90 > SENTENCE_P90_CAP:
             errors.append(
                 f"90th-percentile sentence is {p90} characters, limit {SENTENCE_P90_CAP};"

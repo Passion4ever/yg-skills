@@ -851,7 +851,7 @@
       <details class="provenance" id="model-dataflow">
         <summary>模型接口与形状完整表</summary>
         <div class="details-body table-scroll">
-          <p>记号：B 为批大小，n 为源端长度，m 为目标端长度，d=512（基础模型），h=8，d_k=d_v=64。</p>
+          <table><thead><tr><th>记号</th><th>含义</th></tr></thead><tbody><tr><td>B</td><td>批大小</td></tr><tr><td>n</td><td>源端长度</td></tr><tr><td>m</td><td>目标端长度</td></tr><tr><td>d</td><td>512（基础模型）</td></tr><tr><td>h</td><td>8</td></tr><tr><td>d_k, d_v</td><td>64</td></tr></tbody></table>
           <table><thead><tr><th>阶段</th><th>输入形状</th><th>操作</th><th>输出形状</th><th>证据</th></tr></thead><tbody>
             <tr><td>词嵌入</td><td>B×n（整数）</td><td>查表，乘 √d</td><td>B×n×512</td><td>〔<a class="evidence-link" href="#E05">E05</a>〕</td></tr>
             <tr><td>位置编码</td><td>B×n×512</td><td>加正弦余弦向量</td><td>B×n×512</td><td>〔<a class="evidence-link" href="#E05">E05</a>〕</td></tr>

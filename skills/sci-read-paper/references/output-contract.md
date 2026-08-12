@@ -139,8 +139,15 @@ A reader who has to re-read a sentence to parse it has been failed, however
 correct the content is. `validate_report.py` measures paragraph, list and card
 prose — tables, code and diagrams are exempt — and fails a report whose sentences
 run long: none past **120 characters**, 90th percentile at or under **80**, median
-near **45**. Split a long sentence at its seams rather than compressing it: one
-clause that states the fact, one that states what follows.
+near **45**, and no sentence carrying more than **4** comma-separated clauses.
+Split a long sentence at its seams rather than compressing it: one clause that
+states the fact, one that states what follows.
+
+The clause limit catches a different failure from the character limits. Every
+over-long sentence observed so far was a list — a hyperparameter set, a symbol
+legend, three conflicting numbers — written as prose. Put those in a table, which
+is exempt from all of these limits precisely because a table is how a reader
+scans a list.
 
 Gloss the load-bearing terms. The first time an English concept word appears, say
 in plain Chinese what it means, then use the term freely:
