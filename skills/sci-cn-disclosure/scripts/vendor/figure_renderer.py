@@ -2,7 +2,7 @@
 """VENDORED — do not edit here.
 
 Upstream: the `figure-spec` skill's FigureSpec renderer (tools/figure_renderer.py).
-Copied in so cn-disclosure's 阶段 6 does not depend on an unrelated checkout being
+Copied in so sci-cn-disclosure's 阶段 6 does not depend on an unrelated checkout being
 present at a fixed absolute path. Re-vendor by copying upstream over this file and
 restoring this header; set CN_DISCLOSURE_RENDERER to point elsewhere at runtime.
 

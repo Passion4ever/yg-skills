@@ -1,4 +1,4 @@
-# cn-disclosure
+# sci-cn-disclosure
 
 把论文、源码、运行产物、附图、发明人笔记,转成**中国发明专利技术交底书**,交学校知识产权办公室与专利代理所。
 
@@ -15,7 +15,7 @@
 复制到个人技能目录即可:
 
 ```bash
-git clone <this-repo> ~/.claude/skills/cn-disclosure
+git clone <this-repo> ~/.claude/skills/sci-cn-disclosure
 ```
 
 ## 依赖

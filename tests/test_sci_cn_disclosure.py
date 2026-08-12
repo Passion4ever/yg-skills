@@ -1,4 +1,4 @@
-"""cn-disclosure 的校验器测试。
+"""sci-cn-disclosure 的校验器测试。
 
 这套校验器有 94 个错误码，此前一个测试也没有。三次在 sci-read-paper 上的经验是：
 一条看着没问题的检查可以永远不触发，而且只有负例测试会发现——眼睛看不出来，跑一遍
@@ -21,9 +21,9 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL = ROOT / "skills" / "cn-disclosure"
+SKILL = ROOT / "skills" / "sci-cn-disclosure"
 SCRIPTS = SKILL / "scripts"
-FIXTURE = ROOT / "tests" / "cn-disclosure" / "outputs"
+FIXTURE = ROOT / "tests" / "sci-cn-disclosure" / "outputs"
 DISCLOSURE = "交底书.md"
 
 
@@ -494,7 +494,7 @@ class CoverageTests(unittest.TestCase):
         defined, tested = self.defined_codes(), self.gather_tested_codes()
         missing = sorted(defined - tested)
         print(
-            f"\n  cn-disclosure 错误码覆盖：{len(tested & defined)}/{len(defined)}"
+            f"\n  sci-cn-disclosure 错误码覆盖：{len(tested & defined)}/{len(defined)}"
             f"，未覆盖 {len(missing)} 个：\n    " + ", ".join(missing)
         )
         self.assertLessEqual(
