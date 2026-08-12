@@ -20,6 +20,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "skills" / "sci-cn-disclosure"
 SCRIPTS = SKILL / "scripts"
@@ -465,6 +467,39 @@ def raw_subscript(self, work):
     data = load(spec)
     data["nodes"][1]["label"] = "滑动切分 L_w"
     dump(spec, data)
+
+
+class AgentCardTests(unittest.TestCase):
+    """agents/openai.yaml 只有 Codex 读，Claude Code 完全不看它。
+
+    留着它的代价是四行，收益是这个技能在 Codex 里也有显示名而不只是一个 SKILL.md。
+    但两个技能要么都有要么都没有——一个有一个没有是最差的状态，因为没人会记得为什么。
+    """
+
+    def card(self, skill: str) -> dict:
+        path = ROOT / "skills" / skill / "agents" / "openai.yaml"
+        self.assertTrue(path.is_file(), f"{skill} 缺少 agents/openai.yaml")
+        return yaml.safe_load(path.read_text(encoding="utf-8"))
+
+    def test_this_skill_has_a_card_matching_its_name(self):
+        interface = self.card("sci-cn-disclosure")["interface"]
+        self.assertEqual(interface["display_name"], "SCI CN Disclosure")
+        self.assertGreaterEqual(len(interface["short_description"]), 25)
+        self.assertLessEqual(len(interface["short_description"]), 64)
+        self.assertIn("$sci-cn-disclosure", interface["default_prompt"])
+
+    def test_no_implicit_invocation_policy(self):
+        """Every card in the Codex cache carrying policy.allow_implicit_invocation
+        is an artifact template picked from a menu; the fourteen that are actual
+        skills omit it. This is a skill — it triggers from 「帮我写份技术交底书」."""
+        self.assertNotIn("policy", self.card("sci-cn-disclosure"))
+
+    def test_both_skills_in_this_repo_carry_a_card(self):
+        """Either both have one or neither does. One of each is the state nobody
+        will remember the reason for."""
+        for skill in sorted(p.name for p in (ROOT / "skills").iterdir() if p.is_dir()):
+            with self.subTest(skill=skill):
+                self.assertIn("interface", self.card(skill))
 
 
 class CoverageTests(unittest.TestCase):

@@ -1,0 +1,4 @@
+interface:
+  display_name: "SCI CN Disclosure"
+  short_description: "Draft a Chinese invention-patent technical disclosure"
+  default_prompt: "Use $sci-cn-disclosure to draft a Chinese invention patent technical disclosure from the materials in this directory."
