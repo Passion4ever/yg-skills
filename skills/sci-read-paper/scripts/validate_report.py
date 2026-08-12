@@ -74,6 +74,10 @@ INLINE_TAGS = {
     "a", "b", "code", "em", "i", "mark", "small", "span", "strong", "sub", "sup", "u",
 }
 FOOTER_DISCLOSURES = ("report-info", "evidence-ledger")
+# audit mode adds traceability, not a second narrative. The four panels are a
+# fixed set: an audit report that ships three of them, or renames one, is not a
+# different reading — it is an incomplete one, and nothing said so until now.
+AUDIT_PANELS = ("data-training", "model-dataflow", "experiment-matrix", "critical-review")
 NO_EFFECT_BLOCK = "no-effect-boundaries"
 FIGURE_OUTPUT = "figure-output"
 EVIDENCE_ID = re.compile(r"^E\d{2,}$")
@@ -160,6 +164,7 @@ class ReportIndex(HTMLParser):
         self.images: list[str] = []
         self.prose_blocks: list[str] = []
         self.section_text: dict[int, list[str]] = {}
+        self.panel_text: dict[str, list[str]] = {}
         self.status_badges: list[str] = []
         self.ledger_rows: list[tuple[str, list[str]]] = []
         self.verdict_cards: list[tuple[set[str], str, int]] = []
@@ -354,6 +359,9 @@ class ReportIndex(HTMLParser):
         in_section = self.section
         if in_section is not None:
             self.section_text.setdefault(in_section, []).append(data)
+        for element in self._stack:
+            if element.id in AUDIT_PANELS:
+                self.panel_text.setdefault(element.id, []).append(data)
 
         # A 证据边界 needs a B-id unless its whole value is 无. The verdict can only
         # be reached once the containing element closes, so start buffering here.
@@ -664,6 +672,21 @@ def validate(
     elif badges[1] not in ("complete", "partial"):
         errors.append(f"second status badge must be complete|partial, found {badges[1]!r}")
 
+    # 10b. audit mode ships exactly the four panels, collapsed; standard ships none
+    for panel in AUDIT_PANELS:
+        present = panel in known
+        if mode == "audit" and not present:
+            errors.append(f"mode=audit but the #{panel} panel is missing")
+        elif mode == "standard" and present:
+            errors.append(
+                f"mode=standard but #{panel} is present —"
+                " audit panels belong in the audit deliverable"
+            )
+        elif mode == "audit" and index.details_open.get(panel, False):
+            errors.append(
+                f"#{panel} must ship collapsed; the print rules already expose it"
+            )
+
     # 11. figure output must match the declared figure mode, in both directions.
     # The mode is read from the file, not from a flag the caller supplies: a
     # report validated against the mode it was not built in checks nothing.
@@ -763,12 +786,17 @@ def validate(
     # 15. the interpretation/critique wall — Sections 1–6 explain, Section 7 judges.
     # This is the skill's central structural claim, so it gets a mechanical check
     # rather than a paragraph of prose nobody can verify after the fact.
-    for number in range(1, 7):
-        body = "".join(index.section_text.get(number, []))
+    # The audit panels sit on the same side of the wall as Sections 1–6: they add
+    # traceability, not a second verdict. Leaving them out let a graded judgement
+    # reappear in an appendix where nothing could check it against the boundaries.
+    graded = [(f"section {n}", index.section_text.get(n, [])) for n in range(1, 7)]
+    graded += [(f"#{p}", text) for p, text in index.panel_text.items()]
+    for where, chunks in graded:
+        body = "".join(chunks)
         for term in VERDICTS:
             if term in body:
                 errors.append(
-                    f"section {number} contains the verdict {term!r};"
+                    f"{where} contains the verdict {term!r};"
                     " graded judgement belongs in Section 7"
                 )
 
@@ -801,7 +829,11 @@ def validate(
     # -- warnings --------------------------------------------------------
     # Every boundary costs roughly one paragraph to state and another to discharge,
     # so a boundary-dense paper is legitimately longer than a thin one.
-    body_cjk = len(CJK.findall("".join(index.main_text)))
+    # The 15–20 minute path is the eight sections. Audit panels and figure output
+    # are lookup material — counting them would make every audit run trip a band
+    # that was calibrated on the reading itself.
+    reading = "".join("".join(index.section_text.get(n, [])) for n in range(1, 9))
+    body_cjk = len(CJK.findall(reading))
     ceiling = max(
         READING_LENGTH_MAX,
         READING_LENGTH_BASE + READING_LENGTH_PER_BOUNDARY * len(index.boundary_ids),

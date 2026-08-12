@@ -46,6 +46,8 @@ SLOTS = {
     "BODY_8_1": "第 8 章：论文真正贡献了什么",
     "BODY_8_2": "第 8 章：最终可以相信到哪里",
     "BODY_8_3": "第 8 章：下一步最该做什么",
+    "AUDIT_PANELS": "四块折叠面板，id 固定为 data-training / model-dataflow / "
+                    "experiment-matrix / critical-review；只登记穷尽清单，不下判断",
     "REPORT_DETAILS": "页脚来源块：论文版本、代码 commit、未解决问题、完成状态",
     "EVIDENCE_LEDGER": "完整证据台账表，七列，见 assets/fragments.html 第 7 节",
 }
@@ -69,8 +71,13 @@ def scaffold(template_text: str, mode: str, figure: str) -> str:
             continue
         if "{{AUDIT_PANELS}}" in line and mode == "standard":
             continue
+        # the sidebar group for those panels lives or dies with them, and its
+        # links would be dead — a validation failure — in a standard report
+        if "{{AUDIT_NAV}}" in line and mode == "standard":
+            continue
         lines.append(line)
     text = "".join(lines)
+    text = text.replace("{{AUDIT_NAV}}", "")
     return text.replace("{{MODE}}", mode).replace("{{FIGURE}}", figure)
 
 

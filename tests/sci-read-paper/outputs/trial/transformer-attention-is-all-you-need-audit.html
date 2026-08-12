@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="sci-read-paper" content="mode=audit; figure=off">
+  <title>Transformer 深度精读 · Attention Is All You Need</title>
+  <style>
+    :root {
+      --paper: #fafaf8;
+      --paper-strong: #ffffff;
+      --ink: #2c2c2c;
+      --muted: #6b6b6b;
+      --line: #e2e0d8;
+      --accent: #4a6fa5;
+      --accent-deep: #2a4a7a;
+      --accent-soft: #e8eef6;
+      --nav: #1a1a2e;
+      --warm: #9a5b13;
+      --warm-soft: #fff3dc;
+      --danger: #9f3d32;
+      --danger-soft: #faece8;
+      --success: #356649;
+      --success-soft: #eaf3ec;
+      --shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+      --radius-lg: 12px;
+      --radius-md: 8px;
+      --serif: ui-serif, "Songti SC", "STSong", "Noto Serif CJK SC", Georgia, serif;
+      --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      --mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 28px; }
+    body {
+      margin: 0;
+      padding: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: var(--sans);
+      font-size: 15.75px;
+      line-height: 1.8;
+      text-rendering: optimizeLegibility;
+    }
+    a { color: var(--accent); text-underline-offset: 0.18em; }
+    a:hover { color: var(--accent-deep); }
+    a:focus-visible, summary:focus-visible {
+      outline: 3px solid rgba(21, 94, 117, 0.32);
+      outline-offset: 4px;
+      border-radius: 4px;
+    }
+    code, pre, kbd { font-family: var(--mono); }
+    code {
+      padding: 0.12em 0.35em;
+      border: 1px solid #d7dedb;
+      border-radius: 5px;
+      background: #eef2ef;
+      font-size: 0.9em;
+    }
+    pre {
+      margin: 1.25rem 0;
+      padding: 1.1rem 1.25rem;
+      overflow-x: auto;
+      color: #e9f1f2;
+      background: #183039;
+      border-radius: var(--radius-md);
+      line-height: 1.55;
+    }
+    pre code { padding: 0; border: 0; color: inherit; background: transparent; }
+
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: 280px;
+      min-height: 100vh;
+      overflow-y: auto;
+      color: rgba(255, 255, 255, 0.62);
+      background: var(--nav);
+      z-index: 100;
+      padding: 32px 0;
+    }
+    .sidebar-header {
+      display: block;
+      padding: 0 24px 28px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      text-decoration: none;
+    }
+    .sidebar-header strong {
+      display: block;
+      color: #fff;
+      font-family: var(--serif);
+      font-size: 1.28rem;
+      line-height: 1.3;
+    }
+    .sidebar-header span {
+      display: block;
+      margin-top: 6px;
+      color: rgba(255, 255, 255, 0.38);
+      font-size: 0.75rem;
+      line-height: 1.55;
+    }
+    .nav-group { margin-bottom: 8px; }
+    .nav-group-title {
+      padding: 12px 24px 6px;
+      color: rgba(255, 255, 255, 0.3);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+    .nav-link {
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 4px;
+      padding: 8px 22px 8px 29px;
+      color: rgba(255, 255, 255, 0.56);
+      border-left: 3px solid transparent;
+      text-decoration: none;
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    .nav-link:visited { color: rgba(255, 255, 255, 0.56); }
+    .nav-link:hover, .nav-link:focus-visible {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+      border-left-color: var(--accent);
+    }
+    .nav-link .num {
+      color: rgba(255, 255, 255, 0.3);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+    }
+
+    .content-shell {
+      margin-left: 280px;
+      max-width: 980px;
+      padding: 48px 56px 120px;
+    }
+    .paper-hero {
+      margin-bottom: 68px;
+      padding: 0 0 46px;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+    .paper-title {
+      max-width: 820px;
+      margin: 0 0 12px;
+      overflow-wrap: anywhere;
+      font-family: var(--serif);
+      font-size: clamp(2.25rem, 4vw, 2.75rem);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+    }
+    .paper-subtitle {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      font-family: var(--serif);
+      font-size: 1.08rem;
+      line-height: 1.65;
+    }
+    .paper-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px 16px;
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: fit-content;
+      padding: 4px 9px;
+      border: 1px solid #c9d7d7;
+      border-radius: 999px;
+      color: var(--accent-deep);
+      background: var(--accent-soft);
+      font-size: 0.78rem;
+      font-weight: 750;
+      line-height: 1.3;
+    }
+    .quick-view {
+      margin-top: 30px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .quick-view > h2 {
+      margin: 0;
+      padding: 13px 0 9px;
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+    .quick-view-row {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      gap: 14px;
+      padding: 11px 0;
+      border-top: 1px solid var(--line);
+    }
+    .quick-view-row strong { font-size: 0.8rem; }
+    .quick-view-row p { margin: 0; color: #4e4e4e; font-size: 0.88rem; line-height: 1.65; }
+    .provenance { margin-bottom: 12px; }
+
+    main { min-width: 0; }
+    main > section.report-section {
+      margin: 0 0 72px;
+      padding: 0;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      scroll-margin-top: 24px;
+    }
+    .chapter-label {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    main > section.report-section > h2 {
+      margin: 0 0 9px;
+      font-family: var(--serif);
+      font-size: clamp(1.6rem, 2.8vw, 1.9rem);
+      line-height: 1.3;
+      letter-spacing: -0.015em;
+    }
+    .chapter-intro {
+      margin: 0 0 30px;
+      padding-left: 16px;
+      color: var(--muted);
+      border-left: 3px solid var(--line);
+      font-size: 0.96rem;
+      line-height: 1.7;
+    }
+    h3 {
+      margin: 2.1rem 0 0.8rem;
+      font-family: var(--serif);
+      font-size: 1.33rem;
+      line-height: 1.35;
+    }
+    h4 { margin: 1.65rem 0 0.65rem; font-size: 1.02rem; }
+    p { margin: 0 0 1.05rem; }
+    .lead {
+      color: #304149;
+      font-family: var(--serif);
+      font-size: 1.16rem;
+      line-height: 1.78;
+    }
+    .evidence-link {
+      white-space: nowrap;
+      color: var(--accent);
+      font-size: 0.78em;
+      font-weight: 800;
+      text-decoration: none;
+      vertical-align: 0.08em;
+    }
+    .evidence-link:hover { text-decoration: underline; }
+    .boundary-link {
+      padding: 0 5px;
+      border: 1px solid #e7c997;
+      border-radius: 4px;
+      color: #70420e;
+      background: var(--warm-soft);
+      font-family: var(--mono);
+      font-size: 0.78em;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .boundary-link:hover { color: #70420e; border-color: var(--warm); }
+    .evidence-boundary:target { outline: 3px solid rgba(154, 91, 19, 0.34); outline-offset: 2px; }
+
+    .evidence-boundary, section.experiment-card, section.review-card, .takeaway-card {
+      margin: 1.3rem 0;
+      padding: 20px 22px;
+      border-radius: var(--radius-md);
+    }
+    .evidence-boundary {
+      border: 1px solid #e7c997;
+      border-left: 5px solid var(--warm);
+      background: var(--warm-soft);
+    }
+    .evidence-boundary strong:first-child { color: #70420e; }
+    section.experiment-card { border: 1px solid #cbd8e8; border-left: 4px solid var(--accent); background: #f7f9fc; }
+    section.review-card { border: 1px solid #e4bbb4; border-left: 4px solid var(--danger); background: #fff8f6; }
+    section.review-card h3, section.review-card h4 { margin-top: 0; color: #7f2e27; }
+    section.review-card dl, section.experiment-card dl { margin: 0; }
+    section.review-card dt, section.experiment-card dt {
+      margin-top: 0.75rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    section.review-card dd, section.experiment-card dd { margin: 0.15rem 0 0; }
+    .takeaway-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 13px;
+    }
+    .takeaway-card { margin: 0; border: 1px solid var(--line); background: #fff; }
+    .takeaway-card h3 { margin-top: 0; font-size: 1.08rem; }
+    .verdict-supported { border-top: 4px solid var(--success); }
+    .verdict-qualified { border-top: 4px solid var(--warm); }
+    .verdict-rejected { border-top: 4px solid var(--danger); }
+
+    .flow-wrap {
+      margin: 1.4rem 0;
+      padding: 18px;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fff;
+    }
+    .flow-wrap svg { display: block; min-width: 720px; width: 100%; height: auto; }
+    .flow-chain { display: flex; align-items: stretch; gap: 9px; min-width: 1120px; }
+    .flow-node, .flow-branches {
+      display: flex;
+      flex: 1 0 145px;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      min-height: 116px;
+      padding: 14px;
+      border: 1px solid #bdd5d9;
+      border-radius: 11px;
+      background: #f4f9f9;
+    }
+    .flow-node small { color: var(--accent); font-weight: 850; letter-spacing: 0.08em; }
+    .flow-node span { color: var(--muted); font-family: var(--mono); font-size: 0.76rem; }
+    .flow-branches { gap: 7px; background: #fff; }
+    .flow-branches div { padding: 7px 9px; border-left: 3px solid var(--accent); background: var(--accent-soft); font-size: 0.8rem; font-weight: 700; }
+    .flow-output div { border-left-color: var(--warm); background: var(--warm-soft); }
+    .flow-arrow { align-self: center; color: var(--accent); font-weight: 900; }
+    blockquote {
+      margin: 1.35rem 0;
+      padding: 0.1rem 0 0.1rem 1.2rem;
+      color: #42545c;
+      border-left: 4px solid #9ec3c9;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.87rem; line-height: 1.55; }
+    th, td { padding: 10px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+    th { color: var(--accent-deep); background: #edf4f3; font-weight: 800; }
+    .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+    .table-scroll table { min-width: 820px; }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--paper-strong);
+    }
+    details + details { margin-top: 12px; }
+    summary {
+      padding: 13px 16px;
+      color: var(--accent-deep);
+      cursor: pointer;
+      font-weight: 800;
+      list-style-position: inside;
+    }
+    details[open] > summary { border-bottom: 1px solid var(--line); }
+    .details-body { padding: 18px; }
+    footer {
+      padding: 0;
+      background: var(--paper);
+    }
+    .ledger summary { font-family: var(--serif); font-size: 1.2rem; }
+    .ledger-row:target { outline: 3px solid rgba(154, 91, 19, 0.34); outline-offset: -3px; }
+
+    @media (max-width: 900px) {
+      body { font-size: 16px; }
+      .sidebar { display: none; }
+      .content-shell { margin-left: 0; max-width: none; padding: 36px 24px 80px; }
+      .paper-hero { margin-bottom: 54px; padding-bottom: 36px; }
+      .takeaway-grid { grid-template-columns: 1fr; }
+      .quick-view-row { grid-template-columns: 1fr; gap: 3px; }
+      .paper-meta > * { max-width: 100%; overflow-wrap: anywhere; }
+    }
+
+    @media (max-width: 560px) {
+      .paper-title { font-size: 2.05rem; }
+      .content-shell { padding-inline: 18px; }
+      .evidence-boundary, section.experiment-card, section.review-card, .takeaway-card { padding: 17px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+
+    @media print {
+      :root { --paper: #fff; --paper-strong: #fff; --ink: #000; }
+      body { background: #fff; color: #000; font-size: 11pt; }
+      .sidebar { display: none !important; }
+      .content-shell { margin: 0; max-width: none; padding: 0; }
+      .paper-hero { margin: 0 0 18pt; padding: 0 0 18pt; border-bottom: 1pt solid #999; }
+      main > section.report-section { margin: 0 0 16pt; break-inside: auto; }
+      section.experiment-card, section.review-card, .takeaway-card, .evidence-boundary {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+      details > :not(summary) { display: block !important; }
+      details::details-content { content-visibility: visible !important; block-size: auto !important; }
+      details { border: 0; }
+      summary { padding-left: 0; }
+      footer { padding: 0; }
+      a { color: #000; text-decoration: none; }
+      a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 8pt; overflow-wrap: anywhere; }
+      tr, pre, blockquote, .flow-wrap { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="sidebar" aria-label="论文精读目录">
+    <a class="sidebar-header" href="#main-content">
+      <strong>Transformer 深度精读</strong>
+      <span>Vaswani 等，arXiv:1706.03762v7 · WMT 2014 机器翻译</span>
+    </a>
+    <div class="nav-group"><p class="nav-group-title">论文概览</p>
+      <a class="nav-link" href="#section-1"><span class="num">01</span><span>背景、现状与切入点</span></a>
+      <a class="nav-link" href="#section-2"><span class="num">02</span><span>论文全局地图</span></a>
+    </div>
+    <div class="nav-group"><p class="nav-group-title">问题与方法</p>
+      <a class="nav-link" href="#section-3"><span class="num">03</span><span>作者为什么这样设计</span></a>
+      <a class="nav-link" href="#section-4"><span class="num">04</span><span>数据与训练</span></a>
+      <a class="nav-link" href="#section-5"><span class="num">05</span><span>模型内部数据流</span></a>
+    </div>
+    <div class="nav-group"><p class="nav-group-title">实验与审查</p>
+      <a class="nav-link" href="#section-6"><span class="num">06</span><span>实验逻辑</span></a>
+      <a class="nav-link" href="#section-7"><span class="num">07</span><span>批判性审查</span></a>
+    </div>
+    <div class="nav-group"><p class="nav-group-title">最终结论</p>
+      <a class="nav-link" href="#section-8"><span class="num">08</span><span>真正应该带走什么</span></a>
+    </div>
+    <div class="nav-group"><p class="nav-group-title">报告附录</p>
+      <a class="nav-link" href="#report-info"><span class="num">↳</span><span>来源、版本与缺口</span></a>
+      <a class="nav-link" href="#evidence-ledger"><span class="num">↳</span><span>完整证据账本</span></a>
+    </div>
+    <div class="nav-group"><p class="nav-group-title">审计面板</p><a class="nav-link" href="#data-training"><span class="num">↳</span><span>数据与训练</span></a><a class="nav-link" href="#model-dataflow"><span class="num">↳</span><span>接口与形状</span></a><a class="nav-link" href="#experiment-matrix"><span class="num">↳</span><span>实验矩阵</span></a><a class="nav-link" href="#critical-review"><span class="num">↳</span><span>可复现性清单</span></a></div>
+  </nav>
+
+  <div class="content-shell">
+    <header class="paper-hero">
+      <p class="eyebrow">SCI · DEEP READING</p>
+      <h1 class="paper-title">Transformer 深度精读</h1>
+      <p class="paper-subtitle">Attention Is All You Need</p>
+      <div class="paper-meta"><span class="status-badge">mode: audit</span><span class="status-badge">partial</span><span>arXiv:1706.03762v7（2023-08-02）</span><span>DOI 10.48550/arXiv.1706.03762</span><span>官方代码 tensorflow/tensor2tensor</span><span>访问日期 2026-08-11</span></div>
+      <section class="quick-view" aria-labelledby="quick-view-title">
+        <h2 id="quick-view-title">论文速览</h2>
+        <div class="quick-view-row"><strong>作者主线</strong><p>把序列到序列模型里的循环层整个去掉，只留注意力。这样每层内部不再有前后依赖，训练可以在序列方向上并行。作者用它在两个翻译任务上刷到当时最好成绩，并强调训练成本远低于同期方法。</p></div>
+        <div class="quick-view-row"><strong>证据状态</strong><p>论文与官方代码都完全公开。但公开代码的默认配置 <code>transformer_base</code> 不是论文描述的那个架构：归一化的位置、warmup 步数、Adam 的 β₂ 都不同，还多出两处论文没提的 dropout。要确认表 2 能否复现，最小材料是作者公布产出该表的 hparams 名与 commit。</p></div>
+        <div class="quick-view-row"><strong>审查入口</strong><p>第 7 节集中处理三件事：默认实现与论文架构不一致到什么程度；28.4 这个 BLEU 与表内其他行是否可比；“训练成本低一个量级”这句话建立在什么口径上。</p></div>
+      </section>
+    </header>
+    <main id="main-content">
+      <section id="section-1" class="report-section">
+        <p class="chapter-label">CHAPTER 01</p>
+        <h2>为什么要做这项研究：背景、现状与本文切入点</h2>
+        <p class="chapter-intro">本章要建立三件事。第一，模型字面上收什么、吐什么。第二，这个任务当时卡在哪里。第三，本文切进的是哪一个具体缺口。</p>
+        
+        <h3>1.1 模型字面上接收什么、预测什么</h3>
+        <p class="lead">先把对象说死。后面每一条判断都挂在这个定义上。</p>
+        <p>模型的输入是一串源语言的子词编号。子词指把单词再切小的单位。比如把 unbelievable 切成 un、believ、able 三段，罕见词就能由常见片段拼出来。英译德任务上，源语言和目标语言共用一张约 37000 项的子词表，切法用的是 BPE，即按字节对的出现频率反复合并出子词。〔<a class="evidence-link" href="#E06">E06</a>〕</p>
+        <p>输出不是一整句译文。模型每一步只回答一个问题：在已经写出的前缀之后，下一个子词最可能是哪一个。它给出的是这张子词表上的一个概率分布。整句译文是把这个动作重复到句尾的结果。</p>
+        <p>这里有三样东西必须分开。预测目标是下一个子词。BLEU 是事后用来打分的代理指标，不是训练目标。而"译得好不好"是人的判断，本文没有做人工评测。三者常被当成一回事，但它们能支持的结论不一样。</p>
+
+        <h3>1.2 这件事当时难在哪里</h3>
+        <p>把一句话译成另一种语言，模型必须能把相隔很远的词联系起来。德语的动词可能落在句尾，而它管的宾语在句子开头。要译对，模型得把这两处连上。</p>
+        <p>当时主流做法是循环网络，也就是逐个位置往前推、把历史压进一个隐状态里的模型。它有两个代价。一是隐状态必须按位置顺序算，第 t 步依赖第 t−1 步，所以一句话内部没法并行，句子越长训练越慢。二是两个位置之间的信息要经过它们之间的每一步才能相遇，距离越远越容易衰减。</p>
+        <p>卷积模型换了一条路，用滑动窗口并行处理。但要让相隔 n 个位置的两个词进入同一个感受野，需要堆很多层。作者把这一点量化成一张表：自注意力让任意两个位置之间的路径长度是常数，循环是 n，卷积是 log n。〔<a class="evidence-link" href="#E13">E13</a>〕</p>
+
+        <h3>1.3 主流怎么做，本文切在哪个缺口</h3>
+        <p>注意力机制在本文之前已经很常见。但它当时的角色是配件：主干仍然是循环网络，注意力只负责让解码器去"看"编码器的输出。也就是说，顺序依赖这个根子没有被动过。</p>
+        <p>本文的切入点是把配件变成主干。循环层整个删掉，编码器和解码器内部也改用注意力。这样一来，一层之内所有位置可以同时算完，顺序依赖只剩下解码时的逐词生成。〔<a class="evidence-link" href="#E02">E02</a>〕</p>
+        <p>作者要证明的不只是"能这样做"，还有"这样做更划算"。所以论文把训练成本和翻译质量放在同一张表里比较。这张表是全文的核心证据，第 6 节和第 7 节会反复回到它。〔<a class="evidence-link" href="#E10">E10</a>〕</p>
+
+      </section>
+
+      <section id="section-2" class="report-section">
+        <p class="chapter-label">CHAPTER 02</p>
+        <h2>三分钟建立论文全局地图</h2>
+        <p class="chapter-intro">本章把全文压成三分钟能读完的一张地图。它可以单独读，但不替代后面的细读。</p>
+        
+        <h3>2.1 任务与中心张力</h3>
+        <p>任务是机器翻译，具体是 WMT 2014 的英译德与英译法。中心张力在于：注意力能不能单独撑起一个序列到序列模型，而不只是循环网络的配件。</p>
+
+        <h3>2.2 作者的整体解法</h3>
+        <p>编码器和解码器各堆 6 层。每层由两到三个子层组成，子层之间用残差连接，再做一次层归一化。子层只有两类：多头注意力和一个逐位置的两层前馈网络。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E04">E04</a>〕</p>
+        <p>多头指把 512 维的表示切成 8 份、每份 64 维，各自独立做一次注意力，再拼回来。这样一个头可以盯语法关系，另一个盯指代关系，互不挤占同一组维度。〔<a class="evidence-link" href="#E04">E04</a>〕</p>
+        <p>删掉循环之后，模型就不知道词的先后了。作者用一组不同频率的正弦与余弦函数给每个位置生成一个向量，加到词向量上，把位置信息补回去。〔<a class="evidence-link" href="#E05">E05</a>〕</p>
+
+        <h3>2.3 最小数据流</h3>
+        <div class="flow-wrap">
+          <div class="flow-chain">
+            <div class="flow-node"><strong>源句子词</strong><span>约 37000 项词表</span></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node"><strong>编码器 ×6</strong><span>自注意力 + 前馈</span></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node"><strong>解码器 ×6</strong><span>带掩码自注意力 + 交叉注意力</span></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-output"><strong>下一个子词</strong><span>词表上的概率</span></div>
+          </div>
+        </div>
+
+        <h3>2.4 论文报告的主要结果</h3>
+        <p>英译德 28.4 BLEU，英译法 41.8 BLEU，两项都是当时最好。英译德这一项超过了此前所有集成模型。〔<a class="evidence-link" href="#E10">E10</a>〕</p>
+        <p>成本方面，大模型在 8 张 P100 上训练 3.5 天。论文估计的训练浮点运算量比 GNMT 集成低约一个到两个数量级。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E10">E10</a>〕</p>
+        <p>作者还把同一个模型用到英语句法分析上，四层模型在 WSJ 上取得 91.3 的 F1，半监督设置下 92.7。这一项用来支持"不只对翻译有效"。〔<a class="evidence-link" href="#E14">E14</a>〕</p>
+
+        <h3>2.5 审查预告</h3>
+        <p>第 7 节集中处理三件事。第一，官方代码的默认配置与论文描述的架构并不是同一个东西，差异有多大。第二，28.4 这个数与表 2 其他行是否真的可比。第三，"训练成本低一个量级"这句话建立在什么口径上。</p>
+
+      </section>
+
+      <section id="section-3" class="report-section">
+        <p class="chapter-label">CHAPTER 03</p>
+        <h2>从问题到方法：作者为什么这样设计</h2>
+        <p class="chapter-intro">本章按作者视角重建设计逻辑：每一个选择在回应前一步留下的什么问题。顺序是依据论文证据重建的，不是作者私下的时间线。</p>
+        
+        <h3>3.1 这一节的性质</h3>
+        <p>下面的顺序是从论文自身的论证里重建出来的，不是作者当时的实际思路。作者没有写过设计过程。这样排是为了让每个选择都能回答"它在解决前一步留下的什么问题"。</p>
+
+        <h3>3.2 先删循环，随之而来的问题</h3>
+        <p>第一个决定是把循环层整个删掉。理由在第 1 节已经说过：顺序依赖挡住了并行，远距离信息要逐步传递。删掉之后，同一层里所有位置可以一次算完。〔<a class="evidence-link" href="#E13">E13</a>〕</p>
+        <p>但删掉循环立刻带来两个新问题。一是模型不再知道词的先后。二是原来由隐状态承担的"把上下文压进一个向量"的活，得有别的东西接手。后面几步都是在补这两个洞。</p>
+
+        <h3>3.3 用注意力接手上下文</h3>
+        <p>接手的是自注意力。每个位置都生成三样东西：查询、键、值。一个位置用自己的查询去和所有位置的键做点积，得到一组权重，再按权重把所有位置的值加起来。这样任意两个位置一步就能相连。〔<a class="evidence-link" href="#E04">E04</a>〕</p>
+        <p>点积会随维度增大而变大，进而把 softmax 推到梯度很小的区域。作者的处理是除以维度的平方根，这就是"缩放点积注意力"里"缩放"两个字的由来。〔<a class="evidence-link" href="#E04">E04</a>〕</p>
+
+        <h3>3.4 为什么要切成多个头</h3>
+        <p>单一注意力有个结构性限制：所有关系都要挤在同一组 512 维里，而权重是一组求平均。语法依存和指代关系会互相干扰。</p>
+        <p>作者的处理是把 512 维切成 8 份，每份 64 维，各自独立做一次注意力，最后拼回来。总计算量与单头相当，但不同的头可以各盯一类关系。表 3 的第一组消融就是在检验这个假设。〔<a class="evidence-link" href="#E04">E04</a>、<a class="evidence-link" href="#E12">E12</a>〕</p>
+
+        <h3>3.5 位置信息与堆叠的稳定性</h3>
+        <p>位置信息用一组不同频率的正弦、余弦函数补回来，直接加到词向量上。作者选正弦而不是可学习的位置向量，理由是它可能外推到比训练时更长的句子。〔<a class="evidence-link" href="#E05">E05</a>〕</p>
+        <p>最后是堆叠。六层子层叠起来，梯度要能传到底。作者在每个子层外面套一个残差连接，再做一次层归一化，论文写成 LayerNorm(x + Sublayer(x))，即先相加、后归一化。〔<a class="evidence-link" href="#E03">E03</a>〕</p>
+        <aside class="evidence-boundary" id="B01">
+          <strong>证据边界：</strong>论文写的是先相加、后归一化。官方代码 <code>tensor2tensor</code> 的默认配置 <code>transformer_base</code> 执行的却是先归一化、再进子层：<code>layer_preprocess_sequence="n"</code> 配 <code>layer_postprocess_sequence="da"</code>。代码里另有一行注释指明 <code>("", "dan")</code> 才是"已发表的那个版本"。两种写法在这份代码里都存在，默认走的是后者。这是理解本节必须知道的事实，其影响在第 7 节评估。〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E20">E20</a>、<a class="evidence-link" href="#E21">E21</a>〕
+        </aside>
+
+      </section>
+
+      <section id="section-4" class="report-section">
+        <p class="chapter-label">CHAPTER 04</p>
+        <h2>数据从哪里来，又怎样进入训练</h2>
+        <p class="chapter-intro">本章跟住一条具体样本，看它从语料里被选出来、切分、编号，直到进入模型和损失。</p>
+        
+        <h3>4.1 一条样本的语义身份</h3>
+        <p>取英译德里的一条平行句对。它的语义身份是"一句英语原文配一句人工德语译文"。这个身份来自 WMT 2014 的公开语料，不是模型或作者构造的。〔<a class="evidence-link" href="#E06">E06</a>〕</p>
+        <p>这条句对先被 BPE 切成子词，再查表变成两串整数。源串进编码器，目标串错开一位进解码器：解码器在第 t 个位置看到的是真实译文的前 t−1 个词，要预测第 t 个。这种训练方式叫教师强制。</p>
+
+        <h3>4.2 语料规模与词表</h3>
+        <p>英译德用约 450 万句对，共用一张约 37000 项的子词表。英译法要大得多，3600 万句，词表 32000 项，切法是 word-piece。两个任务的切分口径并不相同。〔<a class="evidence-link" href="#E06">E06</a>〕</p>
+
+        <h3>4.3 批怎么组织</h3>
+        <p>批不是按句子数算，而是按词数算：一批大约装 25000 个源端子词和 25000 个目标端子词。长度相近的句子被放进同一批，这样补齐用的空位最少。〔<a class="evidence-link" href="#E07">E07</a>〕</p>
+
+        <h3>4.4 优化器与学习率</h3>
+        <p>优化器是 Adam，β₁=0.9、β₂=0.98、ε=1e-9。学习率不是常数，先在前 4000 步线性升上去，之后按步数的负平方根衰减。这个先升后降的做法叫 warmup。〔<a class="evidence-link" href="#E08">E08</a>〕</p>
+        <p>warmup 不是可有可无的装饰。它与 3.5 节那个"先相加、后归一化"的顺序直接相关：这种顺序在初始化时靠近输出层的梯度很大，不先压住学习率就容易发散。〔<a class="evidence-link" href="#E24">E24</a>〕</p>
+        <aside class="evidence-boundary" id="B02">
+          <strong>证据边界：</strong>论文报告的三个训练超参在公开代码的默认配置里都不是这个值。warmup 从 4000 变成 8000，Adam 的 β₂ 从 0.98 变成 0.997，学习率也换了一套参数化写法。论文那组值保留在 <code>transformer_base_v1</code> 里，但默认调用的 <code>transformer_base</code> 继承的是 v2 与 v3 的覆写。〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E17">E17</a>、<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E19">E19</a>〕
+        </aside>
+
+        <h3>4.5 正则化与训练规模</h3>
+        <p>论文列了两处 dropout：每个子层的输出在相加之前丢一次，词向量与位置向量相加之后再丢一次。基础模型的比例是 0.1。另外用了 0.1 的标签平滑，它会牺牲困惑度，换取 BLEU 提升。〔<a class="evidence-link" href="#E09">E09</a>〕</p>
+        <p>硬件是一台机器上的 8 张 P100。基础模型每步约 0.4 秒，跑 10 万步，约 12 小时。大模型每步 1.0 秒，跑 30 万步，约 3.5 天。〔<a class="evidence-link" href="#E07">E07</a>〕</p>
+
+        <h3>4.6 从检查点到译文</h3>
+        <p>报告的分数不是单个检查点的结果。基础模型取最后 5 个检查点的平均，大模型取最后 20 个。解码用束搜索，束宽 4，长度惩罚 0.6。〔<a class="evidence-link" href="#E10">E10</a>〕</p>
+        <aside class="evidence-boundary" id="B07">
+          <strong>证据边界：</strong>公开材料没有指明表 2 的数字由哪一组超参、哪个代码版本产出。论文只给出仓库地址，仓库里同时存在与论文一致的 <code>transformer_base_v1</code> 和与论文不一致的默认 <code>transformer_base</code>，且没有文档说明哪一个对应表 2。〔<a class="evidence-link" href="#E15">E15</a>、<a class="evidence-link" href="#E16">E16</a>、<a class="evidence-link" href="#E17">E17</a>、<a class="evidence-link" href="#E26">E26</a>〕
+        </aside>
+
+      </section>
+
+      <section id="section-5" class="report-section">
+        <p class="chapter-label">CHAPTER 05</p>
+        <h2>模型内部：数据怎样一步步变成输出</h2>
+        <p class="chapter-intro">接着第 4 章那条样本，看它进入模型后每一步变成什么形状、丢掉什么、得到什么。</p>
+        
+        <h3>5.1 从整数串到向量</h3>
+        <p>那条英语句子现在是一串整数，长度记作 n。查词向量表后变成 n×512 的矩阵。位置向量按同样形状生成，直接相加。相加而不是拼接，意味着位置信息和词义信息共用这 512 维，模型要自己把它们分开用。〔<a class="evidence-link" href="#E05">E05</a>〕</p>
+
+        <h3>5.2 一层编码器里发生什么</h3>
+        <p>一层有两个子层。第一个是自注意力，第二个是逐位置的前馈网络。每个子层外面都有残差连接和层归一化。输入输出形状都是 n×512，六层叠下来形状始终不变。〔<a class="evidence-link" href="#E03">E03</a>〕</p>
+
+        <h3>5.3 多头注意力的形状</h3>
+        <p>输入的 n×512 先经三个线性变换，得到查询、键、值三份 n×512。然后各自切成 8 段，每段 n×64。〔<a class="evidence-link" href="#E04">E04</a>〕</p>
+        <p>每段内部算查询乘键的转置，得到 n×n 的分数矩阵。这一步是全文计算量的来源：它与句长的平方成正比。分数除以 8（即 64 的平方根）后过 softmax，再乘上值，得到 n×64。八段拼回 n×512，再过一次线性变换。〔<a class="evidence-link" href="#E04">E04</a>、<a class="evidence-link" href="#E13">E13</a>〕</p>
+        <p>这里丢掉了什么值得留意：n×n 的分数矩阵在乘完值之后就不再保留，模型往下传的只有加权求和的结果。所谓"注意力可视化"看的是这个中间矩阵，它不是模型后续用到的东西。</p>
+
+        <h3>5.4 前馈子层</h3>
+        <p>前馈子层对每个位置单独作用，位置之间不交换信息。它把 512 维升到 2048 维，过一次 ReLU，再降回 512 维。全句共享同一组权重。〔<a class="evidence-link" href="#E12">E12</a>〕</p>
+
+        <h3>5.5 解码器的两处不同</h3>
+        <p>解码器每层有三个子层。第一个是带掩码的自注意力：第 t 个位置只允许看 t 及以前，把之后的位置在 softmax 之前置成负无穷。这样训练时可以一次算完整句，又不泄露答案。〔<a class="evidence-link" href="#E03">E03</a>〕</p>
+        <p>第二个子层是交叉注意力，查询来自解码器自身，键和值来自编码器最后一层的输出。这是源语言信息进入解码器的唯一通道。第三个子层与编码器的前馈相同。〔<a class="evidence-link" href="#E03">E03</a>〕</p>
+
+        <h3>5.6 输出</h3>
+        <p>解码器最后一层的 n×512 过一个线性层升到词表大小，再过 softmax。这个线性层与词向量表共享权重。训练时用带标签平滑的交叉熵，推理时用束搜索逐词展开。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E10">E10</a>〕</p>
+        <aside class="evidence-boundary" id="B03">
+          <strong>证据边界：</strong>论文只列出两处 dropout：子层输出、词向量与位置向量之和。公开代码的默认配置另有两处：注意力分数上的 <code>attention_dropout=0.1</code>，以及前馈中间层上的 <code>relu_dropout=0.1</code>。这两处在 <code>transformer_base_v1</code> 里都是 0.0，是 v2 把它们打开的。论文全文没有提到这两项。〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E17">E17</a>、<a class="evidence-link" href="#E18">E18</a>〕
+        </aside>
+
+      </section>
+
+      <section id="section-6" class="report-section">
+        <p class="chapter-label">CHAPTER 06</p>
+        <h2>实验逻辑：每项实验在回答什么问题</h2>
+        <p class="chapter-intro">本章按「每项实验在回答什么问题」来组织，不按论文表格顺序。观察与作者的解读分开写，累计判断留到第 7 章。</p>
+        
+        <p class="lead">论文一共四类证据：与同期最强方法的主对比、模型内部的消融、一组位置编码的对照，以及换一个任务的泛化检验。</p>
+
+        <section id="exp-main" class="experiment-card">
+          <h3>6.1 纯注意力模型能否在质量和成本上同时赢过当时最强的方法</h3>
+          <dl>
+            <dt>作者要回答什么</dt><dd>去掉循环之后，翻译质量能不能不降反升，同时训练成本明显更低。</dd>
+            <dt>实验类型</dt><dd>主实验 / 基线对比。</dd>
+            <dt>实验怎样设计</dt><dd>在 WMT 2014 英译德与英译法两个公开测试集上，把基础模型和大模型与 ByteNet、GNMT+RL、ConvS2S、MoE 及它们的集成版放进同一张表。〔<a class="evidence-link" href="#E10">E10</a>〕</dd>
+            <dt>改变了什么，控制了什么</dt><dd>变的是模型结构。测试集公开且一致。但基线数字全部取自各自原论文，没有在本文的硬件与解码设置下重跑。训练成本一列也来自各原论文的报告。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E11">E11</a>〕</dd>
+            <dt>数据与指标</dt><dd>英译德 newstest2014、英译法 newstest2014，指标为 BLEU，越高越好。另有一列估算的训练浮点运算量。〔<a class="evidence-link" href="#E10">E10</a>〕</dd>
+            <dt>实际观察到什么</dt><dd>基础模型英译德 27.3、英译法 38.1。大模型 28.4 与 41.8，两项均为表内最高。大模型的估算成本为 2.3×10¹⁹，GNMT+RL 集成为 1.8×10²⁰。〔<a class="evidence-link" href="#E10">E10</a>〕</dd>
+            <dt>作者据此主张什么</dt><dd>在两个任务上取得新的最好成绩，英译德一项超过此前所有集成；训练成本只是同类最好模型的一小部分。〔<a class="evidence-link" href="#E02">E02</a>、<a class="evidence-link" href="#E15">E15</a>〕</dd>
+            <dt>证据边界</dt><dd class="evidence-boundary" id="B04">论文没有说明 BLEU 的计算口径。它只声明困惑度按子词计算，对 BLEU 的分词与规范化方式只字未提。表内其他行来自各自原论文，口径同样未知。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E22">E22</a>〕</dd>
+          </dl>
+        </section>
+        <aside class="evidence-boundary" id="B05">
+          <strong>证据边界：</strong>表 2 那一列「训练成本」不是实测的浮点运算量。论文说明它由训练时间、GPU 数量、以及对每张 GPU 单精度持续算力的一个估计相乘得到。这三项里只有前两项属于本文自己，第三项是估计值，而基线各行的时间与硬件来自不同论文。〔<a class="evidence-link" href="#E11">E11</a>〕</aside>
+
+        <section id="exp-heads" class="experiment-card">
+          <h3>6.2 多头是不是真的比单头好，头越多越好吗</h3>
+          <dl>
+            <dt>作者要回答什么</dt><dd>把表示切成多个头，是否真的带来收益，以及头数是否越多越好。</dd>
+            <dt>实验类型</dt><dd>消融。</dd>
+            <dt>实验怎样设计</dt><dd>固定基础模型的其余设置与总计算量，只改头数，取 1、4、8、16、32 五档，在英译德开发集上比较。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>改变了什么，控制了什么</dt><dd>变的只有头数与随之调整的每头维度，总维度保持 512 不变。训练步数同为 10 万步。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>数据与指标</dt><dd>newstest2013 开发集，报告困惑度与 BLEU。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>实际观察到什么</dt><dd>单头 24.9 BLEU，比 8 头的 25.8 低 0.9。4 头 25.5，16 头 25.8，32 头回落到 25.4。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>作者据此主张什么</dt><dd>多头优于单头，但头数过多反而变差。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>证据边界</dt><dd class="evidence-boundary" id="B06">表 3 每一行都是单次训练的结果。论文没有报告随机种子、没有重复实验、也没有给出任何波动范围。8 头与 16 头之间的 25.8 对 25.8、4 头与 32 头之间的 25.5 对 25.4，都落在无法与噪声区分的范围里。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E25">E25</a>〕</dd>
+          </dl>
+        </section>
+
+        <section id="exp-capacity" class="experiment-card">
+          <h3>6.3 容量、dropout 与标签平滑各自起多大作用</h3>
+          <dl>
+            <dt>作者要回答什么</dt><dd>层数、注意力维度、前馈宽度、dropout 比例与标签平滑，分别把结果推动多少。</dd>
+            <dt>实验类型</dt><dd>消融。</dd>
+            <dt>实验怎样设计</dt><dd>以基础模型为原点，每次只改一项，覆盖表 3 的 B、C、D 三组。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>改变了什么，控制了什么</dt><dd>每行只动一个量，其余保持基础配置。训练步数一致。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>数据与指标</dt><dd>同 6.2，开发集上的困惑度与 BLEU，另附参数量。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>实际观察到什么</dt><dd>层数从 6 减到 2，BLEU 从 25.8 掉到 23.7。前馈宽度加到 4096 升到 26.0。完全关掉 dropout 掉到 24.6。关掉标签平滑，困惑度从 4.92 改善到 4.67，BLEU 却从 25.8 掉到 25.3。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>作者据此主张什么</dt><dd>模型越大越好；dropout 对避免过拟合很有帮助；标签平滑牺牲困惑度换取 BLEU。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>证据边界</dt><dd>无</dd>
+          </dl>
+        </section>
+
+        <section id="exp-pe" class="experiment-card">
+          <h3>6.4 正弦位置编码是不是必需的</h3>
+          <dl>
+            <dt>作者要回答什么</dt><dd>把正弦位置编码换成可学习的位置向量，结果会不会变差。</dd>
+            <dt>实验类型</dt><dd>对照。</dd>
+            <dt>实验怎样设计</dt><dd>表 3 的 E 行，只把位置编码方式换掉，其余与基础模型完全相同。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>改变了什么，控制了什么</dt><dd>只变位置编码的来源。层数、维度、头数、dropout、训练步数全部保持基础配置。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>数据与指标</dt><dd>同 6.2 的开发集，困惑度与 BLEU。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>实际观察到什么</dt><dd>困惑度 4.92，与基础模型相同；BLEU 25.7，比基础模型的 25.8 低 0.1。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>作者据此主张什么</dt><dd>两种位置编码给出几乎相同的结果。作者选正弦的理由不是这一行的分数，而是它可能外推到更长的句子。〔<a class="evidence-link" href="#E05">E05</a>、<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>证据边界</dt><dd>无</dd>
+          </dl>
+        </section>
+
+        <section id="exp-parsing" class="experiment-card">
+          <h3>6.5 这套结构只对翻译有效，还是能迁到别的任务</h3>
+          <dl>
+            <dt>作者要回答什么</dt><dd>同一套结构换到一个输出带强结构约束的任务上，是否仍然可用。</dd>
+            <dt>实验类型</dt><dd>泛化。</dd>
+            <dt>实验怎样设计</dt><dd>用四层模型做英语句法分析，把句法树线性化成一个符号序列来生成。分别在只用 WSJ 的小数据设置和加入大规模半监督语料的设置下训练。〔<a class="evidence-link" href="#E14">E14</a>〕</dd>
+            <dt>改变了什么，控制了什么</dt><dd>变的是任务与训练语料规模。对比行取自各自原论文，不是在同一实现下重跑。〔<a class="evidence-link" href="#E14">E14</a>〕</dd>
+            <dt>数据与指标</dt><dd>WSJ 第 23 节，指标为 F1，越高越好。〔<a class="evidence-link" href="#E14">E14</a>〕</dd>
+            <dt>实际观察到什么</dt><dd>只用 WSJ 时 F1 为 91.3，低于 Dyer 等的 91.7。半监督设置下 92.7，高于该组其他所有行。〔<a class="evidence-link" href="#E14">E14</a>〕</dd>
+            <dt>作者据此主张什么</dt><dd>模型泛化良好，在大数据和小数据两种设置下都能用于句法分析。〔<a class="evidence-link" href="#E02">E02</a>、<a class="evidence-link" href="#E14">E14</a>〕</dd>
+            <dt>证据边界</dt><dd>无</dd>
+          </dl>
+        </section>
+
+      </section>
+
+      <section id="section-7" class="report-section">
+        <p class="chapter-label">CHAPTER 07</p>
+        <h2>批判性审查：证据究竟支持到哪里</h2>
+        <p class="chapter-intro">从这里换成审稿人视角，按对中心结论的威胁程度逐条判断证据支持到哪里。</p>
+        
+        <p class="lead">前六节按作者的思路解释了这项工作。下面逐条检查每个主张是否排除了更简单的解释，并说明问题会把结论降到哪一级。顺序按对中心结论的威胁程度排列。</p>
+
+        <section id="review-implementation" class="review-card">
+          <h3>7.1 公开代码的默认配置不是论文描述的那个模型</h3>
+          <dl>
+            <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B01">B01</a>、<a class="boundary-link" href="#B02">B02</a>、<a class="boundary-link" href="#B03">B03</a></dd>
+            <dt>作者主张</dt><dd>论文第 7 节写明「我们用来训练和评测模型的代码」在该仓库公开。〔<a class="evidence-link" href="#E15">E15</a>〕</dd>
+            <dt>支持证据</dt><dd>仓库确实公开，且与论文一致的那组超参以 <code>transformer_base_v1</code> 的名义完整保留在代码里。〔<a class="evidence-link" href="#E16">E16</a>、<a class="evidence-link" href="#E17">E17</a>〕</dd>
+            <dt>反证或替代解释</dt><dd>默认调用的 <code>transformer_base</code> 在三个方面与论文不同。归一化位置从「先加后归一」变成「先归一再进子层」。warmup 从 4000 变成 8000，Adam 的 β₂ 从 0.98 变成 0.997。注意力与前馈中间层上各多出一处 0.1 的 dropout，论文全文没有提过。这三点分别由 <code>transformer_base_v2</code> 与 <code>v3</code> 的覆写引入。〔<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E19">E19</a>、<a class="evidence-link" href="#E20">E20</a>〕</dd>
+            <dt>证据缺少什么</dt><dd>代码里有一行注释自己承认 <code>("", "dan")</code> 才是「已发表的那个版本」，却把非发表版设为默认。缺的是一份说明：哪一组配置对应论文的哪一个数字。〔<a class="evidence-link" href="#E21">E21</a>〕</dd>
+            <dt>对中心结论的影响</dt><dd>降低置信——「注意力可以单独撑起序列模型」这个中心结论不受影响，它由论文自身的实验支持。受影响的是「照着公开代码跑就能得到论文那个模型」这一步。归一化位置尤其不是小改动：它决定初始化时的梯度尺度，也决定 warmup 是不是必需。〔<a class="evidence-link" href="#E24">E24</a>〕</dd>
+            <dt>最小解决实验</dt><dd>作者或维护者公布产出表 2 的 hparams 名与 commit，或在 README 里注明默认配置与论文的差异清单。</dd>
+          </dl>
+        </section>
+
+        <section id="review-repro" class="review-card">
+          <h3>7.2 没有任何公开材料指明表 2 由哪一组配置产出</h3>
+          <dl>
+            <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B07">B07</a></dd>
+            <dt>作者主张</dt><dd>表 2 的 28.4 与 41.8 是本文模型在两个公开测试集上的成绩。〔<a class="evidence-link" href="#E10">E10</a>〕</dd>
+            <dt>支持证据</dt><dd>论文给出了完整的超参、硬件、步数与检查点平均方式，信息本身是齐的。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E10">E10</a>〕</dd>
+            <dt>反证或替代解释</dt><dd>仓库里同时存在与论文一致的 <code>transformer_base_v1</code> 和与论文不一致的默认 <code>transformer_base</code>，而没有任何文档说明哪一个产出了表 2。仓库已于 2023 年归档，最后一次提交为 <code>bafdc1b67730</code>。〔<a class="evidence-link" href="#E16">E16</a>、<a class="evidence-link" href="#E17">E17</a>、<a class="evidence-link" href="#E26">E26</a>〕</dd>
+            <dt>证据缺少什么</dt><dd>缺的是配置与结果之间的对应关系。有了它，第 7.1 节列出的差异就只是版本演进；没有它，读者无法判断自己复现失败是配置选错还是别的原因。</dd>
+            <dt>对中心结论的影响</dt><dd>降低置信——不改变结论方向，改变的是这些数字能否被逐位重算。这是可复现性问题，不是有效性问题。</dd>
+            <dt>最小解决实验</dt><dd>用 <code>transformer_base_v1</code> 与默认 <code>transformer_base</code> 各跑一次英译德，报告两者的 BLEU 差距。</dd>
+          </dl>
+        </section>
+
+        <section id="review-bleu" class="review-card">
+          <h3>7.3 表 2 的横向比较建立在未报告的评测口径上</h3>
+          <dl>
+            <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B04">B04</a></dd>
+            <dt>作者主张</dt><dd>在两个任务上取得新的最好成绩，英译德一项超过此前所有集成模型。〔<a class="evidence-link" href="#E02">E02</a>、<a class="evidence-link" href="#E15">E15</a>〕</dd>
+            <dt>支持证据</dt><dd>28.4 比表内次高的 26.36 高出 2.0 以上，差距不算小。〔<a class="evidence-link" href="#E10">E10</a>〕</dd>
+            <dt>反证或替代解释</dt><dd>论文没有说明 BLEU 用的是哪种分词与规范化。BLEU 是带参数的指标，同一份译文在不同口径下的分数可以差出 1.8 以上。表内其他行来自各自原论文，口径同样未报告，因此这一列究竟是不是在量同一件事，无法从论文确定。〔<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E23">E23</a>〕</dd>
+            <dt>证据缺少什么</dt><dd>缺一份评测脚本，或一句说明使用了哪套参数。这个问题在本文发表后才被系统提出，因此是时代限制而非疏漏，但它对读数的影响不变。〔<a class="evidence-link" href="#E23">E23</a>〕</dd>
+            <dt>对中心结论的影响</dt><dd>收窄范围——支持的说法应缩到「在作者未公开的评测口径下，本文模型的 BLEU 高于各基线论文自报的 BLEU」。2.0 的差距大于文献记录的口径差上限，因此方向性结论仍然成立；能被削掉的是「28.4 是一个可以跨论文直接引用的数」。</dd>
+            <dt>最小解决实验</dt><dd>用统一口径的 sacreBLEU 对本文与至少两个基线的公开译文重算一次，报告重算后的排序。</dd>
+          </dl>
+        </section>
+
+        <section id="review-cost" class="review-card">
+          <h3>7.4 训练成本的对比不是实测量</h3>
+          <dl>
+            <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B05">B05</a></dd>
+            <dt>作者主张</dt><dd>训练成本只是文献中最好模型的一小部分。〔<a class="evidence-link" href="#E02">E02</a>〕</dd>
+            <dt>支持证据</dt><dd>挂钟时间这一项是本文自己测的，硬件也写清楚了：8 张 P100，大模型 3.5 天。这一部分不依赖估算。〔<a class="evidence-link" href="#E07">E07</a>〕</dd>
+            <dt>反证或替代解释</dt><dd>表 2 那一列的浮点运算量由「训练时间 × GPU 数 × 对单精度持续算力的估计」相乘得到，第三项是估计值。基线各行的时间与硬件来自不同论文、不同年份的不同卡，三个因子里有两个不可比。〔<a class="evidence-link" href="#E11">E11</a>〕</dd>
+            <dt>证据缺少什么</dt><dd>缺的是同一硬件上的重跑，或直接的运算量计数。有了其中之一，这一列才能作为跨方法的成本比较。</dd>
+            <dt>对中心结论的影响</dt><dd>收窄范围——「本文模型在 8 张 P100 上 3.5 天训完」是实测，这一句站得住。「比对手省一到两个数量级的算力」则是三个因子相乘的估计，只能读作数量级上的粗略指示。</dd>
+            <dt>最小解决实验</dt><dd>在同一批 GPU 上把本文模型与一个基线各训到收敛，报告实测挂钟时间与能耗。</dd>
+          </dl>
+        </section>
+
+        <section id="review-variance" class="review-card">
+          <h3>7.5 消融表没有重复实验，细粒度结论无法与噪声区分</h3>
+          <dl>
+            <dt>处理的证据边界</dt><dd><a class="boundary-link" href="#B06">B06</a></dd>
+            <dt>作者主张</dt><dd>多头优于单头，但头数过多反而变差；模型越大越好。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>支持证据</dt><dd>单头 24.9 对 8 头 25.8，差 0.9；层数 6 减到 2，差 2.1。这两处差距明显大于同表相邻档之间的波动。〔<a class="evidence-link" href="#E12">E12</a>〕</dd>
+            <dt>反证或替代解释</dt><dd>表 3 每行只训一次，没有种子、没有重复、没有区间。8 头与 16 头都是 25.8，4 头 25.5 与 32 头 25.4 相差 0.1。这些相邻档之间的名次，同样可以由随机初始化解释。〔<a class="evidence-link" href="#E25">E25</a>〕</dd>
+            <dt>证据缺少什么</dt><dd>缺的是同一配置多个种子的结果。有了它，才能把「8 头是最优点」与「8 到 16 头之间没有可测差异」区分开。</dd>
+            <dt>对中心结论的影响</dt><dd>削弱主张——「多头比单头好」和「层数不能太少」两条保留。「头数过多反而变差」这一子主张的证据是 0.4 的单次差值，不足以支撑。</dd>
+            <dt>最小解决实验</dt><dd>对 4、8、16、32 头各跑三个种子，报告均值与区间。</dd>
+          </dl>
+        </section>
+
+        <section id="no-effect-boundaries">
+          <h3>无实质影响的证据边界</h3>
+          <p>本次审查没有归入此类的边界。B01 到 B07 全部在上面五张卡中处理，每一条都改变了某个结论的范围或置信度，没有一条只需备案。</p>
+        </section>
+        <h3>分级判定</h3>
+        <div class="takeaway-grid">
+            <article class="takeaway-card verdict-supported">
+              <h3>可以相信</h3>
+              <p>把循环层整个去掉、只用注意力，可以在 WMT 2014 英译德与英译法上达到与当时最强方法同级或更好的翻译质量。这一条由主表、五组消融和一个跨任务实验共同支持。同时，「一台 8 卡 P100 机器、3.5 天训完大模型」是本文自测的挂钟时间，不依赖任何估算。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E14">E14</a>〕</p>
+            </article>
+            <article class="takeaway-card verdict-qualified">
+              <h3>可以暂时相信</h3>
+              <p>多头注意力优于单头，层数不能太少，dropout 与标签平滑都在起作用。这几条的效应量都在 0.9 到 2.1 BLEU，明显大于同表相邻档的波动。但全部来自单次训练，没有种子重复。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E25">E25</a>〕</p>
+            </article>
+            <article class="takeaway-card verdict-qualified">
+              <h3>当前不能推出</h3>
+              <p>有三条。第一，28.4 可以作为跨论文直接引用的数：BLEU 口径本文与各基线均未报告。第二，训练成本低一到两个数量级是实测结论：那一列由三个因子相乘估出，其中一个是估计值。第三，「头数过多反而变差」：支撑它的是 0.4 的单次差值。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E23">E23</a>、<a class="evidence-link" href="#E25">E25</a>〕</p>
+            </article>
+            <article class="takeaway-card verdict-rejected">
+              <h3>被现有证据否定</h3>
+              <p>「照仓库默认配置 <code>transformer_base</code> 训出来的就是论文所描述的架构」这一读法不成立。默认配置的归一化位置、warmup、β₂ 与两处 dropout 都与论文不同，而代码自身的注释指明另一组设置才是已发表的版本。〔<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E19">E19</a>、<a class="evidence-link" href="#E21">E21</a>〕</p>
+            </article>
+</div>
+      </section>
+
+      <section id="section-8" class="report-section">
+        <p class="chapter-label">CHAPTER 08</p>
+        <h2>读完这篇论文，真正应该带走什么</h2>
+        <p class="chapter-intro">把前面各章的结论收成三件事：真正的贡献、可信到哪一步、下一步最该做什么。</p>
+        <h3>8.1 论文真正贡献了什么</h3>
+        
+        <p>最实在的贡献是一个结构性的否定：序列建模不需要循环。在本文之前，注意力是循环网络的配件；本文证明它可以单独成为主干，而且不牺牲质量。这一点后来重塑了整个领域。〔<a class="evidence-link" href="#E02">E02</a>、<a class="evidence-link" href="#E13">E13</a>〕</p>
+        <p>第二项贡献是可迁移的工程配方：多头、缩放点积、正弦位置编码、残差加归一化、学习率升温、标签平滑、检查点平均。这套配方的价值独立于本文那两个 BLEU 数字是否可复现。〔<a class="evidence-link" href="#E04">E04</a>、<a class="evidence-link" href="#E05">E05</a>、<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E09">E09</a>〕</p>
+        <p>第三项是把训练成本正式摆进对比表。无论那一列的估算口径是否够严，这个做法本身改变了后续论文报告结果的方式。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E11">E11</a>〕</p>
+
+        <h3>8.2 最终可以相信到哪里</h3>
+        
+        <p>方向性结论可以相信：纯注意力模型在这两个翻译任务上达到了当时的最好水平，并且在一台 8 卡机器上 3.5 天内训完。前者有主表、消融与跨任务实验共同支持，后者是自测的挂钟时间。〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E14">E14</a>〕</p>
+        <p>具体数字要打折扣。28.4 与 41.8 的评测口径未报告，不能跨论文直接引用；「成本低一到两个数量级」那一列是三个因子相乘的估计。这两条都属于收窄范围，不改变方向。〔<a class="evidence-link" href="#E11">E11</a>、<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E23">E23</a>〕</p>
+        <p>可复现性是最弱的一环。公开代码的默认配置与论文架构在归一化位置、升温步数、β₂ 与两处 dropout 上都不同，而没有任何材料指明表 2 由哪一组配置产出。〔<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E19">E19</a>、<a class="evidence-link" href="#E21">E21</a>、<a class="evidence-link" href="#E26">E26</a>〕</p>
+
+        <h3>8.3 如果继续这项研究，下一步最该做什么</h3>
+        
+        <p>第一件，也是最省的一件：用 <code>transformer_base_v1</code> 与默认 <code>transformer_base</code> 各跑一次英译德，报告两者 BLEU 的差距。这一次实验同时回答 7.1 与 7.2 两个问题。</p>
+        <p>第二件，用统一口径重算本文与至少两个基线的公开译文，看排序是否保持。这决定 28.4 能不能作为可引用的数。〔<a class="evidence-link" href="#E23">E23</a>〕</p>
+        <p>第三件，对头数那一组消融各跑三个种子。这是把「8 头是最优点」与「8 到 16 头之间没有可测差异」分开的唯一办法。〔<a class="evidence-link" href="#E25">E25</a>〕</p>
+
+      </section>
+
+      <details class="provenance" id="data-training">
+        <summary>数据与训练完整清单</summary>
+        <div class="details-body table-scroll">
+          <p>本面板只列清单，不复述第 4 章的叙述。每一项都指向已有的证据编号。</p>
+          <table><thead><tr><th>项目</th><th>论文报告值</th><th>官方默认 <code>transformer_base</code></th><th>证据</th></tr></thead><tbody>
+            <tr><td>子层归一化位置</td><td>先相加后归一 LayerNorm(x+Sublayer(x))</td><td>先归一再进子层（<code>"n"</code> / <code>"da"</code>）</td><td>〔<a class="evidence-link" href="#E03">E03</a>、<a class="evidence-link" href="#E18">E18</a>、<a class="evidence-link" href="#E20">E20</a>〕</td></tr>
+            <tr><td>warmup 步数</td><td>4000</td><td>8000</td><td>〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E18">E18</a>〕</td></tr>
+            <tr><td>Adam β₁ / β₂ / ε</td><td>0.9 / 0.98 / 1e-9</td><td>0.9 / <strong>0.997</strong> / 1e-9</td><td>〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E19">E19</a>〕</td></tr>
+            <tr><td>学习率参数化</td><td>d_model^-0.5 · min(step^-0.5, step·warmup^-1.5)</td><td><code>constant*linear_warmup*rsqrt_decay*rsqrt_hidden_size</code>，常数 2.0</td><td>〔<a class="evidence-link" href="#E08">E08</a>、<a class="evidence-link" href="#E19">E19</a>〕</td></tr>
+            <tr><td>子层输出 dropout</td><td>0.1</td><td>0.1</td><td>〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E18">E18</a>〕</td></tr>
+            <tr><td>注意力分数 dropout</td><td><strong>论文未提</strong></td><td>0.1</td><td>〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E18">E18</a>〕</td></tr>
+            <tr><td>前馈中间层 dropout</td><td><strong>论文未提</strong></td><td>0.1</td><td>〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E18">E18</a>〕</td></tr>
+            <tr><td>标签平滑</td><td>0.1</td><td>0.1</td><td>〔<a class="evidence-link" href="#E09">E09</a>、<a class="evidence-link" href="#E17">E17</a>〕</td></tr>
+            <tr><td>批大小口径</td><td>约 25000 源端 + 25000 目标端子词</td><td><code>batch_size=4096</code>（按 token 计，单卡）</td><td>〔<a class="evidence-link" href="#E07">E07</a>、<a class="evidence-link" href="#E17">E17</a>〕</td></tr>
+            <tr><td>层数 / d_model / d_ff / 头数（基础）</td><td>6 / 512 / 2048 / 8</td><td>6 / 512 / 2048 / 8</td><td>〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E17">E17</a>〕</td></tr>
+            <tr><td>层数 / d_model / d_ff / 头数（大）</td><td>6 / 1024 / 4096 / 16</td><td>6 / 1024 / 4096 / 16</td><td>〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E18">E18</a>〕</td></tr>
+          </tbody></table>
+          <p>语料与切分：英译德 WMT 2014 约 450 万句对、BPE、共享词表约 37000；英译法 3600 万句、word-piece 词表 32000。两个任务切分口径不同。〔<a class="evidence-link" href="#E06">E06</a>〕</p>
+          <p>硬件与时长：8 张 P100。基础 0.4 秒/步 × 10 万步 ≈ 12 小时；大模型 1.0 秒/步 × 30 万步 ≈ 3.5 天。〔<a class="evidence-link" href="#E07">E07</a>〕</p>
+          <p>检查点与解码：基础取最后 5 个检查点平均，大模型取最后 20 个；束宽 4，长度惩罚 0.6。〔<a class="evidence-link" href="#E10">E10</a>〕</p>
+        </div>
+      </details>
+
+      <details class="provenance" id="model-dataflow">
+        <summary>模型接口与形状完整表</summary>
+        <div class="details-body table-scroll">
+          <p>记号：B 为批大小，n 为源端长度，m 为目标端长度，d=512（基础模型），h=8，d_k=d_v=64。</p>
+          <table><thead><tr><th>阶段</th><th>输入形状</th><th>操作</th><th>输出形状</th><th>证据</th></tr></thead><tbody>
+            <tr><td>词嵌入</td><td>B×n（整数）</td><td>查表，乘 √d</td><td>B×n×512</td><td>〔<a class="evidence-link" href="#E05">E05</a>〕</td></tr>
+            <tr><td>位置编码</td><td>B×n×512</td><td>加正弦余弦向量</td><td>B×n×512</td><td>〔<a class="evidence-link" href="#E05">E05</a>〕</td></tr>
+            <tr><td>Q/K/V 投影</td><td>B×n×512</td><td>三个线性层，再切成 8 头</td><td>3 × B×8×n×64</td><td>〔<a class="evidence-link" href="#E04">E04</a>〕</td></tr>
+            <tr><td>注意力分数</td><td>B×8×n×64</td><td>QKᵀ / √64，加掩码，softmax</td><td>B×8×n×n</td><td>〔<a class="evidence-link" href="#E04">E04</a>〕</td></tr>
+            <tr><td>加权求和</td><td>B×8×n×n 与 B×8×n×64</td><td>矩阵乘，拼头，线性变换</td><td>B×n×512</td><td>〔<a class="evidence-link" href="#E04">E04</a>〕</td></tr>
+            <tr><td>前馈子层</td><td>B×n×512</td><td>512→2048，ReLU，2048→512</td><td>B×n×512</td><td>〔<a class="evidence-link" href="#E12">E12</a>〕</td></tr>
+            <tr><td>交叉注意力</td><td>Q 来自 B×m×512，K/V 来自 B×n×512</td><td>同上，无因果掩码</td><td>B×m×512</td><td>〔<a class="evidence-link" href="#E03">E03</a>〕</td></tr>
+            <tr><td>输出层</td><td>B×m×512</td><td>线性升到词表，权重与嵌入共享，softmax</td><td>B×m×37000</td><td>〔<a class="evidence-link" href="#E09">E09</a>〕</td></tr>
+          </tbody></table>
+          <p>注意力分数矩阵 B×8×n×n 在乘完 V 之后不再保留，是全模型显存与算力的主要来源，且随 n 平方增长。〔<a class="evidence-link" href="#E13">E13</a>〕</p>
+        </div>
+      </details>
+
+      <details class="provenance" id="experiment-matrix">
+        <summary>完整实验矩阵</summary>
+        <div class="details-body table-scroll">
+          <table><thead><tr><th>表</th><th>行</th><th>英译德</th><th>英译法</th><th>训练成本</th></tr></thead><tbody>
+            <tr><td>表 2</td><td>ByteNet</td><td>23.75</td><td>—</td><td>—</td></tr>
+            <tr><td>表 2</td><td>Deep-Att + PosUnk</td><td>—</td><td>39.2</td><td>1.0×10²⁰</td></tr>
+            <tr><td>表 2</td><td>GNMT + RL</td><td>24.6</td><td>39.92</td><td>1.4×10²⁰</td></tr>
+            <tr><td>表 2</td><td>ConvS2S</td><td>25.16</td><td>40.46</td><td>1.5×10²⁰</td></tr>
+            <tr><td>表 2</td><td>MoE</td><td>26.03</td><td>40.56</td><td>1.2×10²⁰</td></tr>
+            <tr><td>表 2</td><td>GNMT + RL 集成</td><td>26.30</td><td>41.16</td><td>1.1×10²¹</td></tr>
+            <tr><td>表 2</td><td>ConvS2S 集成</td><td>26.36</td><td>41.29</td><td>1.2×10²¹</td></tr>
+            <tr><td>表 2</td><td><strong>本文基础</strong></td><td>27.3</td><td>38.1</td><td>3.3×10¹⁸</td></tr>
+            <tr><td>表 2</td><td><strong>本文大模型</strong></td><td>28.4</td><td>41.8</td><td>2.3×10¹⁹</td></tr>
+          </tbody></table>
+          <p>表 2 全部行均取自各自原论文，未在本文协议下重跑；成本列为估算值。〔<a class="evidence-link" href="#E10">E10</a>、<a class="evidence-link" href="#E11">E11</a>〕</p>
+          <table><thead><tr><th>表 3 行</th><th>改动</th><th>困惑度</th><th>BLEU</th><th>参数量</th></tr></thead><tbody>
+            <tr><td>base</td><td>—</td><td>4.92</td><td>25.8</td><td>65M</td></tr>
+            <tr><td>A</td><td>1 头</td><td>5.29</td><td>24.9</td><td>—</td></tr>
+            <tr><td>A</td><td>4 头</td><td>5.00</td><td>25.5</td><td>—</td></tr>
+            <tr><td>A</td><td>16 头</td><td>4.91</td><td>25.8</td><td>—</td></tr>
+            <tr><td>A</td><td>32 头</td><td>5.01</td><td>25.4</td><td>—</td></tr>
+            <tr><td>C</td><td>2 层</td><td>6.11</td><td>23.7</td><td>36M</td></tr>
+            <tr><td>C</td><td>4 层</td><td>5.19</td><td>25.3</td><td>50M</td></tr>
+            <tr><td>C</td><td>8 层</td><td>4.88</td><td>25.5</td><td>80M</td></tr>
+            <tr><td>D</td><td>d_ff=4096</td><td>4.66</td><td>26.0</td><td>168M</td></tr>
+            <tr><td>D</td><td>无 dropout</td><td>5.77</td><td>24.6</td><td>—</td></tr>
+            <tr><td>D</td><td>dropout 0.2</td><td>4.95</td><td>25.5</td><td>—</td></tr>
+            <tr><td>D</td><td>无标签平滑</td><td>4.67</td><td>25.3</td><td>—</td></tr>
+            <tr><td>E</td><td>可学习位置向量</td><td>4.92</td><td>25.7</td><td>—</td></tr>
+            <tr><td>big</td><td>—</td><td>4.33</td><td>26.4</td><td>213M</td></tr>
+          </tbody></table>
+          <p>表 3 每行单次训练，无种子重复与区间。〔<a class="evidence-link" href="#E12">E12</a>、<a class="evidence-link" href="#E25">E25</a>〕</p>
+          <p>表 4 句法分析：仅 WSJ 时 F1=91.3，半监督 92.7，对照行取自各自原论文。〔<a class="evidence-link" href="#E14">E14</a>〕</p>
+        </div>
+      </details>
+
+      <details class="provenance" id="critical-review">
+        <summary>可复现性清单</summary>
+        <div class="details-body table-scroll">
+          <table><thead><tr><th>要素</th><th>状态</th><th>说明</th><th>证据</th></tr></thead><tbody>
+            <tr><td>论文全文与附录</td><td>可获取</td><td>arXiv v7 公开</td><td>〔<a class="evidence-link" href="#E01">E01</a>〕</td></tr>
+            <tr><td>官方代码</td><td>可获取</td><td>仓库已归档，最后提交 2023-04-01</td><td>〔<a class="evidence-link" href="#E16">E16</a>〕</td></tr>
+            <tr><td>与论文一致的超参组</td><td>可获取</td><td>保留为 <code>transformer_base_v1</code></td><td>〔<a class="evidence-link" href="#E17">E17</a>〕</td></tr>
+            <tr><td>表 2 对应的超参组与 commit</td><td><strong>缺失</strong></td><td>无任何文档指明；这是本次唯一未解决项</td><td>〔<a class="evidence-link" href="#E26">E26</a>〕</td></tr>
+            <tr><td>BLEU 评测脚本与口径</td><td><strong>缺失</strong></td><td>论文与仓库均未给出</td><td>〔<a class="evidence-link" href="#E22">E22</a>、<a class="evidence-link" href="#E23">E23</a>〕</td></tr>
+            <tr><td>随机种子与重复次数</td><td><strong>缺失</strong></td><td>表 2、表 3 均为单次结果</td><td>〔<a class="evidence-link" href="#E25">E25</a>〕</td></tr>
+            <tr><td>训练语料</td><td>可获取</td><td>WMT 2014 公开数据集</td><td>〔<a class="evidence-link" href="#E06">E06</a>〕</td></tr>
+            <tr><td>预训练权重</td><td>未核验</td><td>本次未下载任何权重，按证据政策排除</td><td>〔<a class="evidence-link" href="#E16">E16</a>〕</td></tr>
+          </tbody></table>
+          <p>结论性判断已在第 7 章给出，本面板只登记可获取状态，不重复评级。</p>
+        </div>
+      </details>
+    </main>
+    <footer>
+      <details class="provenance" id="report-info" open>
+        <summary>来源、版本与未解决问题</summary>
+        <div class="details-body"><p><strong>论文版本：</strong>arXiv:1706.03762v7（2023-08-02），DOI 10.48550/arXiv.1706.03762。本次阅读以 v7 为准。〔<a class="evidence-link" href="#E01">E01</a>〕</p>
+        <p><strong>代码版本：</strong>tensorflow/tensor2tensor，commit bafdc1b67730（2023-04-01，仓库已归档）。仅通过 GitHub API 与原始文件读取，未克隆仓库，未下载任何权重。〔<a class="evidence-link" href="#E16">E16</a>〕</p>
+        <p><strong>未解决问题：</strong>没有任何公开材料指明表 2 的数字由哪一组超参与哪个代码版本产出，因此无法确认默认配置能否复现 28.4。最小解决材料是作者或维护者公布对应的 hparams 名与 commit。〔<a class="evidence-link" href="#E26">E26</a>〕</p>
+        <p><strong>完成状态：</strong>partial。论文、官方代码与两项外部核验均已取得并核对；上述一项对应关系未解决。如需逐文件代码比对与完整实验矩阵，可用 <code>audit</code> 模式展开。</p></div>
+      </details>
+      <details class="ledger" id="evidence-ledger" open>
+        <summary>完整证据账本</summary>
+        <div class="details-body table-scroll"><table><thead><tr><th>ID</th><th>类型</th><th>来源</th><th>版本/commit</th><th>定位</th><th>支持的陈述</th><th>获取状态</th></tr></thead><tbody><tr class="ledger-row" id="E01"><td><strong>E01</strong></td><td>[论文]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>标题页与 arXiv 版本记录</td><td>论文身份：8 位作者，v1 于 2017-06-12 提交，最新 v7 于 2023-08-02</td><td>可访问</td></tr><tr class="ledger-row" id="E02"><td><strong>E02</strong></td><td>[论文]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>摘要</td><td>摘要主张：英译德 28.4、英译法 41.8 BLEU，8 卡训练 3.5 天，成本为文献最好模型的一小部分</td><td>可访问</td></tr><tr class="ledger-row" id="E03"><td><strong>E03</strong></td><td>[论文]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>§3.1 与 §3.2.3</td><td>编码器解码器各 6 层；每个子层外为残差加层归一化，写作 LayerNorm(x + Sublayer(x))；解码器自注意力带因果掩码</td><td>可访问</td></tr><tr class="ledger-row" id="E04"><td><strong>E04</strong></td><td>[论文]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>§3.2.1–3.2.2</td><td>缩放点积注意力除以 d_k 的平方根；多头 h=8，d_k=d_v=64</td><td>可访问</td></tr><tr class="ledger-row" id="E05"><td><strong>E05</strong></td><td>[论文]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>§3.5</td><td>正弦余弦位置编码，直接与词向量相加；选它的理由是可能外推到更长序列</td><td>可访问</td></tr><tr class="ledger-row" id="E06"><td><strong>E06</strong></td><td>[论文]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>§5.1</td><td>英译德 WMT 2014 约 450 万句对、BPE、共享词表约 37000；英译法 3600 万句、word-piece 词表 32000</td><td>可访问</td></tr><tr class="ledger-row" id="E07"><td><strong>E07</strong></td><td>[论文]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>§5.2</td><td>8 张 NVIDIA P100；基础模型 0.4 秒/步、10 万步、约 12 小时；大模型 1.0 秒/步、30 万步、约 3.5 天；每批约 25000 源端与 25000 目标端子词</td><td>可访问</td></tr><tr class="ledger-row" id="E08"><td><strong>E08</strong></td><td>[论文]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>§5.3</td><td>Adam，β₁=0.9、β₂=0.98、ε=1e-9；学习率先线性升温 4000 步再按步数负平方根衰减</td><td>可访问</td></tr><tr class="ledger-row" id="E09"><td><strong>E09</strong></td><td>[论文]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>§5.4</td><td>两处 dropout：子层输出、词向量与位置编码之和；基础模型 P_drop=0.1；标签平滑 0.1</td><td>可访问</td></tr><tr class="ledger-row" id="E10"><td><strong>E10</strong></td><td>[论文]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>§6.1 与表 2</td><td>基础 27.3/38.1，大模型 28.4/41.8；表内次高 ConvS2S 集成 26.36；成本 2.3×10¹⁹ 对 GNMT+RL 集成 1.8×10²⁰；检查点平均 5/20；束宽 4、长度惩罚 0.6</td><td>可访问</td></tr><tr class="ledger-row" id="E11"><td><strong>E11</strong></td><td>[论文]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>表 2 脚注</td><td>训练成本由训练时间 × GPU 数 × 对单精度持续算力的估计相乘得到</td><td>可访问</td></tr><tr class="ledger-row" id="E12"><td><strong>E12</strong></td><td>[论文]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>表 3（A–E 行）</td><td>头数 1/4/8/16/32 对应 BLEU 24.9/25.5/25.8/25.8/25.4；2 层 23.7；d_ff=4096 得 26.0；无 dropout 24.6；无标签平滑困惑度 4.67 而 BLEU 25.3；E 行可学习位置向量 25.7</td><td>可访问</td></tr><tr class="ledger-row" id="E13"><td><strong>E13</strong></td><td>[论文]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>表 1</td><td>自注意力最大路径长度 O(1)、循环 O(n)、卷积 O(log n)；自注意力每层复杂度 O(n²·d)</td><td>可访问</td></tr><tr class="ledger-row" id="E14"><td><strong>E14</strong></td><td>[论文]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>§6.3 与表 4</td><td>四层模型英语句法分析：仅 WSJ 时 F1=91.3（Dyer 等 91.7），半监督 92.7</td><td>可访问</td></tr><tr class="ledger-row" id="E15"><td><strong>E15</strong></td><td>[论文]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>§7 结论</td><td>声明取得新的最好成绩，并给出代码地址 github.com/tensorflow/tensor2tensor</td><td>可访问</td></tr><tr class="ledger-row" id="E16"><td><strong>E16</strong></td><td>[代码]</td><td>tensorflow/tensor2tensor</td><td>commit bafdc1b67730（2023-04-01，仓库已归档）</td><td>仓库元数据（GitHub API）</td><td>官方代码公开；仓库已归档，最后提交 2023-04-01</td><td>可访问</td></tr><tr class="ledger-row" id="E17"><td><strong>E17</strong></td><td>[代码]</td><td>tensorflow/tensor2tensor</td><td>commit bafdc1b67730（2023-04-01，仓库已归档）</td><td>tensor2tensor/models/transformer.py: transformer_base_v1</td><td>与论文一致的一组：warmup 4000、β₂=0.98、attention_dropout=0.0、relu_dropout=0.0、未覆写归一化顺序</td><td>可访问</td></tr><tr class="ledger-row" id="E18"><td><strong>E18</strong></td><td>[冲突]</td><td>tensorflow/tensor2tensor</td><td>commit bafdc1b67730（2023-04-01，仓库已归档）</td><td>transformer.py: transformer_base_v2</td><td>覆写 layer_preprocess_sequence="n"、layer_postprocess_sequence="da"、warmup 8000、attention_dropout=0.1、relu_dropout=0.1</td><td>可访问</td></tr><tr class="ledger-row" id="E19"><td><strong>E19</strong></td><td>[冲突]</td><td>tensorflow/tensor2tensor</td><td>commit bafdc1b67730（2023-04-01，仓库已归档）</td><td>transformer.py: transformer_base_v3 与 transformer_base</td><td>v3 覆写 β₂=0.997 并改用另一套学习率参数化；transformer_base 直接返回 v3</td><td>可访问</td></tr><tr class="ledger-row" id="E20"><td><strong>E20</strong></td><td>[代码]</td><td>tensorflow/tensor2tensor</td><td>commit bafdc1b67730（2023-04-01，仓库已归档）</td><td>tensor2tensor/layers/common_layers.py: layer_prepostprocess</td><td>序列字符含义：a 加上先前值、n 归一化、d dropout；preprocess 传入的先前值为 None 且禁止 a</td><td>可访问</td></tr><tr class="ledger-row" id="E21"><td><strong>E21</strong></td><td>[冲突]</td><td>tensorflow/tensor2tensor</td><td>commit bafdc1b67730（2023-04-01，仓库已归档）</td><td>tensor2tensor/layers/common_hparams.py: basic_params1</td><td>默认为 ("none", "dan")，注释写明该设置是「已发表的那个版本」，而 ("n", "da") 只是「对更难学的模型似乎更好」</td><td>可访问</td></tr><tr class="ledger-row" id="E22"><td><strong>E22</strong></td><td>[缺失]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>全文检索</td><td>论文声明困惑度按子词计算，但未给出 BLEU 的分词或规范化口径</td><td>已检索</td></tr><tr class="ledger-row" id="E23"><td><strong>E23</strong></td><td>[外部核验]</td><td>Post，A Call for Clarity in Reporting BLEU Scores</td><td>WMT18（arXiv:1804.08771）</td><td>正文与摘要</td><td>BLEU 是带参数的指标，常用配置之间差距可达 1.8；建议统一使用 WMT 口径</td><td>可访问</td></tr><tr class="ledger-row" id="E24"><td><strong>E24</strong></td><td>[外部核验]</td><td>Xiong 等，On Layer Normalization in the Transformer Architecture</td><td>ICML 2020（arXiv:2002.04745）</td><td>正文与摘要</td><td>后置归一化在初始化时靠近输出层的梯度很大，因而需要学习率升温；前置归一化梯度良好，可去掉升温</td><td>可访问</td></tr><tr class="ledger-row" id="E25"><td><strong>E25</strong></td><td>[缺失]</td><td>Vaswani 等，Attention Is All You Need</td><td>arXiv:1706.03762v7（2023-08-02）</td><td>表 2、表 3 与 §6</td><td>未报告随机种子、重复次数或任何区间；所有行均为单次训练结果</td><td>已检索</td></tr><tr class="ledger-row" id="E26"><td><strong>E26</strong></td><td>[推断]</td><td>本次分析（基于 E17–E19、E21）</td><td>commit bafdc1b67730（2023-04-01，仓库已归档）</td><td>逐函数比对继承链</td><td>transformer_base → v3 → v2 → v1；论文那组配置保留在 v1，默认调用得到的是与论文不一致的 v3</td><td>本次核验</td></tr></tbody></table></div>
+      </details>
+    </footer>
+  </div>
+</body>
+</html>

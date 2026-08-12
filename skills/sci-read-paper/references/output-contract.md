@@ -162,11 +162,18 @@ nothing; introducing one costs them something every time.
 
 `standard` delivers `<paper-slug>.html`: the complete eight-section reading, the
 embedded ledger, and report information. `audit` delivers `<paper-slug>-audit.html`
-and appends four collapsed panels — `data-training`, `model-dataflow`,
+and appends exactly four panels — `data-training`, `model-dataflow`,
 `experiment-matrix`, `critical-review` — which own exhaustive configurations,
 complete interfaces and shapes, every experiment row, and expanded reproducibility
-inventories. They add traceability, not a second narrative; reference sections and
-evidence IDs rather than duplicating prose.
+inventories. All four are required, all four ship collapsed, and a standard report
+carries none of them; `validate_report.py` checks all three directions.
+
+Panels add traceability, not a second narrative. Reference sections and evidence
+IDs instead of duplicating prose, and keep them on the same side of the wall as
+Sections 1–6: the four verdict terms may not appear there either, because a
+graded judgement in an appendix is one no boundary can be checked against. The
+reading-length band is measured on the eight sections alone, so an exhaustive
+panel does not push the report out of its own range.
 
 `figure=off` is the default and emits no figure UI at all. `figure=brief` renders
 at most three collapsed briefs in `#figure-output` — purpose and reader, figure

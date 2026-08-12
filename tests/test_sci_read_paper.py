@@ -610,18 +610,21 @@ class ReportValidatorTests(unittest.TestCase):
             text=True,
         )
 
+    def write_temp(self, text: str) -> Path:
+        handle = tempfile.NamedTemporaryFile(
+            "w", suffix=".html", delete=False, encoding="utf-8"
+        )
+        handle.write(text)
+        handle.close()  # validate() reopens the path; an unflushed handle reads empty
+        self.addCleanup(Path(handle.name).unlink, missing_ok=True)
+        return Path(handle.name)
+
     def corrupt(self, source: Path, *replacements: tuple[str, str]) -> Path:
         text = source.read_text(encoding="utf-8")
         for old, new in replacements:
             self.assertIn(old, text, f"fixture no longer contains {old!r}")
             text = text.replace(old, new, 1)
-        handle = tempfile.NamedTemporaryFile(
-            "w", suffix=".html", delete=False, encoding="utf-8"
-        )
-        handle.write(text)
-        handle.close()
-        self.addCleanup(Path(handle.name).unlink, missing_ok=True)
-        return Path(handle.name)
+        return self.write_temp(text)
 
     def test_scaffolder_resolves_every_flag_determined_placeholder(self):
         """Deciding these by hand shipped a broken build procedure once already."""
@@ -822,6 +825,92 @@ class ReportValidatorTests(unittest.TestCase):
         result = self.run_validator(broken)
         self.assertEqual(result.returncode, 1)
         self.assertIn("run-on sentence", result.stderr)
+
+    def test_audit_mode_is_gated_at_all(self):
+        """Until the first audit run, this mode had no contract: a report declaring
+        mode=audit with zero panels passed."""
+        audit = next(
+            (
+                r
+                for r in sorted((ROOT / "tests" / "sci-read-paper" / "outputs").rglob("*.html"))
+                if "mode=audit" in r.read_text(encoding="utf-8")
+            ),
+            None,
+        )
+        self.assertIsNotNone(audit, "no audit-mode showcase to gate against")
+        source = audit.read_text(encoding="utf-8")
+        self.assertEqual(self.run_validator(audit).returncode, 0)
+
+        stripped = re.sub(
+            r'      <details class="provenance" id="(?:data-training|model-dataflow'
+            r'|experiment-matrix|critical-review)">.*?</details>\n',
+            "",
+            source,
+            flags=re.DOTALL,
+        )
+        self.assertNotEqual(stripped, source, "the panels are no longer where we look")
+        result = self.run_validator(self.write_temp(stripped))
+        self.assertEqual(result.returncode, 1, "audit with no panels must fail")
+        self.assertIn("panel is missing", result.stderr)
+
+        loosened = source.replace(
+            '<details class="provenance" id="data-training">',
+            '<details class="provenance" id="data-training" open>',
+            1,
+        )
+        result = self.run_validator(self.write_temp(loosened))
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("must ship collapsed", result.stderr)
+
+    def test_standard_mode_rejects_audit_panels(self):
+        panel = (
+            '      <details class="provenance" id="data-training"><summary>x</summary>'
+            '<div class="details-body">占位内容占位内容</div></details>\n'
+        )
+        broken = self.corrupt(CPROMG_HTML, ("    </main>", panel + "    </main>"))
+        result = self.run_validator(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("audit panels belong in the audit deliverable", result.stderr)
+
+    def test_the_wall_covers_audit_panels_too(self):
+        """A verdict in an appendix is a verdict nothing can check against a boundary."""
+        audit = next(
+            r
+            for r in sorted((ROOT / "tests" / "sci-read-paper" / "outputs").rglob("*.html"))
+            if "mode=audit" in r.read_text(encoding="utf-8")
+        )
+        source = audit.read_text(encoding="utf-8")
+        leaked = source.replace(
+            '<summary>可复现性清单</summary>',
+            '<summary>可复现性清单</summary><p>这一条可以相信。</p>',
+            1,
+        )
+        self.assertNotEqual(leaked, source)
+        result = self.run_validator(self.write_temp(leaked))
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("graded judgement belongs in Section 7", result.stderr)
+
+    def test_audit_sidebar_group_exists_only_in_audit_mode(self):
+        """Those nav links would be dead — and fail validation — in a standard report."""
+        for mode, expected in (("standard", False), ("audit", True)):
+            with self.subTest(mode=mode):
+                outdir = tempfile.mkdtemp()
+                subprocess.run(
+                    [sys.executable, str(SCAFFOLD), "--slug", "nav",
+                     "--outdir", outdir, "--mode", mode],
+                    capture_output=True, text=True, check=True,
+                )
+                suffix = "-audit" if mode == "audit" else ""
+                text = (Path(outdir) / f"nav{suffix}.html").read_text(encoding="utf-8")
+                self.assertEqual('href="#data-training"' in text, expected)
+                self.assertNotIn("{{AUDIT_NAV}}", text, "the marker must never ship")
+
+    def test_reading_band_measures_the_reading_not_the_appendices(self):
+        """Audit panels are lookup material; counting them trips a band calibrated
+        on the eight-section path."""
+        source = VALIDATOR.read_text(encoding="utf-8")
+        self.assertIn("index.section_text.get(n, [])", source)
+        self.assertNotIn('CJK.findall("".join(index.main_text))', source)
 
     def test_term_dumping_fails_the_build_rather_than_only_warning(self):
         """The old Latin-share warning fired for two rounds and the report shipped."""
