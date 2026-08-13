@@ -23,7 +23,8 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL = ROOT / "skills" / "sci-cn-disclosure"
+SCIENTIFIC = ROOT / "skills" / "scientific"
+SKILL = SCIENTIFIC / "sci-cn-disclosure"
 SCRIPTS = SKILL / "scripts"
 FIXTURE = ROOT / "tests" / "sci-cn-disclosure" / "outputs"
 DISCLOSURE = "交底书.md"
@@ -477,7 +478,7 @@ class AgentCardTests(unittest.TestCase):
     """
 
     def card(self, skill: str) -> dict:
-        path = ROOT / "skills" / skill / "agents" / "openai.yaml"
+        path = SCIENTIFIC / skill / "agents" / "openai.yaml"
         self.assertTrue(path.is_file(), f"{skill} 缺少 agents/openai.yaml")
         return yaml.safe_load(path.read_text(encoding="utf-8"))
 
@@ -494,12 +495,19 @@ class AgentCardTests(unittest.TestCase):
         skills omit it. This is a skill — it triggers from 「帮我写份技术交底书」."""
         self.assertNotIn("policy", self.card("sci-cn-disclosure"))
 
-    def test_both_skills_in_this_repo_carry_a_card(self):
-        """Either both have one or neither does. One of each is the state nobody
-        will remember the reason for."""
-        for skill in sorted(p.name for p in (ROOT / "skills").iterdir() if p.is_dir()):
-            with self.subTest(skill=skill):
-                self.assertIn("interface", self.card(skill))
+    def test_every_skill_in_this_repo_carries_a_card(self):
+        """Either all of them have one or none does. One of each is the state nobody
+        will remember the reason for.
+
+        Held repo-wide across both categories — a card costs four lines and buys the
+        skill a display name in Codex, and there is no property of a skill that makes
+        it exempt.
+        """
+        for skill in sorted(p for p in (ROOT / "skills").glob("*/*") if p.is_dir()):
+            with self.subTest(skill=f"{skill.parent.name}/{skill.name}"):
+                path = skill / "agents" / "openai.yaml"
+                self.assertTrue(path.is_file(), f"{skill.name} 缺少 agents/openai.yaml")
+                self.assertIn("interface", yaml.safe_load(read(path)))
 
 
 class CoverageTests(unittest.TestCase):

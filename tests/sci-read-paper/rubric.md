@@ -24,7 +24,7 @@ Score each positive or partial-source output from 0 to 2 on every criterion.
 
 An otherwise strong report does not pass if it emits multiple deliverable files, depends on external UI resources, breaks its internal evidence links, drops a deferred boundary, or mixes the Section 7 verdict into the explanatory Sections 1–6.
 
-Score only reports for which `skills/sci-read-paper/scripts/validate_report.py` already exits `0`. The rubric judges what the validator cannot: whether the reasoning is right. A report that fails the validator is not eligible for scoring.
+Score only reports for which `skills/scientific/sci-read-paper/scripts/validate_report.py` already exits `0`. The rubric judges what the validator cannot: whether the reasoning is right. A report that fails the validator is not eligible for scoring.
 
 Do not spend scoring effort on anything the gate already decides — section order and headings, card fields, the experiment-type/impact/verdict/ledger vocabularies, boundary labelling and discharge, citation resolution, badges, figure mode, template-only classes, sentence length, or section length. Those are closed sets or fixed strings, and a report that reached the rubric has already satisfied all of them. Judge the open questions instead: is the causal chain real, does the concrete sample actually trace, does each discharge answer what its boundary asserts, and does any verdict outrun its evidence.
 

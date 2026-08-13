@@ -12,7 +12,7 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = ROOT / "skills" / "sci-read-paper"
+SKILL_DIR = ROOT / "skills" / "scientific" / "sci-read-paper"
 SKILL_MD = SKILL_DIR / "SKILL.md"
 VALIDATOR = SKILL_DIR / "scripts" / "validate_report.py"
 OPENAI_YAML = SKILL_DIR / "agents" / "openai.yaml"
