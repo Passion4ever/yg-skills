@@ -1,0 +1,4 @@
+interface:
+  display_name: "Catch Me Up"
+  short_description: "Rebuild the whole picture when I have lost the thread"
+  default_prompt: "Use $catch-me-up to stop all work and rebuild the full picture, including every decision you made that I never approved."

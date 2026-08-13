@@ -1,0 +1,4 @@
+interface:
+  display_name: "Grill Me"
+  short_description: "Interrogate a half-formed plan until it is decided"
+  default_prompt: "Use $grill-me to question my half-formed plan one round at a time until every vague part has a decided answer. Propose nothing until I say go."
