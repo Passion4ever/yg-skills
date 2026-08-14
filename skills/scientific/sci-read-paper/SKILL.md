@@ -1,43 +1,62 @@
 ---
 name: sci-read-paper
-description: Use when deeply analyzing one AI/ML paper beyond summary, including its research logic, datasets, training, model data flow, experiments, reproducibility, code, or scientific validity, especially in protein, small-molecule, or drug-discovery research. Also use for 深度精读、复现性审查、论文与代码是否一致、模型内部数据流、实验能证明什么. Do not use for direct single-fact extraction, and do not use for full-text translation or 中英对照 bilingual reading.
+description: 深度精读一篇 AI/ML 论文时使用——不止看摘要，而是读懂它的研究逻辑、数据集、训练过程、模型内部数据流、实验设计、可复现性、代码与科学有效性，尤其是蛋白、小分子与药物发现方向。用户说"深度精读""帮我真正读懂这篇""复现性审查""论文和代码对不对得上""模型内部数据流""这个实验到底能证明什么"时使用。只想问某一个具体数字或事实的不用；要全文翻译或中英对照阅读的也不用。
 ---
 
-# Deep Read Paper
+# 论文精读
 
-Help the reader understand one paper as an expert does: reconstruct reasoning and data flow before judging evidence; never reduce it to a summary.
+让读者像内行一样读懂一篇论文：**先把作者的推理链和数据流重建出来，再判断证据**。任何时候都不要退化成摘要。
 
-## Workflow
+## 工作流
 
-1. Default to `standard`. Select `audit` only on explicit request for exhaustive audit, reproduction preparation, a full experiment matrix, or file-by-file code comparison.
-2. Resolve the paper from a PDF/path, title, DOI, arXiv ID, journal page, or official repository. Collect only conclusion-relevant supplement, code/configuration, dataset, and external evidence. Read [evidence-policy.md](references/evidence-policy.md). Ask only about access, ambiguous identity, or a conclusion-changing conflict.
-3. Orient the reader on the real task, significance, difficulty, mainstream framing, and gap; build limitation → hypothesis → design → evidence → contribution.
-4. Trace one concrete sample through provenance, construction, labels, splits, training, model transformations, output, and paper-code differences. Read [ai-ml-reading-guide.md](references/ai-ml-reading-guide.md).
-5. Organize baseline, control, ablation, analysis, case-study, and external-validation evidence by the question each answers.
-6. Audit internal validity and conclusion-critical scientific claims. For protein, small-molecule, or drug-discovery work, read [bio-chem-validity.md](references/bio-chem-validity.md).
-7. Scaffold with `python3 <skill-dir>/scripts/new_report.py --slug <paper-slug> --outdir <outdir>`, then fill one placeholder per edit. Copy every repeated structure — cards, boundaries, ledger rows, citations, verdicts — from `assets/fragments.html` instead of writing markup. [output-contract.md](references/output-contract.md) defines the rest.
-8. Run `python3 <skill-dir>/scripts/validate_report.py <delivered file>`. Fix every violation and re-run until it exits `0`. Do not call the report finished before it does.
+1. **默认 `standard`。** 只有明确要求穷尽审计、准备复现、完整实验矩阵，或逐文件比对代码时，才选 `audit`。
 
-Continue as `partial` when non-critical artifacts are unavailable; never guess a gap shut.
+2. **先认准是哪篇。** PDF、本地路径、标题、DOI、arXiv 号、期刊页面、官方仓库，任一入口都能定位。只取与结论相关的补充材料、代码与配置、数据集和外部证据——取之前先读 [evidence-policy.md](references/evidence-policy.md)。只有三种情况才问用户：材料拿不到、论文身份有歧义、或者出现会改变结论的冲突。
 
-## Communication
+3. **先把读者领进场。** 说清这篇论文真正在解决什么任务、为什么重要、难在哪、主流怎么做、缺口在哪，再把「局限 → 假设 → 设计 → 证据 → 贡献」串成一条链。
 
-- Use Chinese-first prose. Say in plain Chinese what an English term means at first use, then use the term. Preserve proper names, metrics, identifiers, paths, and author-defined modules.
-- Develop Sections 1–6 as question → author rationale → technical detail → role in the argument.
-- Keep a paragraph to one explanatory purpose and usually 3–5 sentences. A sentence the reader has to re-read has failed. Aim for a 15–20 minute main reading path.
-- Cite paragraphs with evidence IDs; name the source kind: paper, code, conflict, missing, or inference.
+4. **跟住一条具体样本。** 从它怎么来、怎么被构造、怎么打标签、怎么划分开始，进入训练，在模型内部一步步变形，直到产出结果；沿路记下论文与代码对不上的地方。读 [ai-ml-reading-guide.md](references/ai-ml-reading-guide.md)。
 
-## Final Gates
+5. **按问题组织实验证据。** 基线、对照、消融、分析、案例研究、外部验证——**不按论文的表格顺序排，按每个实验回答的是哪个问题排**。
 
-`scripts/validate_report.py` decides every mechanical question, and its output — not your reading of it — is the evidence. Check the delivered file yourself against what it cannot see:
+6. **审内部有效性，以及那些决定结论成不成立的科学主张。** 蛋白、小分子或药物发现方向另读 [bio-chem-validity.md](references/bio-chem-validity.md)。
 
-- Background states the literal input and prediction target, separate from sampling proxies and biological mechanism.
-- The three-minute map gives task, thought chain, minimal flow, reported outcome, and one review preview.
-- Data and model explanations follow a concrete sample; module inventories fail.
-- Section 6 states experiment questions, controls, results, and neutral boundaries; Section 7 judges them.
-- Each discharge names what its boundary actually asserts. Linking the id satisfies the validator without answering anything.
-- No verdict endorses what a boundary called confounded.
-- Computational proxies never become experimental biological or chemical facts.
-- Unresolved gaps appear once, only where they change a judgment.
+7. **先生成骨架，再一个占位符一次编辑地填。**
 
-`figure=off` is the default and emits no figure UI. Select `figure=brief` or `figure=generate` only on request; `output-contract.md` defines both. `sci-diagram` is invoked only under `figure=generate`.
+   ```bash
+   python3 <skill-dir>/scripts/new_report.py --slug <paper-slug> --outdir <outdir>
+   ```
+
+   卡片、证据边界、台账行、引用、判定——凡是反复出现的结构，一律从 `assets/fragments.html` 整块复制，不要自己敲标签。其余细则见 [output-contract.md](references/output-contract.md)。
+
+8. **交付前必须过校验器。**
+
+   ```bash
+   python3 <skill-dir>/scripts/validate_report.py <交付文件>
+   ```
+
+   有违规就改，改完重跑，直到退出码是 `0`。没到 `0` 之前，这份报告不算写完。
+
+非关键材料拿不到时，按 `partial` 继续往下走——**但绝不用猜测把缺口填平**。
+
+## 表达
+
+- **中文为主。** 英文术语第一次出现时，先用大白话说清它指什么，之后再直接用这个术语。专有名词、指标名、标识符、路径，以及作者自定义的模块名，一律保持原样。
+- 第 1～6 章按「**问题 → 作者为什么这么想 → 技术细节 → 它在整个论证里起什么作用**」展开。
+- 一段只讲一件事，通常 3～5 句。**读者需要回头重读的句子，就是一句失败的句子。** 正文主线控制在 15～20 分钟读得完。
+- 段落里的结论要挂证据编号，并标明来源类型：论文、代码、冲突、缺失、推断。
+
+## 最终检查
+
+`scripts/validate_report.py` 判定所有机械问题，**以它的输出为准，不以你对它的理解为准**。它看不见的部分，你自己对着交付文件逐条核：
+
+- 背景章把**模型字面上收什么、预测什么**说死了，并且与采样代理、生物机理分得开。
+- 三分钟速览给全了任务、思路链、最小流程、报告结果，以及一句审查预告。
+- 数据与模型的讲解是跟着一条具体样本走的——**列模块清单不算数**。
+- 第 6 章只写实验问题、对照、结果和中立的证据边界；判断一律留到第 7 章。
+- 每条边界的兑现都说清了**那条边界究竟断言了什么**。只把编号链过去，能骗过校验器，但什么都没回答。
+- 没有任何一条判定，去认可一个已被边界判为混淆的结果。
+- 计算代理的结果，从不被写成实验测得的生物或化学事实。
+- 悬而未决的缺口只出现一次，且只出现在它会改变判断的地方。
+
+`figure=off` 是默认值，不出任何配图 UI。只有用户要求时才选 `figure=brief` 或 `figure=generate`，两者的定义见 `output-contract.md`。`sci-diagram` 只在 `figure=generate` 下调用。

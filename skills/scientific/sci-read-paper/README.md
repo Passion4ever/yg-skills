@@ -49,6 +49,8 @@ python3 scripts/validate_report.py <报告.html>
 
 **它验不了推理对不对。** 那部分见 `../../../tests/sci-read-paper/rubric.md`。
 
+**SKILL.md 是中文的**——正文与产出同语言，少一层翻译损耗；`standard` / `audit` / `partial` / `figure=*` 这些是标识符，保持原样。
+
 ## 目录
 
 ```

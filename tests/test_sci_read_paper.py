@@ -179,9 +179,9 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual(set(frontmatter), {"name", "description"})
         self.assertEqual(frontmatter["name"], "sci-read-paper")
         description = frontmatter["description"]
-        self.assertTrue(description.startswith("Use when "))
+        self.assertIn("时使用", description[:40], "开头就要说清什么时候用它")
         self.assertLessEqual(len(description), 500)
-        for keyword in ("AI/ML", "paper", "protein", "small-molecule"):
+        for keyword in ("AI/ML", "论文", "蛋白", "小分子"):
             self.assertIn(keyword, description)
 
     def test_readme_numbers_match_the_code(self):
@@ -217,18 +217,24 @@ class SkillContractTests(unittest.TestCase):
                 self.assertEqual(outside, set(), f"{script.name} imports {outside}")
 
     def test_skill_body_is_compact(self):
+        """按非空白字符数计，不按 split()。
+
+        正文改成中文之后 split() 从 494 掉到 123——中文没有空格，这条上限会在
+        没有任何迹象的情况下失效，而它原本是贴着 500 卡住的。现状 1808 字符。
+        """
         _frontmatter, body = read_frontmatter(SKILL_MD)
-        self.assertLessEqual(len(body.split()), 500)
+        chars = len(re.sub(r"\s", "", body))
+        self.assertLessEqual(chars, 2200, f"SKILL.md 正文 {chars} 字符，触发即常驻上下文")
 
     def test_skill_lists_supported_starting_inputs(self):
         text = SKILL_MD.read_text(encoding="utf-8")
         for starting_input in (
             "PDF",
-            "title",
+            "标题",
             "DOI",
             "arXiv",
-            "journal page",
-            "official repository",
+            "期刊页面",
+            "官方仓库",
         ):
             self.assertIn(starting_input, text)
 
@@ -264,7 +270,7 @@ class SkillContractTests(unittest.TestCase):
         for state in ("figure=off", "figure=brief", "figure=generate"):
             self.assertIn(state, skill)
             self.assertIn(state, contract)
-        self.assertIn("default", skill)
+        self.assertIn("`figure=off` 是默认值", skill)
         self.assertIn("fall back to `figure=brief`", contract)
         self.assertIn("does not change the completion status", contract)
 
@@ -386,12 +392,12 @@ class SkillContractTests(unittest.TestCase):
     def test_skill_enforces_chinese_first_progressive_reading(self):
         text = " ".join(SKILL_MD.read_text(encoding="utf-8").split())
         for phrase in (
-            "Chinese-first",
-            "question → author rationale → technical detail → role in the argument",
-            "3–5 sentences",
+            "中文为主",
+            "问题 → 作者为什么这么想 → 技术细节 → 它在整个论证里起什么作用",
+            "3～5 句",
         ):
             self.assertIn(phrase, text)
-        self.assertRegex(text, r"15–20 minutes?")
+        self.assertRegex(text, r"15～20 分钟")
 
     def test_evidence_policy_supports_lightweight_ids(self):
         policy = (SKILL_DIR / "references" / "evidence-policy.md").read_text(encoding="utf-8")
@@ -422,7 +428,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("「无」", fragments)
         self.assertIn("discharged in Section 7", contract)
         self.assertIn("a passing mention is not a discharge", contract)
-        self.assertIn("boundary", skill)
+        self.assertIn("证据边界", skill)
         self.assertIn("validate_report.py", skill)
 
     def test_ai_ml_guide_is_sample_and_question_driven(self):
