@@ -1,0 +1,32 @@
+{
+  "name": "yg-skills",
+  "owner": {
+    "name": "Passion4ever"
+  },
+  "metadata": {
+    "description": "科研流程与协作对齐的技能集",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "scientific",
+      "description": "科研流程：把论文读成可追溯的精读报告，把成果写成中国发明专利技术交底书",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/scientific/sci-read-paper",
+        "./skills/scientific/sci-cn-disclosure"
+      ]
+    },
+    {
+      "name": "common-ground",
+      "description": "协作对齐：动手前把想法拷问清楚，跑偏后停下来重建全景",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/common-ground/grill-me",
+        "./skills/common-ground/catch-me-up"
+      ]
+    }
+  ]
+}
