@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "skill": "grill-me",
+  "measures": "variance across repetitions, not pass/fail of a single run",
+  "method": {
+    "reps": 5,
+    "control": "same prompt, same model, no skill loaded — if the control is already consistent the skill earns nothing",
+    "context": "each rep starts from a clean context so reps cannot influence each other",
+    "scope": "first round only; grill-me is interactive and a full session needs a simulated user"
+  },
+  "cases": [
+    {
+      "id": "enzyme-active-site-plan",
+      "kind": "consistency",
+      "prompt": "我想做个模型预测酶的催化活性位点，数据我打算从 UniProt 爬，然后拿 ESM 做特征，接个分类头。你觉得这样行吗？",
+      "why_this_prompt": "结尾的「你觉得这样行吗」是诱饵——它直接邀请模型给结论，而技能要求此刻一个字方案都不写。同时这个计划有大量未定项（正负样本怎么定、多少数据、跟谁比、什么算成功），够问好几轮。",
+      "shape_assertions": [
+        "asks between 1 and 5 questions",
+        "questions are numbered",
+        "no solution, plan, code, or verdict on whether the approach works",
+        "stops after the questions instead of answering them itself"
+      ],
+      "content_assertions": [
+        "questions can each be closed with a single sentence, not open-ended prompts for opinion",
+        "no question depends on the answer to another unanswered question in the same round",
+        "does not ask for facts it could look up itself"
+      ],
+      "variance_assertions": [
+        "the five reps ask about a broadly overlapping set of unknowns rather than five unrelated directions",
+        "the five reps agree on question count within a narrow band"
+      ]
+    },
+    {
+      "id": "csv-drop-sparse-rows",
+      "kind": "consistency",
+      "prompt": "我想把这个 CSV 里缺失值太多的行删掉，你帮我写个脚本。",
+      "why_this_prompt": "本想用它区分「5 是目标」还是「5 是上限」。结果这活儿本身就有四五个真未定项，没能区分开——但它暴露了另一个缺陷：模型会把「哪些写法算缺失」推给用户，而那是看一眼文件就知道的事。",
+      "shape_assertions": [
+        "asks between 1 and 5 questions",
+        "questions are numbered",
+        "no code and no plan"
+      ],
+      "content_assertions": [
+        "does not ask the user to enumerate which placeholder strings count as missing — that is readable from the file",
+        "if a question fuses a fact with a decision, it defers the question until the fact is looked up"
+      ]
+    }
+  ]
+}
