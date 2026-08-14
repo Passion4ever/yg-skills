@@ -2,6 +2,25 @@
   "version": 1,
   "skill": "grill-me",
   "measures": "variance across repetitions, not pass/fail of a single run",
+  "future": {
+    "migrate_to": "claude plugin eval",
+    "status": "官方工具当前对本账号是 early access，`eval` 和 `eval init --bare` 都只回一句提示，拿不到真实 schema。本地十个插件缓存里也没有任何 case.yaml 可抄。所以这份文件是手工格式——等开放后用 `claude plugin eval init` 生成真模板再迁，别照下面的线索硬猜字段名。",
+    "why_worth_migrating": "它内建了我们手工做的三件事：重复跑、自动对照组、LLM 判分。",
+    "clues_from_help": {
+      "layout": "evals/**/case.yaml，或 evals/**/prompt.md 搭配 graders/*.md",
+      "case_fields_seen": [
+        "runs（默认 3）",
+        "scaffold_script",
+        "max_turns",
+        "timeout_seconds",
+        "tags"
+      ],
+      "ablation": "--ablation with-without 自带无插件对照组，不用自己搭",
+      "grading": "--judge-model 默认 haiku，判分是 LLM grader",
+      "gates": "--threshold 分数阈值；--case / --tag 过滤"
+    },
+    "manual_procedure_until_then": "每个场景开 N 个干净上下文的子代理，把 SKILL.md 正文拼进提示里，收回输出后按下面的 assertions 人工比对。改技能后必须用同一场景重跑，否则不知道改动是不是真的生效了。"
+  },
   "method": {
     "reps": 5,
     "control": "same prompt, same model, no skill loaded — if the control is already consistent the skill earns nothing",
