@@ -19,7 +19,23 @@
       "grading": "--judge-model 默认 haiku，判分是 LLM grader",
       "gates": "--threshold 分数阈值；--case / --tag 过滤"
     },
-    "manual_procedure_until_then": "每个场景开 N 个干净上下文的子代理，把 SKILL.md 正文拼进提示里，收回输出后按下面的 assertions 人工比对。改技能后必须用同一场景重跑，否则不知道改动是不是真的生效了。"
+    "manual_procedure_until_then": "每个场景开 N 个干净上下文的子代理，把 SKILL.md 正文拼进提示里，收回输出后按下面的 assertions 人工比对。改技能后必须用同一场景重跑，否则不知道改动是不是真的生效了。",
+    "tried_and_rejected": {
+      "tool": "skill-creator 的描述触发优化器（scripts/run_loop.py）",
+      "date": "2026-08-14",
+      "verdict": "跑不通，两次都是空结果。别再跑第二遍。",
+      "what_happened": [
+        "catch-me-up 跑了 20 条查询 × 3 次 × 5 轮：全部 40 条（含正例与负例）触发率 0%。",
+        "sci-read-paper 换一套完全不同的 20 条查询重跑：Train 18/36、Test 12/24、recall=0%——与 catch-me-up 逐位相同。",
+        "两个性质相反的技能、两套无关的查询，得出同一组数字。这说明被测的不是描述。",
+        "两次的 best_description 都等于原描述，因为没有任何改写能拉开分差。"
+      ],
+      "leading_hypothesis_unconfirmed": "run_eval.py 把技能脚手架成 .claude/commands/<名字>.md（斜杠命令），而触发判定看的是模型有没有调 Skill 工具。斜杠命令只有用户敲得动，模型不会自己调，所以 Skill 永远不被调用。这条是读源码得出的，**没有验证成功**——复现探针跑了 3 分钟只产出 0 字节，没能隔离出原因。",
+      "second_suspect": "run_loop 每条查询默认超时 30 秒（--timeout）。真实任务远超这个数，超时同样会被计为未触发。",
+      "correction": "第一次（catch-me-up）空结果时，曾把原因归结为「这个技能依赖对话上下文，单条查询测不了」。那个解释是错的——sci-read-paper 完全自足，结果一模一样。别再采信那个说法。",
+      "what_would_make_it_usable": "先独立验证：脚手架出来的东西，模型到底能不能通过 Skill 工具调用它。验不通就别谈分数。",
+      "meanwhile": "catch-me-up 的触发只能靠日常真实使用观察——该停时停没停、不该停时有没有乱停。真实会话里已见它正确触发一次（样本量 1）。"
+    }
   },
   "method": {
     "reps": 5,
